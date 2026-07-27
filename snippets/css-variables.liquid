@@ -1,0 +1,42 @@
+{% style %}
+  {{ settings.type_body_font | font_face: font_display: 'swap' }}
+  {{ settings.type_body_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
+  {{ settings.type_body_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
+  {{ settings.type_heading_font | font_face: font_display: 'swap' }}
+
+  :root {
+    --font-body-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
+    --font-body-style: {{ settings.type_body_font.style }};
+    --font-body-weight: {{ settings.type_body_font.weight }};
+    --font-heading-family: {{ settings.type_heading_font.family }}, {{ settings.type_heading_font.fallback_families }};
+    --font-heading-style: {{ settings.type_heading_font.style }};
+    --font-heading-weight: {{ settings.type_heading_font.weight }};
+    --font-size-base: {{ settings.type_base_size }}px;
+    --heading-scale: {{ settings.type_heading_scale | divided_by: 100.0 }};
+
+    --color-bg: {{ settings.color_background }};
+    --color-surface: {{ settings.color_surface }};
+    --color-ink: {{ settings.color_ink }};
+    --color-muted: {{ settings.color_muted }};
+    --color-line: {{ settings.color_line }};
+    --color-accent: {{ settings.color_accent }};
+    --color-on-accent: {{ settings.color_on_accent }};
+
+    --page-width: {{ settings.max_page_width }}px;
+    --page-margin: {{ settings.min_page_margin }}px;
+    --section-spacing: {{ settings.section_spacing }}px;
+
+    --radius-btn: {{ settings.radius_buttons }}px;
+    --radius-input: {{ settings.radius_inputs }}px;
+    --radius-card: {{ settings.radius_cards }}px;
+
+    {% case settings.card_image_ratio %}
+      {% when 'square' %}
+        --card-ratio: 1 / 1;
+      {% when 'portrait' %}
+        --card-ratio: 4 / 5;
+      {% else %}
+        --card-ratio: auto;
+    {% endcase %}
+  }
+{% endstyle %}

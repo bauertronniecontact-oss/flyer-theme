@@ -1,0 +1,396 @@
+/** Critical CSS for FLYER. Included on every page. */
+
+/* --- Reset --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-height: 100svh;
+}
+
+html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {
+  overflow: hidden;
+}
+
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+p {
+  text-wrap: pretty;
+}
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+p:empty {
+  display: none;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):first-child,
+:empty:first-child + :where(p, h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 0;
+}
+
+:is(p, h1, h2, h3, h4, h5, h6):last-child,
+:where(p, h1, h2, h3, h4, h5, h6) + :has(+ :empty:last-child) {
+  margin-block-end: 0;
+}
+
+/* --- Base --- */
+body {
+  font-family: var(--font-body-family);
+  font-style: var(--font-body-style);
+  font-weight: var(--font-body-weight);
+  font-size: var(--font-size-base);
+  line-height: 1.6;
+  background-color: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading-family);
+  font-style: var(--font-heading-style);
+  font-weight: var(--font-heading-weight);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: calc(var(--font-size-base) * var(--heading-scale) * var(--heading-scale) * var(--heading-scale));
+}
+h2 {
+  font-size: calc(var(--font-size-base) * var(--heading-scale) * var(--heading-scale));
+}
+h3 {
+  font-size: calc(var(--font-size-base) * var(--heading-scale));
+}
+
+a {
+  color: inherit;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.2em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+
+/* --- Accessibility utilities --- */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+  border-radius: var(--radius-btn);
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.skip-link:focus-visible {
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Buttons --- */
+.fl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  min-height: 44px;
+  font: inherit;
+  font-weight: 500;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 1px solid var(--color-accent);
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+.fl-btn:hover {
+  opacity: 0.85;
+}
+.fl-btn:disabled,
+.fl-btn[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.fl-btn--secondary {
+  color: var(--color-ink);
+  background: transparent;
+  border-color: var(--color-ink);
+}
+.fl-btn--secondary:hover {
+  opacity: 1;
+  background: var(--color-surface);
+}
+
+/* --- Forms --- */
+.fl-input,
+.fl-select,
+.fl-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  min-height: 44px;
+  color: var(--color-ink);
+  background: var(--color-bg);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-input);
+}
+.fl-input:focus-visible,
+.fl-select:focus-visible,
+.fl-textarea:focus-visible {
+  outline-offset: 0;
+  border-color: var(--color-ink);
+}
+.fl-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.875em;
+  color: var(--color-muted);
+}
+.fl-field {
+  margin-bottom: 18px;
+}
+.fl-form-status {
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-input);
+  background: var(--color-surface);
+}
+.fl-form-status--error {
+  border-color: currentcolor;
+}
+
+/* --- Type utilities --- */
+.fl-eyebrow {
+  display: block;
+  margin-bottom: 10px;
+  font-size: 0.75em;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.fl-section-head {
+  margin-bottom: 32px;
+}
+.fl-section-head--center {
+  text-align: center;
+}
+
+/* --- Badges --- */
+.fl-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 0.75em;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  background: var(--color-ink);
+  color: var(--color-bg);
+}
+.fl-badge--soldout {
+  background: var(--color-surface);
+  color: var(--color-ink);
+  border: 1px solid var(--color-line);
+}
+
+/* --- Product card (markup in snippets/product-card.liquid) --- */
+.fl-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+.fl-card__media {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+.fl-card__media img {
+  width: 100%;
+  aspect-ratio: var(--card-ratio);
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+.fl-card:hover .fl-card__media img {
+  transform: scale(1.03);
+}
+.fl-card__badges {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  display: flex;
+  gap: 6px;
+}
+.fl-card__link {
+  text-decoration: none;
+}
+.fl-card__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+.fl-card__title {
+  font-size: 1em;
+  font-weight: 500;
+}
+.fl-card__vendor {
+  font-size: 0.8125em;
+  color: var(--color-muted);
+}
+.fl-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.fl-card__quick {
+  position: relative;
+  z-index: 1;
+  margin-top: 2px;
+  align-self: flex-start;
+}
+
+/* --- Price (markup in snippets/price.liquid) --- */
+.fl-price {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: baseline;
+}
+.fl-price__compare {
+  color: var(--color-muted);
+  text-decoration: line-through;
+}
+.fl-price--sale .fl-price__current {
+  font-weight: 600;
+}
+.fl-price__unit {
+  font-size: 0.8125em;
+  color: var(--color-muted);
+}
+
+/* --- Grid helper for product listings --- */
+.fl-product-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-cols, 4), minmax(0, 1fr));
+  gap: 28px 20px;
+}
+@media (max-width: 989px) {
+  .fl-product-grid {
+    grid-template-columns: repeat(var(--grid-cols-tablet, 3), minmax(0, 1fr));
+  }
+}
+@media (max-width: 749px) {
+  .fl-product-grid {
+    grid-template-columns: repeat(var(--grid-cols-mobile, 2), minmax(0, 1fr));
+    gap: 24px 12px;
+  }
+}
+
+/* --- Section layout grid (full-width | constrained) --- */
+.shopify-section {
+  --content-width: min(
+    calc(var(--page-width) - var(--page-margin) * 2),
+    calc(100% - var(--page-margin) * 2)
+  );
+  --content-margin: minmax(var(--page-margin), 1fr);
+  --content-grid: var(--content-margin) var(--content-width) var(--content-margin);
+
+  /* Required to make <img> elements work as background images */
+  position: relative;
+  grid-template-columns: var(--content-grid);
+  display: grid;
+  width: 100%;
+}
+
+.shopify-section > * {
+  grid-column: 2;
+}
+
+.shopify-section > .full-width {
+  grid-column: 1 / -1;
+}
+
+/* --- Overlay primitives (drawers, dialogs) --- */
+.fl-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  background: rgb(0 0 0 / 40%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.fl-overlay.is-open {
+  opacity: 1;
+  pointer-events: auto;
+}

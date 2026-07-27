@@ -1,0 +1,293 @@
+[
+  {
+    "name": "theme_info",
+    "theme_name": "FLYER",
+    "theme_version": "1.0.0",
+    "theme_author": "KIOSK",
+    "theme_documentation_url": "https://kioskthemes.com",
+    "theme_support_url": "https://kioskthemes.com/support/"
+  },
+  {
+    "name": "Logo",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "logo",
+        "label": "Logo image"
+      },
+      {
+        "type": "range",
+        "id": "logo_width",
+        "min": 60,
+        "max": 300,
+        "step": 10,
+        "unit": "px",
+        "label": "Logo width",
+        "default": 120
+      }
+    ]
+  },
+  {
+    "name": "Typography",
+    "settings": [
+      {
+        "type": "font_picker",
+        "id": "type_body_font",
+        "default": "work_sans_n4",
+        "label": "Body font"
+      },
+      {
+        "type": "font_picker",
+        "id": "type_heading_font",
+        "default": "work_sans_n5",
+        "label": "Heading font"
+      },
+      {
+        "type": "range",
+        "id": "type_base_size",
+        "min": 14,
+        "max": 18,
+        "step": 1,
+        "unit": "px",
+        "label": "Base font size",
+        "default": 16
+      },
+      {
+        "type": "range",
+        "id": "type_heading_scale",
+        "min": 100,
+        "max": 160,
+        "step": 5,
+        "unit": "%",
+        "label": "Heading scale",
+        "default": 125
+      }
+    ]
+  },
+  {
+    "name": "Colors",
+    "settings": [
+      {
+        "type": "color",
+        "id": "color_background",
+        "default": "#FFFFFF",
+        "label": "Background"
+      },
+      {
+        "type": "color",
+        "id": "color_surface",
+        "default": "#F6F6F5",
+        "label": "Surface",
+        "info": "Cards, inputs and secondary backgrounds."
+      },
+      {
+        "type": "color",
+        "id": "color_ink",
+        "default": "#1A1A1A",
+        "label": "Text"
+      },
+      {
+        "type": "color",
+        "id": "color_muted",
+        "default": "#666666",
+        "label": "Secondary text"
+      },
+      {
+        "type": "color",
+        "id": "color_line",
+        "default": "#E8E8E8",
+        "label": "Borders"
+      },
+      {
+        "type": "color",
+        "id": "color_accent",
+        "default": "#1A1A1A",
+        "label": "Accent",
+        "info": "Buttons and highlights."
+      },
+      {
+        "type": "color",
+        "id": "color_on_accent",
+        "default": "#FFFFFF",
+        "label": "Text on accent"
+      }
+    ]
+  },
+  {
+    "name": "Layout",
+    "settings": [
+      {
+        "type": "range",
+        "id": "max_page_width",
+        "min": 1000,
+        "max": 1600,
+        "step": 20,
+        "unit": "px",
+        "label": "Page width",
+        "default": 1280
+      },
+      {
+        "type": "range",
+        "id": "min_page_margin",
+        "min": 12,
+        "max": 60,
+        "step": 2,
+        "unit": "px",
+        "label": "Page margin",
+        "default": 24
+      },
+      {
+        "type": "range",
+        "id": "section_spacing",
+        "min": 24,
+        "max": 120,
+        "step": 4,
+        "unit": "px",
+        "label": "Spacing between sections",
+        "default": 64
+      }
+    ]
+  },
+  {
+    "name": "Style",
+    "settings": [
+      {
+        "type": "range",
+        "id": "radius_buttons",
+        "min": 0,
+        "max": 24,
+        "step": 2,
+        "unit": "px",
+        "label": "Button corner radius",
+        "default": 4
+      },
+      {
+        "type": "range",
+        "id": "radius_inputs",
+        "min": 0,
+        "max": 24,
+        "step": 2,
+        "unit": "px",
+        "label": "Input corner radius",
+        "default": 4
+      },
+      {
+        "type": "range",
+        "id": "radius_cards",
+        "min": 0,
+        "max": 24,
+        "step": 2,
+        "unit": "px",
+        "label": "Card corner radius",
+        "default": 8
+      }
+    ]
+  },
+  {
+    "name": "Product cards",
+    "settings": [
+      {
+        "type": "select",
+        "id": "card_image_ratio",
+        "label": "Image ratio",
+        "options": [
+          { "value": "natural", "label": "Natural" },
+          { "value": "square", "label": "Square" },
+          { "value": "portrait", "label": "Portrait" }
+        ],
+        "default": "portrait"
+      },
+      {
+        "type": "checkbox",
+        "id": "card_show_vendor",
+        "label": "Show vendor",
+        "default": false
+      },
+      {
+        "type": "checkbox",
+        "id": "card_quick_add",
+        "label": "Show quick add button",
+        "default": true
+      },
+      {
+        "type": "text",
+        "id": "badge_sale_label",
+        "label": "Sale badge label",
+        "default": "Sale"
+      },
+      {
+        "type": "text",
+        "id": "badge_soldout_label",
+        "label": "Sold out badge label",
+        "default": "Sold out"
+      }
+    ]
+  },
+  {
+    "name": "Cart",
+    "settings": [
+      {
+        "type": "select",
+        "id": "cart_type",
+        "label": "Cart type",
+        "options": [
+          { "value": "drawer", "label": "Drawer" },
+          { "value": "page", "label": "Page" }
+        ],
+        "default": "drawer"
+      },
+      {
+        "type": "checkbox",
+        "id": "cart_show_note",
+        "label": "Enable order note",
+        "default": true
+      }
+    ]
+  },
+  {
+    "name": "Social media",
+    "settings": [
+      {
+        "type": "text",
+        "id": "social_instagram",
+        "label": "Instagram URL"
+      },
+      {
+        "type": "text",
+        "id": "social_tiktok",
+        "label": "TikTok URL"
+      },
+      {
+        "type": "text",
+        "id": "social_facebook",
+        "label": "Facebook URL"
+      },
+      {
+        "type": "text",
+        "id": "social_x",
+        "label": "X (Twitter) URL"
+      },
+      {
+        "type": "text",
+        "id": "social_pinterest",
+        "label": "Pinterest URL"
+      },
+      {
+        "type": "text",
+        "id": "social_youtube",
+        "label": "YouTube URL"
+      }
+    ]
+  },
+  {
+    "name": "Favicon",
+    "settings": [
+      {
+        "type": "image_picker",
+        "id": "favicon",
+        "label": "Favicon",
+        "info": "Displayed at 32 × 32 px."
+      }
+    ]
+  }
+]

@@ -1,0 +1,46 @@
+{% doc %}
+  Quick add control for product cards.
+  Works without JS (posts to /cart/add and redirects to the cart).
+  The cart drawer intercepts [data-quick-add] forms for AJAX adds.
+
+  - Sold out: disabled button.
+  - Single variant: instant add form.
+  - Multiple variants: link to the product page.
+
+  @param {object} product - product object
+
+  @example
+  {% render 'quick-add', product: product %}
+{% enddoc %}
+
+{%- if product -%}
+  {%- if product.available == false -%}
+    <button type="button" class="fl-btn fl-btn--secondary fl-quick" disabled>
+      {{ 'products.card.sold_out' | t }}
+    </button>
+  {%- elsif product.variants.size == 1 -%}
+    <form
+      action="{{ routes.cart_add_url }}"
+      method="post"
+      enctype="multipart/form-data"
+      class="fl-quick"
+      data-quick-add
+    >
+      <input type="hidden" name="quantity" value="1">
+      <button
+        type="submit"
+        name="id"
+        value="{{ product.selected_or_first_available_variant.id }}"
+        class="fl-btn fl-btn--secondary"
+      >
+        {{ 'products.card.quick_add' | t }}
+        <span class="visually-hidden">— {{ product.title | escape }}</span>
+      </button>
+    </form>
+  {%- else -%}
+    <a href="{{ product.url }}" class="fl-btn fl-btn--secondary fl-quick">
+      {{ 'products.card.choose_options' | t }}
+      <span class="visually-hidden">— {{ product.title | escape }}</span>
+    </a>
+  {%- endif -%}
+{%- endif -%}

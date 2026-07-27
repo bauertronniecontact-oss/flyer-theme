@@ -1,0 +1,61 @@
+{% doc %}
+  Product card used in every product listing (collection, featured, search, related).
+  Styles live in assets/critical.css (.fl-card).
+
+  @param {object} product - product object
+  @param {boolean} [show_quick_add] - override theme setting
+  @param {string} [sizes] - sizes attribute for the image (default grid sizing)
+
+  @example
+  {% render 'product-card', product: product %}
+{% enddoc %}
+
+{%- liquid
+  assign quick = settings.card_quick_add
+  if show_quick_add != nil
+    assign quick = show_quick_add
+  endif
+  assign img_sizes = sizes | default: '(max-width: 749px) 50vw, (max-width: 989px) 33vw, 25vw'
+  assign on_sale = false
+  if product.compare_at_price > product.price
+    assign on_sale = true
+  endif
+-%}
+
+<article class="fl-card">
+  <div class="fl-card__media">
+    {%- if product.featured_media -%}
+      {{
+        product.featured_media
+        | image_url: width: 900
+        | image_tag: widths: '360, 540, 720, 900', sizes: img_sizes, alt: product.featured_media.alt, loading: 'lazy'
+      }}
+    {%- else -%}
+      {{ 'product-1' | placeholder_svg_tag: 'fl-card__placeholder' }}
+    {%- endif -%}
+    {%- if product.available == false or on_sale -%}
+      <div class="fl-card__badges">
+        {%- if product.available == false -%}
+          <span class="fl-badge fl-badge--soldout">{{ settings.badge_soldout_label | default: 'Sold out' }}</span>
+        {%- elsif on_sale -%}
+          <span class="fl-badge">{{ settings.badge_sale_label | default: 'Sale' }}</span>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+
+  <div class="fl-card__info">
+    {%- if settings.card_show_vendor and product.vendor != blank -%}
+      <span class="fl-card__vendor">{{ product.vendor | escape }}</span>
+    {%- endif -%}
+    <h3 class="fl-card__title">
+      <a class="fl-card__link" href="{{ product.url }}">{{ product.title | escape }}</a>
+    </h3>
+    {% render 'price', product: product %}
+    {%- if quick and product.available -%}
+      <div class="fl-card__quick">
+        {% render 'quick-add', product: product %}
+      </div>
+    {%- endif -%}
+  </div>
+</article>
