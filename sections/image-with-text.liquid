@@ -1,0 +1,309 @@
+<section
+  class="fl-imgtext full-width{% if section.settings.background == 'surface' %} fl-imgtext--surface{% endif %}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  <div class="fl-imgtext__inner">
+    <div class="fl-imgtext__grid{% if section.settings.layout == 'text_first' %} fl-imgtext__grid--flip{% endif %}">
+      <div class="fl-imgtext__media fl-imgtext__media--{{ section.settings.image_ratio }}">
+        {%- if section.settings.image -%}
+          {{
+            section.settings.image
+            | image_url: width: 1600
+            | image_tag:
+              widths: '400, 600, 800, 1000, 1200, 1600',
+              sizes: '(max-width: 749px) 100vw, 50vw',
+              class: 'fl-imgtext__img',
+              alt: section.settings.image.alt,
+              loading: 'lazy'
+          }}
+        {%- else -%}
+          {{ 'lifestyle-2' | placeholder_svg_tag: 'fl-imgtext__img fl-imgtext__img--placeholder' }}
+        {%- endif -%}
+      </div>
+
+      <div class="fl-imgtext__content">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'eyebrow' -%}
+              {%- if block.settings.text != blank -%}
+                <span class="fl-eyebrow" {{ block.shopify_attributes }}>{{ block.settings.text | escape }}</span>
+              {%- endif -%}
+
+            {%- when 'heading' -%}
+              {%- if block.settings.heading != blank -%}
+                <h2 class="fl-imgtext__heading" {{ block.shopify_attributes }}>
+                  {{- block.settings.heading | escape -}}
+                </h2>
+              {%- endif -%}
+
+            {%- when 'text' -%}
+              {%- if block.settings.text != blank -%}
+                <div class="fl-imgtext__text" {{ block.shopify_attributes }}>{{ block.settings.text }}</div>
+              {%- endif -%}
+
+            {%- when 'button' -%}
+              {%- if block.settings.label != blank -%}
+                <div class="fl-imgtext__cta" {{ block.shopify_attributes }}>
+                  <a
+                    class="fl-btn{% if block.settings.style == 'secondary' %} fl-btn--secondary{% endif %}"
+                    href="{{ block.settings.link | default: '#' }}"
+                  >{{ block.settings.label | escape }}</a>
+                </div>
+              {%- endif -%}
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-imgtext {
+    background-color: var(--color-bg);
+  }
+
+  .fl-imgtext--surface {
+    background-color: var(--color-surface);
+  }
+
+  .fl-imgtext__inner {
+    width: min(
+      calc(var(--page-width) - var(--page-margin) * 2),
+      calc(100% - var(--page-margin) * 2)
+    );
+    margin-inline: auto;
+  }
+
+  .fl-imgtext__grid {
+    display: grid;
+    gap: 28px;
+  }
+
+  .fl-imgtext__media {
+    min-width: 0;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background-color: var(--color-surface);
+  }
+
+  .fl-imgtext__img {
+    width: 100%;
+  }
+
+  .fl-imgtext__media--square .fl-imgtext__img {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  .fl-imgtext__media--portrait .fl-imgtext__img {
+    aspect-ratio: 4 / 5;
+    object-fit: cover;
+  }
+
+  .fl-imgtext__content {
+    min-width: 0;
+    max-width: 46ch;
+  }
+
+  .fl-imgtext__heading {
+    margin-bottom: 16px;
+  }
+
+  .fl-imgtext__text > p + p {
+    margin-top: 1em;
+  }
+
+  .fl-imgtext__cta {
+    margin-top: 28px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .fl-imgtext__grid {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(32px, 5vw, 72px);
+    }
+
+    .fl-imgtext__grid--flip .fl-imgtext__media {
+      order: 2;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Image with text",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Desktop layout",
+      "options": [
+        {
+          "value": "image_first",
+          "label": "Image first"
+        },
+        {
+          "value": "text_first",
+          "label": "Text first"
+        }
+      ],
+      "default": "image_first",
+      "info": "On mobile the image always comes first."
+    },
+    {
+      "type": "select",
+      "id": "image_ratio",
+      "label": "Image ratio",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "Adapt to image"
+        },
+        {
+          "value": "square",
+          "label": "Square (1:1)"
+        },
+        {
+          "value": "portrait",
+          "label": "Portrait (4:5)"
+        }
+      ],
+      "default": "adapt"
+    },
+    {
+      "type": "select",
+      "id": "background",
+      "label": "Background",
+      "options": [
+        {
+          "value": "default",
+          "label": "White"
+        },
+        {
+          "value": "surface",
+          "label": "Soft gray"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "eyebrow",
+      "name": "Eyebrow",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Eyebrow",
+          "default": "Made to last"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "name": "Heading",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Pair text with an image"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Use this section to describe a product, share your process, or tell the story behind your brand.</p>"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Button",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Button label",
+          "default": "Shop now"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Button link"
+        },
+        {
+          "type": "select",
+          "id": "style",
+          "label": "Button style",
+          "options": [
+            {
+              "value": "primary",
+              "label": "Primary"
+            },
+            {
+              "value": "secondary",
+              "label": "Secondary"
+            }
+          ],
+          "default": "primary"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image with text",
+      "blocks": [
+        {
+          "type": "heading"
+        },
+        {
+          "type": "text"
+        },
+        {
+          "type": "button"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
