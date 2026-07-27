@@ -1,0 +1,207 @@
+{%- assign form_id = 'Newsletter-' | append: section.id -%}
+
+<section
+  class="fl-newsletter full-width{% if section.settings.background == 'surface' %} fl-newsletter--surface{% endif %}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  <div class="fl-newsletter__inner">
+    {%- if section.settings.eyebrow != blank -%}
+      <span class="fl-eyebrow">{{ section.settings.eyebrow | escape }}</span>
+    {%- endif -%}
+
+    {%- if section.settings.heading != blank -%}
+      <h2 class="fl-newsletter__heading">{{ section.settings.heading | escape }}</h2>
+    {%- endif -%}
+
+    {%- if section.settings.text != blank -%}
+      <div class="fl-newsletter__text">{{ section.settings.text }}</div>
+    {%- endif -%}
+
+    {%- form 'customer', id: form_id, class: 'fl-newsletter__form' -%}
+      <input type="hidden" name="contact[tags]" value="newsletter">
+      {%- if form.posted_successfully? -%}
+        <p
+          class="fl-form-status fl-newsletter__status"
+          aria-live="polite"
+          tabindex="-1"
+          autofocus
+        >
+          {{ 'general.newsletter.success' | t }}
+        </p>
+      {%- else -%}
+        {%- if form.errors -%}
+          <p
+            class="fl-form-status fl-form-status--error fl-newsletter__status"
+            id="{{ form_id }}-error"
+            aria-live="polite"
+          >
+            {{ 'general.newsletter.error' | t }}
+          </p>
+        {%- endif -%}
+        <div class="fl-newsletter__row">
+          <label class="visually-hidden" for="{{ form_id }}-email">{{ 'general.newsletter.label' | t }}</label>
+          <input
+            id="{{ form_id }}-email"
+            class="fl-input"
+            type="email"
+            name="contact[email]"
+            value="{{ form.email }}"
+            placeholder="{{ 'general.newsletter.placeholder' | t }}"
+            required
+            autocomplete="email"
+            autocapitalize="off"
+            autocorrect="off"
+            {% if form.errors %}
+              autofocus
+              aria-invalid="true"
+              aria-describedby="{{ form_id }}-error"
+            {% endif %}
+          >
+          <button type="submit" class="fl-btn">{{ 'general.newsletter.submit' | t }}</button>
+        </div>
+      {%- endif -%}
+    {%- endform -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-newsletter {
+    background-color: var(--color-bg);
+  }
+
+  .fl-newsletter--surface {
+    background-color: var(--color-surface);
+  }
+
+  .fl-newsletter__inner {
+    width: min(560px, calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .fl-newsletter__heading {
+    margin-bottom: 12px;
+  }
+
+  .fl-newsletter__text {
+    margin-bottom: 24px;
+    color: var(--color-muted);
+  }
+
+  .fl-newsletter__status {
+    text-align: center;
+  }
+
+  .fl-newsletter__row {
+    display: flex;
+  }
+
+  .fl-newsletter__row .fl-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border-start-end-radius: 0;
+    border-end-end-radius: 0;
+  }
+
+  .fl-newsletter__row .fl-btn {
+    flex: none;
+    margin-inline-start: -1px;
+    border-start-start-radius: 0;
+    border-end-start-radius: 0;
+  }
+
+  .fl-newsletter--surface .fl-newsletter__row .fl-input {
+    border-color: transparent;
+  }
+
+  .fl-newsletter--surface .fl-newsletter__row .fl-input:focus-visible {
+    border-color: var(--color-ink);
+  }
+
+  @media (max-width: 479px) {
+    .fl-newsletter__row {
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .fl-newsletter__row .fl-input {
+      border-radius: var(--radius-input);
+    }
+
+    .fl-newsletter__row .fl-btn {
+      margin-inline-start: 0;
+      border-radius: var(--radius-btn);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Newsletter",
+  "settings": [
+    {
+      "type": "text",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Newsletter"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Subscribe to our emails"
+    },
+    {
+      "type": "richtext",
+      "id": "text",
+      "label": "Text",
+      "default": "<p>Be the first to know about new arrivals and exclusive offers.</p>"
+    },
+    {
+      "type": "select",
+      "id": "background",
+      "label": "Background",
+      "options": [
+        {
+          "value": "default",
+          "label": "White"
+        },
+        {
+          "value": "surface",
+          "label": "Soft gray"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Newsletter"
+    }
+  ]
+}
+{% endschema %}

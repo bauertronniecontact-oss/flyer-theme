@@ -1,0 +1,418 @@
+{%- liquid
+  assign pos = section.settings.content_position | split: '-'
+  assign pos_v = pos | first
+  assign pos_h = pos | last
+
+  case pos_v
+    when 'top'
+      assign justify = 'flex-start'
+    when 'bottom'
+      assign justify = 'flex-end'
+    else
+      assign justify = 'center'
+  endcase
+
+  case pos_h
+    when 'left'
+      assign align = 'flex-start'
+      assign text_align = 'left'
+    when 'right'
+      assign align = 'flex-end'
+      assign text_align = 'right'
+    else
+      assign align = 'center'
+      assign text_align = 'center'
+  endcase
+-%}
+
+<section class="fl-banner fl-banner--{{ section.settings.height }} full-width">
+  <div class="fl-banner__media">
+    {%- if section.settings.image -%}
+      {{
+        section.settings.image
+        | image_url: width: 3840
+        | image_tag:
+          widths: '750, 1100, 1500, 1920, 2560, 3840',
+          sizes: '100vw',
+          class: 'fl-banner__img',
+          loading: 'eager',
+          fetchpriority: 'high'
+      }}
+    {%- else -%}
+      {{ 'lifestyle-1' | placeholder_svg_tag: 'fl-banner__img fl-banner__img--placeholder' }}
+    {%- endif -%}
+  </div>
+
+  <div
+    class="fl-banner__overlay"
+    style="background-color: rgb(0 0 0 / {{ section.settings.overlay_opacity }}%);"
+  ></div>
+
+  {%- if section.blocks.size > 0 -%}
+    <div
+      class="fl-banner__content"
+      style="justify-content: {{ justify }}; align-items: {{ align }}; text-align: {{ text_align }};"
+    >
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+          {%- when 'heading' -%}
+            {%- if block.settings.heading != blank -%}
+              <h2
+                class="fl-banner__heading fl-banner__heading--{{ block.settings.heading_size }}"
+                {{ block.shopify_attributes }}
+              >
+                {{ block.settings.heading | escape }}
+              </h2>
+            {%- endif -%}
+
+          {%- when 'text' -%}
+            {%- if block.settings.text != blank -%}
+              <p class="fl-banner__text" {{ block.shopify_attributes }}>{{ block.settings.text | escape }}</p>
+            {%- endif -%}
+
+          {%- when 'buttons' -%}
+            {%- if block.settings.button_label_1 != blank or block.settings.button_label_2 != blank -%}
+              <div class="fl-banner__btns" {{ block.shopify_attributes }}>
+                {%- if block.settings.button_label_1 != blank -%}
+                  <a
+                    class="fl-banner__btn{% if block.settings.button_style_1 == 'secondary' %} fl-banner__btn--secondary{% endif %}"
+                    href="{{ block.settings.button_link_1 | default: '#' }}"
+                  >{{ block.settings.button_label_1 | escape }}</a>
+                {%- endif -%}
+                {%- if block.settings.button_label_2 != blank -%}
+                  <a
+                    class="fl-banner__btn{% if block.settings.button_style_2 == 'secondary' %} fl-banner__btn--secondary{% endif %}"
+                    href="{{ block.settings.button_link_2 | default: '#' }}"
+                  >{{ block.settings.button_label_2 | escape }}</a>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+</section>
+
+{% stylesheet %}
+  .fl-banner {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    background-color: var(--color-surface);
+  }
+
+  .fl-banner--small {
+    min-height: 40vh;
+    min-height: 40svh;
+  }
+
+  .fl-banner--medium {
+    min-height: 60vh;
+    min-height: 60svh;
+  }
+
+  .fl-banner--large {
+    min-height: 80vh;
+    min-height: 80svh;
+  }
+
+  .fl-banner__media {
+    position: absolute;
+    inset: 0;
+    min-width: 0;
+  }
+
+  .fl-banner__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fl-banner__overlay {
+    position: absolute;
+    inset: 0;
+  }
+
+  .fl-banner__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: clamp(32px, 6vw, 64px) var(--page-margin);
+    color: var(--color-on-accent);
+  }
+
+  .fl-banner__heading {
+    max-width: 16em;
+  }
+
+  .fl-banner__heading--small {
+    font-size: clamp(1.75rem, 3vw, 2.25rem);
+  }
+
+  .fl-banner__heading--medium {
+    font-size: clamp(2rem, 4.5vw, 3rem);
+  }
+
+  .fl-banner__heading--large {
+    font-size: clamp(2.5rem, 6vw, 4rem);
+  }
+
+  .fl-banner__text {
+    max-width: 44ch;
+    font-size: 1.0625em;
+  }
+
+  .fl-banner__btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 8px;
+  }
+
+  .fl-banner__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    min-height: 44px;
+    font-weight: 500;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    color: var(--color-ink);
+    background: var(--color-on-accent);
+    border: 1px solid var(--color-on-accent);
+    border-radius: var(--radius-btn);
+    transition: opacity 0.15s ease;
+  }
+
+  .fl-banner__btn:hover {
+    opacity: 0.85;
+  }
+
+  .fl-banner__btn:focus-visible {
+    outline-color: var(--color-on-accent);
+  }
+
+  .fl-banner__btn--secondary {
+    color: var(--color-on-accent);
+    background: transparent;
+    border-color: var(--color-on-accent);
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Image banner",
+  "settings": [
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "Banner height",
+      "options": [
+        {
+          "value": "small",
+          "label": "Small (40% of screen)"
+        },
+        {
+          "value": "medium",
+          "label": "Medium (60% of screen)"
+        },
+        {
+          "value": "large",
+          "label": "Large (80% of screen)"
+        }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "range",
+      "id": "overlay_opacity",
+      "min": 0,
+      "max": 80,
+      "step": 5,
+      "unit": "%",
+      "label": "Image overlay opacity",
+      "default": 20,
+      "info": "Keeps text readable over the image."
+    },
+    {
+      "type": "select",
+      "id": "content_position",
+      "label": "Content position",
+      "options": [
+        {
+          "value": "top-left",
+          "label": "Top left"
+        },
+        {
+          "value": "top-center",
+          "label": "Top center"
+        },
+        {
+          "value": "top-right",
+          "label": "Top right"
+        },
+        {
+          "value": "middle-left",
+          "label": "Middle left"
+        },
+        {
+          "value": "middle-center",
+          "label": "Middle center"
+        },
+        {
+          "value": "middle-right",
+          "label": "Middle right"
+        },
+        {
+          "value": "bottom-left",
+          "label": "Bottom left"
+        },
+        {
+          "value": "bottom-center",
+          "label": "Bottom center"
+        },
+        {
+          "value": "bottom-right",
+          "label": "Bottom right"
+        }
+      ],
+      "default": "middle-center"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "New season essentials"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "Heading size",
+          "options": [
+            {
+              "value": "small",
+              "label": "Small"
+            },
+            {
+              "value": "medium",
+              "label": "Medium"
+            },
+            {
+              "value": "large",
+              "label": "Large"
+            }
+          ],
+          "default": "medium"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Discover the latest pieces from our collection."
+        }
+      ]
+    },
+    {
+      "type": "buttons",
+      "name": "Buttons",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "button_label_1",
+          "label": "First button label",
+          "default": "Shop now"
+        },
+        {
+          "type": "url",
+          "id": "button_link_1",
+          "label": "First button link"
+        },
+        {
+          "type": "select",
+          "id": "button_style_1",
+          "label": "First button style",
+          "options": [
+            {
+              "value": "primary",
+              "label": "Primary"
+            },
+            {
+              "value": "secondary",
+              "label": "Secondary"
+            }
+          ],
+          "default": "primary"
+        },
+        {
+          "type": "text",
+          "id": "button_label_2",
+          "label": "Second button label"
+        },
+        {
+          "type": "url",
+          "id": "button_link_2",
+          "label": "Second button link"
+        },
+        {
+          "type": "select",
+          "id": "button_style_2",
+          "label": "Second button style",
+          "options": [
+            {
+              "value": "primary",
+              "label": "Primary"
+            },
+            {
+              "value": "secondary",
+              "label": "Secondary"
+            }
+          ],
+          "default": "secondary"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Image banner",
+      "blocks": [
+        {
+          "type": "heading"
+        },
+        {
+          "type": "text"
+        },
+        {
+          "type": "buttons"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

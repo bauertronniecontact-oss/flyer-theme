@@ -1,7 +1,7 @@
 {
   "sections": {
     "main": {
-      "type": "page"
+      "type": "customer-account"
     }
   },
   "order": ["main"]

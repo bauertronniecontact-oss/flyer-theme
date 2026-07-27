@@ -1,77 +1,745 @@
-<header>
-  <h2 class="header__title">
-    {{ shop.name | link_to: routes.root_url }}
-  </h2>
+{%- liquid
+  assign menu = section.settings.menu
+  assign logo_alt = settings.logo.alt | default: shop.name | escape
+-%}
 
-  <div class="header__menu">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
-  </div>
+<fl-header
+  class="fl-header full-width"
+  {% if section.settings.sticky_header %}
+    data-sticky
+  {% endif %}
+  data-cart-label-template="{{ 'accessibility.cart_count' | t: count: '%COUNT%' | escape }}"
+>
+  <div class="fl-header__bar">
+    <button
+      type="button"
+      class="fl-header__icon-btn fl-header__burger"
+      aria-expanded="false"
+      aria-controls="FlMenuDrawer"
+      aria-haspopup="dialog"
+      data-menu-open
+    >
+      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+        <path d="M3 5.5h14M3 10h14M3 14.5h14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span class="visually-hidden">{{ 'accessibility.open_menu' | t }}</span>
+    </button>
 
-  <div class="header__icons">
-    {% if shop.customer_accounts_enabled %}
-      <shopify-account menu="{{ section.settings.customer_account_menu }}">
-        {{ 'icon-account.svg' | inline_asset_content }}
-      </shopify-account>
-    {% endif %}
-
-    <a href="{{ routes.cart_url }}">
-      {% if cart.item_count > 0 %}
-        <sup>{{ cart.item_count }}</sup>
-      {% endif %}
-
-      {{ 'icon-cart.svg' | inline_asset_content }}
+    <a class="fl-header__logo" href="{{ routes.root_url }}">
+      {%- if settings.logo != blank -%}
+        {%- assign logo_w = settings.logo_width -%}
+        {%- assign logo_w2 = logo_w | times: 2 -%}
+        {%- assign logo_widths = logo_w | append: ', ' | append: logo_w2 -%}
+        {%- assign logo_sizes = logo_w | append: 'px' -%}
+        {%- capture logo_style -%}width: {{ logo_w }}px; height: auto;{%- endcapture -%}
+        {{
+          settings.logo
+          | image_url: width: logo_w2
+          | image_tag:
+            class: 'fl-header__logo-img',
+            widths: logo_widths,
+            sizes: logo_sizes,
+            alt: logo_alt,
+            loading: 'eager',
+            style: logo_style
+        }}
+      {%- else -%}
+        <span class="fl-header__wordmark">{{ shop.name }}</span>
+      {%- endif -%}
     </a>
+
+    {%- if menu.links.size > 0 -%}
+      <nav class="fl-header__nav" aria-label="{{ 'accessibility.main_menu' | t }}">
+        <ul class="fl-header__menu">
+          {%- for link in menu.links -%}
+            <li class="fl-header__item">
+              {%- if link.links.size > 0 -%}
+                <details class="fl-header__dropdown" data-dropdown>
+                  <summary class="fl-header__link fl-header__summary{% if link.current or link.child_active %} is-active{% endif %}">
+                    <span>{{ link.title | escape }}</span>
+                    <svg class="fl-header__caret" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true" focusable="false">
+                      <path d="m2 3.5 3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </summary>
+                  <ul class="fl-header__panel">
+                    {%- for child in link.links -%}
+                      <li>
+                        <a
+                          class="fl-header__sublink{% if child.current %} is-active{% endif %}"
+                          href="{{ child.url }}"
+                          {% if child.current %}
+                            aria-current="page"
+                          {% endif %}
+                        >{{ child.title | escape }}</a>
+                        {%- if child.links.size > 0 -%}
+                          <ul class="fl-header__subgroup">
+                            {%- for grand in child.links -%}
+                              <li>
+                                <a
+                                  class="fl-header__sublink fl-header__sublink--nested{% if grand.current %} is-active{% endif %}"
+                                  href="{{ grand.url }}"
+                                  {% if grand.current %}
+                                    aria-current="page"
+                                  {% endif %}
+                                >{{ grand.title | escape }}</a>
+                              </li>
+                            {%- endfor -%}
+                          </ul>
+                        {%- endif -%}
+                      </li>
+                    {%- endfor -%}
+                  </ul>
+                </details>
+              {%- else -%}
+                <a
+                  class="fl-header__link{% if link.current %} is-active{% endif %}"
+                  href="{{ link.url }}"
+                  {% if link.current %}
+                    aria-current="page"
+                  {% endif %}
+                >{{ link.title | escape }}</a>
+              {%- endif -%}
+            </li>
+          {%- endfor -%}
+        </ul>
+      </nav>
+    {%- endif -%}
+
+    <div class="fl-header__icons">
+      {%- if section.settings.show_search -%}
+        <button
+          type="button"
+          class="fl-header__icon-btn"
+          data-search-open
+          aria-haspopup="dialog"
+          aria-expanded="false"
+          aria-controls="FlSearchOverlay"
+        >
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+            <circle cx="9" cy="9" r="5.5" stroke="currentColor" stroke-width="1.5"/>
+            <path d="m13.5 13.5 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span class="visually-hidden">{{ 'accessibility.search' | t }}</span>
+        </button>
+      {%- endif -%}
+
+      {%- if shop.customer_accounts_enabled -%}
+        <a class="fl-header__icon-btn fl-header__account" href="{{ routes.account_login_url }}">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+            <circle cx="10" cy="6.5" r="3.25" stroke="currentColor" stroke-width="1.5"/>
+            <path d="M3.75 17c.9-3 3.3-4.75 6.25-4.75S15.35 14 16.25 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span class="visually-hidden">{{ 'customer.account.title' | t }}</span>
+        </a>
+      {%- endif -%}
+
+      <a
+        class="fl-header__icon-btn fl-header__cart"
+        href="{{ routes.cart_url }}"
+        aria-label="{{ 'accessibility.cart_count' | t: count: cart.item_count }}"
+        {% if settings.cart_type == 'drawer' %}
+          data-cart-open
+        {% endif %}
+        data-cart-link
+      >
+        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+          <path d="M4 6.5h12l-.8 9.25a1.5 1.5 0 0 1-1.5 1.37H6.3a1.5 1.5 0 0 1-1.5-1.37Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M7.25 8.5V5.75a2.75 2.75 0 0 1 5.5 0V8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span
+          class="fl-header__cart-count{% if cart.item_count == 0 %} is-empty{% endif %}"
+          data-cart-count
+          aria-hidden="true"
+        >{{ cart.item_count }}</span>
+      </a>
+      <span class="visually-hidden" role="status" aria-live="polite" data-cart-live></span>
+    </div>
   </div>
-</header>
+
+  <dialog
+    class="fl-header__drawer"
+    id="FlMenuDrawer"
+    data-menu-drawer
+    scroll-lock
+    aria-label="{{ 'accessibility.main_menu' | t }}"
+  >
+    <div class="fl-header__drawer-inner">
+      <div class="fl-header__drawer-head">
+        <span class="fl-header__drawer-title">{{ shop.name }}</span>
+        <button type="button" class="fl-header__icon-btn" data-menu-close>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+            <path d="m5 5 10 10M15 5 5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <span class="visually-hidden">{{ 'accessibility.close_menu' | t }}</span>
+        </button>
+      </div>
+
+      {%- if menu.links.size > 0 -%}
+        <nav class="fl-header__drawer-nav" aria-label="{{ 'accessibility.main_menu' | t }}">
+          <ul class="fl-header__drawer-menu">
+            {%- for link in menu.links -%}
+              <li>
+                {%- if link.links.size > 0 -%}
+                  <details class="fl-header__drawer-details">
+                    <summary class="fl-header__drawer-link fl-header__drawer-summary">
+                      <span>{{ link.title | escape }}</span>
+                      <svg class="fl-header__caret" width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true" focusable="false">
+                        <path d="m2 3.5 3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                      </svg>
+                    </summary>
+                    <ul class="fl-header__drawer-sub">
+                      {%- for child in link.links -%}
+                        <li>
+                          <a
+                            class="fl-header__drawer-sublink"
+                            href="{{ child.url }}"
+                            {% if child.current %}
+                              aria-current="page"
+                            {% endif %}
+                          >{{ child.title | escape }}</a>
+                          {%- if child.links.size > 0 -%}
+                            <ul class="fl-header__drawer-sub fl-header__drawer-sub--nested">
+                              {%- for grand in child.links -%}
+                                <li>
+                                  <a
+                                    class="fl-header__drawer-sublink fl-header__drawer-sublink--nested"
+                                    href="{{ grand.url }}"
+                                    {% if grand.current %}
+                                      aria-current="page"
+                                    {% endif %}
+                                  >{{ grand.title | escape }}</a>
+                                </li>
+                              {%- endfor -%}
+                            </ul>
+                          {%- endif -%}
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  </details>
+                {%- else -%}
+                  <a
+                    class="fl-header__drawer-link"
+                    href="{{ link.url }}"
+                    {% if link.current %}
+                      aria-current="page"
+                    {% endif %}
+                  >{{ link.title | escape }}</a>
+                {%- endif -%}
+              </li>
+            {%- endfor -%}
+          </ul>
+        </nav>
+      {%- endif -%}
+
+      {%- if shop.customer_accounts_enabled -%}
+        <div class="fl-header__drawer-foot">
+          <a class="fl-header__drawer-account" href="{{ routes.account_login_url }}">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+              <circle cx="10" cy="6.5" r="3.25" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M3.75 17c.9-3 3.3-4.75 6.25-4.75S15.35 14 16.25 17" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            {{ 'customer.account.title' | t }}
+          </a>
+        </div>
+      {%- endif -%}
+    </div>
+  </dialog>
+
+  {%- if section.settings.show_search -%}
+    {% render 'search-overlay' %}
+  {%- endif -%}
+</fl-header>
 
 {% stylesheet %}
-  header {
-    height: 5rem;
+  .fl-header-section:has([data-sticky]) {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+
+  .fl-header {
+    display: block;
+    background: var(--color-bg);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-header__bar {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    max-width: var(--page-width);
+    margin-inline: auto;
+    padding: 10px var(--page-margin);
+    min-height: 64px;
+  }
+
+  .fl-header__logo {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .fl-header__wordmark {
+    font-family: var(--font-heading-family);
+    font-weight: 600;
+    font-size: 1.125em;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .fl-header__nav {
+    display: flex;
+    min-width: 0;
+  }
+
+  .fl-header__menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 24px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-header__item {
+    position: relative;
+  }
+
+  .fl-header__link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 10px 2px;
+    color: var(--color-ink);
+    font-size: 0.9375em;
+    text-decoration: none;
+  }
+
+  .fl-header__link::after {
+    content: '';
+    position: absolute;
+    inset: auto 2px 9px 2px;
+    height: 1px;
+    background: var(--color-ink);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.2s ease;
+  }
+
+  .fl-header__link:hover::after,
+  .fl-header__link.is-active::after,
+  .fl-header__dropdown[open] > .fl-header__summary::after {
+    transform: scaleX(1);
+  }
+
+  .fl-header__summary {
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .fl-header__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .fl-header__summary::marker {
+    content: none;
+  }
+
+  .fl-header__caret {
+    flex: 0 0 auto;
+    color: var(--color-muted);
+    transition: transform 0.2s ease;
+  }
+
+  .fl-header__dropdown[open] > .fl-header__summary .fl-header__caret {
+    transform: rotate(180deg);
+  }
+
+  .fl-header__panel {
+    position: absolute;
+    top: 100%;
+    left: -20px;
+    z-index: 5;
+    min-width: 220px;
+    margin: 0;
+    padding: 8px 0;
+    list-style: none;
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 40px rgb(0 0 0 / 12%);
+  }
+
+  .fl-header__dropdown[open] .fl-header__panel {
+    animation: fl-header-fade 0.15s ease;
+  }
+
+  @keyframes fl-header-fade {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+  }
+
+  .fl-header__sublink {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 6px 20px;
+    color: var(--color-ink);
+    font-size: 0.9375em;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .fl-header__sublink:hover,
+  .fl-header__sublink:focus-visible {
+    background: var(--color-surface);
+  }
+
+  .fl-header__sublink.is-active {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .fl-header__subgroup {
+    margin: 0;
+    padding: 0 0 4px;
+    list-style: none;
+  }
+
+  .fl-header__sublink--nested {
+    padding-left: 32px;
+    color: var(--color-muted);
+    font-size: 0.875em;
+  }
+
+  .fl-header__icons {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-left: auto;
+  }
+
+  .fl-header__icon-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-btn);
+    background: none;
+    color: var(--color-ink);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .fl-header__icon-btn:hover {
+    background: var(--color-surface);
+  }
+
+  .fl-header__cart-count {
+    position: absolute;
+    top: 4px;
+    right: 3px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    background: var(--color-accent);
+    color: var(--color-on-accent);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    border-radius: 999px;
+  }
+
+  .fl-header__cart-count.is-empty {
+    display: none;
+  }
+
+  .fl-header__burger {
+    display: none;
+  }
+
+  .fl-header__drawer {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: min(360px, 86vw);
+    height: 100dvh;
+    max-height: none;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: var(--color-bg);
+    box-shadow: 0 8px 40px rgb(0 0 0 / 12%);
+  }
+
+  .fl-header__drawer[open] {
+    animation: fl-header-slide 0.25s ease;
+  }
+
+  @keyframes fl-header-slide {
+    from {
+      transform: translateX(-100%);
+    }
+  }
+
+  .fl-header__drawer::backdrop {
+    background: rgb(0 0 0 / 40%);
+  }
+
+  .fl-header__drawer-inner {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .fl-header__drawer-head {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    gap: 16px;
+    min-height: 64px;
+    padding: 10px var(--page-margin);
+    border-bottom: 1px solid var(--color-line);
   }
-  header a {
-    position: relative;
-    text-decoration: none;
-    color: var(--color-foreground);
+
+  .fl-header__drawer-title {
+    font-family: var(--font-heading-family);
+    font-weight: 600;
+  }
+
+  .fl-header__drawer-nav {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 8px 0;
+  }
+
+  .fl-header__drawer-menu,
+  .fl-header__drawer-sub {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-header__drawer-sub {
+    padding-bottom: 8px;
+  }
+
+  .fl-header__drawer-link {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    padding: 10px var(--page-margin);
+    color: var(--color-ink);
+    text-decoration: none;
   }
-  header a sup {
-    position: absolute;
-    left: 100%;
-    overflow: hidden;
-    max-width: var(--page-margin);
+
+  .fl-header__drawer-summary {
+    cursor: pointer;
+    list-style: none;
   }
-  header svg {
-    width: 2rem;
+
+  .fl-header__drawer-summary::-webkit-details-marker {
+    display: none;
   }
-  header .header__menu,
-  header .header__icons {
+
+  .fl-header__drawer-summary::marker {
+    content: none;
+  }
+
+  .fl-header__drawer-details[open] > .fl-header__drawer-summary .fl-header__caret {
+    transform: rotate(180deg);
+  }
+
+  .fl-header__drawer-sublink {
     display: flex;
-    gap: 1rem;
+    align-items: center;
+    min-height: 44px;
+    padding: 8px var(--page-margin) 8px 40px;
+    color: var(--color-muted);
+    text-decoration: none;
+  }
+
+  .fl-header__drawer-sublink:hover,
+  .fl-header__drawer-sublink[aria-current='page'] {
+    color: var(--color-ink);
+  }
+
+  .fl-header__drawer-sublink--nested {
+    padding-left: 56px;
+    font-size: 0.875em;
+  }
+
+  .fl-header__drawer-foot {
+    padding: 12px var(--page-margin);
+    border-top: 1px solid var(--color-line);
+  }
+
+  .fl-header__drawer-account {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    color: var(--color-ink);
+    text-decoration: none;
+  }
+
+  .fl-header__drawer-account:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  @media (max-width: 989px) {
+    .fl-header__nav,
+    .fl-header__account {
+      display: none;
+    }
+
+    .fl-header__burger {
+      display: inline-flex;
+    }
+
+    .fl-header__bar {
+      gap: 12px;
+      min-height: 56px;
+    }
   }
 {% endstylesheet %}
 
+{% javascript %}
+  class FlHeader extends HTMLElement {
+    connectedCallback() {
+      this.drawer = this.querySelector('[data-menu-drawer]');
+      this.burger = this.querySelector('[data-menu-open]');
+      this.cartLink = this.querySelector('[data-cart-link]');
+      this.cartLive = this.querySelector('[data-cart-live]');
+      this.dropdowns = Array.from(this.querySelectorAll('[data-dropdown]'));
+
+      if (this.burger && this.drawer) {
+        this.burger.addEventListener('click', () => this.openDrawer());
+        this.drawer.addEventListener('click', (event) => {
+          if (event.target === this.drawer) this.drawer.close();
+        });
+        this.drawer.addEventListener('close', () => {
+          this.burger.setAttribute('aria-expanded', 'false');
+        });
+        this.querySelectorAll('[data-menu-close]').forEach((btn) => {
+          btn.addEventListener('click', () => this.drawer.close());
+        });
+      }
+
+      this.dropdowns.forEach((dropdown) => {
+        const summary = dropdown.querySelector('summary');
+        if (summary) summary.setAttribute('aria-expanded', String(dropdown.open));
+        dropdown.addEventListener('toggle', () => {
+          if (summary) summary.setAttribute('aria-expanded', String(dropdown.open));
+          if (dropdown.open) this.closeDropdowns(dropdown);
+        });
+        dropdown.addEventListener('focusout', (event) => {
+          if (!dropdown.open) return;
+          if (event.relatedTarget && !dropdown.contains(event.relatedTarget)) dropdown.open = false;
+        });
+        dropdown.addEventListener('keydown', (event) => {
+          if (event.key === 'Escape' && dropdown.open) {
+            event.preventDefault();
+            dropdown.open = false;
+            if (summary) summary.focus();
+          }
+        });
+      });
+
+      this._onDocClick = (event) => {
+        this.dropdowns.forEach((dropdown) => {
+          if (dropdown.open && !dropdown.contains(event.target)) dropdown.open = false;
+        });
+      };
+      document.addEventListener('click', this._onDocClick);
+
+      this._onCartChange = (event) => this.updateCartCount(event);
+      document.addEventListener('fl:cart:change', this._onCartChange);
+    }
+
+    disconnectedCallback() {
+      document.removeEventListener('click', this._onDocClick);
+      document.removeEventListener('fl:cart:change', this._onCartChange);
+    }
+
+    openDrawer() {
+      if (typeof this.drawer.showModal === 'function') {
+        this.drawer.showModal();
+      } else {
+        this.drawer.setAttribute('open', '');
+      }
+      this.burger.setAttribute('aria-expanded', 'true');
+    }
+
+    closeDropdowns(except) {
+      this.dropdowns.forEach((dropdown) => {
+        if (dropdown !== except) dropdown.open = false;
+      });
+    }
+
+    updateCartCount(event) {
+      if (!event.detail || typeof event.detail.itemCount !== 'number') return;
+      const count = event.detail.itemCount;
+      this.querySelectorAll('[data-cart-count]').forEach((el) => {
+        el.textContent = count;
+        el.classList.toggle('is-empty', count === 0);
+      });
+      const template = this.dataset.cartLabelTemplate || '';
+      if (!template) return;
+      const label = template.replace('%COUNT%', count);
+      if (this.cartLink) this.cartLink.setAttribute('aria-label', label);
+      if (this.cartLive) this.cartLive.textContent = label;
+    }
+  }
+
+  if (!customElements.get('fl-header')) customElements.define('fl-header', FlHeader);
+{% endjavascript %}
+
 {% schema %}
 {
-  "name": "t:general.header",
+  "name": "Header",
+  "tag": "header",
+  "class": "fl-header-section",
   "settings": [
     {
       "type": "link_list",
       "id": "menu",
-      "label": "t:labels.menu"
+      "label": "Menu",
+      "default": "main-menu"
     },
     {
-      "type": "link_list",
-      "id": "customer_account_menu",
-      "label": "t:labels.customer_account_menu",
-      "default": "customer-account-main-menu"
+      "type": "checkbox",
+      "id": "sticky_header",
+      "label": "Sticky header",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_search",
+      "label": "Show search",
+      "default": true
     }
-  ]
+  ],
+  "enabled_on": {
+    "groups": ["header"]
+  }
 }
 {% endschema %}

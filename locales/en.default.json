@@ -10,14 +10,30 @@
     "previous": "Previous",
     "next": "Next",
     "loading": "Loading…",
-    "go_to_slide": "Go to slide {{ index }}"
+    "go_to_slide": "Go to slide {{ index }}",
+    "main_menu": "Main menu"
   },
   "general": {
     "pagination": {
+      "label": "Pagination",
       "previous": "Previous",
       "next": "Next",
       "page": "Page {{ number }}",
       "current_page": "Page {{ number }}, current page"
+    },
+    "announcement": {
+      "label": "Announcement"
+    },
+    "footer": {
+      "navigation": "Footer navigation"
+    },
+    "localization": {
+      "country_label": "Country/region",
+      "language_label": "Language",
+      "update": "Update"
+    },
+    "payment": {
+      "methods": "Payment methods"
     },
     "newsletter": {
       "label": "Email",
@@ -87,6 +103,7 @@
     },
     "filters": {
       "title": "Filters",
+      "remove_filter": "Remove filter: {{ name }}",
       "clear_all": "Clear all",
       "apply": "Apply",
       "no_results": "No products matched your filters.",
@@ -108,6 +125,7 @@
     "note_label": "Order note",
     "note_placeholder": "How can we help?",
     "subtotal": "Subtotal",
+    "discount": "Discount",
     "taxes_note": "Taxes and shipping calculated at checkout.",
     "item_error": "Something went wrong. Please try again.",
     "drawer_title": "Your cart",

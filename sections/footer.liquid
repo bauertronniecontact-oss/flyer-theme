@@ -1,56 +1,522 @@
-<footer>
-  <div class="footer__copyright">
-    &copy;
-    {{ 'now' | date: '%Y' }}
-    {{ shop.name | link_to: routes.root_url }}, {{ powered_by_link }}
-  </div>
+<footer
+  class="fl-footer full-width"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;{% if section.settings.background == 'surface' %} background-color: var(--color-surface);{% endif %}"
+>
+  <div class="fl-footer__inner">
+    {%- if section.blocks.size > 0 -%}
+      <div class="fl-footer__grid">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'menu' -%}
+              <div class="fl-footer__col" {{ block.shopify_attributes }}>
+                {%- if block.settings.heading != blank -%}
+                  <h2 class="fl-footer__heading" id="Footer-heading-{{ block.id }}">{{ block.settings.heading | escape }}</h2>
+                {%- endif -%}
+                {%- if block.settings.menu != blank -%}
+                  <nav
+                    class="fl-footer__nav"
+                    {% if block.settings.heading != blank %}
+                      aria-labelledby="Footer-heading-{{ block.id }}"
+                    {% else %}
+                      aria-label="{{ 'general.footer.navigation' | t }}"
+                    {% endif %}
+                  >
+                    <ul class="fl-footer__menu" role="list">
+                      {%- for link in block.settings.menu.links -%}
+                        <li>
+                          <a class="fl-footer__link" href="{{ link.url }}">{{ link.title | escape }}</a>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  </nav>
+                {%- endif -%}
+              </div>
 
-  <div class="footer__links">
-    {% for link in section.settings.menu.links %}
-      {{ link.title | link_to: link.url }}
-    {% endfor %}
-  </div>
+            {%- when 'text' -%}
+              <div class="fl-footer__col" {{ block.shopify_attributes }}>
+                {%- if block.settings.heading != blank -%}
+                  <h2 class="fl-footer__heading">{{ block.settings.heading | escape }}</h2>
+                {%- endif -%}
+                {%- if block.settings.text != blank -%}
+                  <div class="fl-footer__text">{{ block.settings.text }}</div>
+                {%- endif -%}
+              </div>
 
-  <div class="footer__payment">
-    {% if section.settings.show_payment_icons %}
-      {% for type in shop.enabled_payment_types %}
-        {{ type | payment_type_svg_tag }}
-      {% endfor %}
-    {% endif %}
+            {%- when 'newsletter' -%}
+              <div class="fl-footer__col fl-footer__col--news" {{ block.shopify_attributes }}>
+                {%- if block.settings.heading != blank -%}
+                  <h2 class="fl-footer__heading">{{ block.settings.heading | escape }}</h2>
+                {%- endif -%}
+                {%- if block.settings.text != blank -%}
+                  <div class="fl-footer__text">{{ block.settings.text }}</div>
+                {%- endif -%}
+                {%- assign news_id = 'Footer-news-' | append: block.id -%}
+                {%- form 'customer', id: news_id, class: 'fl-footer__news' -%}
+                  <input type="hidden" name="contact[tags]" value="newsletter">
+                  {%- if form.posted_successfully? -%}
+                    <p
+                      class="fl-form-status fl-footer__news-status"
+                      aria-live="polite"
+                      tabindex="-1"
+                      autofocus
+                    >
+                      {{ 'general.newsletter.success' | t }}
+                    </p>
+                  {%- else -%}
+                    {%- if form.errors -%}
+                      <p
+                        class="fl-form-status fl-form-status--error fl-footer__news-status"
+                        id="{{ news_id }}-error"
+                        aria-live="polite"
+                      >
+                        {{ 'general.newsletter.error' | t }}
+                      </p>
+                    {%- endif -%}
+                    <div class="fl-footer__news-row">
+                      <label class="visually-hidden" for="{{ news_id }}-email">{{ 'general.newsletter.label' | t }}</label>
+                      <input
+                        id="{{ news_id }}-email"
+                        class="fl-input"
+                        type="email"
+                        name="contact[email]"
+                        value="{{ form.email }}"
+                        placeholder="{{ 'general.newsletter.placeholder' | t }}"
+                        required
+                        autocomplete="email"
+                        autocapitalize="off"
+                        autocorrect="off"
+                        {% if form.errors %}
+                          autofocus
+                          aria-invalid="true"
+                          aria-describedby="{{ news_id }}-error"
+                        {% endif %}
+                      >
+                      <button type="submit" class="fl-btn">{{ 'general.newsletter.submit' | t }}</button>
+                    </div>
+                  {%- endif -%}
+                {%- endform -%}
+              </div>
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+
+    <div class="fl-footer__bottom{% if section.blocks.size > 0 %} fl-footer__bottom--ruled{% endif %}">
+      {%- liquid
+        assign show_country = false
+        if section.settings.show_country_selector and localization.available_countries.size > 1
+          assign show_country = true
+        endif
+        assign show_language = false
+        if section.settings.show_language_selector and localization.available_languages.size > 1
+          assign show_language = true
+        endif
+        capture social_html
+          render 'social-icons', class: 'fl-footer__social'
+        endcapture
+        assign social_html = social_html | strip
+      -%}
+
+      {%- if social_html != blank or show_country or show_language -%}
+        <div class="fl-footer__utility">
+          {{ social_html }}
+
+          {%- if show_country or show_language -%}
+            <div class="fl-footer__localization">
+              {%- if show_country -%}
+                {%- form 'localization', id: 'Footer-country-form', class: 'fl-footer__loc-form' -%}
+                  <fl-localization>
+                    <label class="visually-hidden" for="Footer-country">{{ 'general.localization.country_label' | t }}</label>
+                    <select id="Footer-country" class="fl-select fl-footer__loc-select" name="country_code">
+                      {%- for country in localization.available_countries -%}
+                        <option
+                          value="{{ country.iso_code }}"
+                          {% if country.iso_code == localization.country.iso_code %}
+                            selected
+                          {% endif %}
+                        >
+                          {{ country.name }} ({{ country.currency.iso_code }} {{ country.currency.symbol }})
+                        </option>
+                      {%- endfor -%}
+                    </select>
+                    <button type="submit" class="fl-btn fl-btn--secondary fl-footer__loc-submit" data-loc-submit>
+                      {{ 'general.localization.update' | t }}
+                    </button>
+                  </fl-localization>
+                {%- endform -%}
+              {%- endif -%}
+
+              {%- if show_language -%}
+                {%- form 'localization', id: 'Footer-language-form', class: 'fl-footer__loc-form' -%}
+                  <fl-localization>
+                    <label class="visually-hidden" for="Footer-language">{{ 'general.localization.language_label' | t }}</label>
+                    <select id="Footer-language" class="fl-select fl-footer__loc-select" name="locale_code">
+                      {%- for language in localization.available_languages -%}
+                        <option
+                          value="{{ language.iso_code }}"
+                          lang="{{ language.iso_code }}"
+                          {% if language.iso_code == localization.language.iso_code %}
+                            selected
+                          {% endif %}
+                        >
+                          {{ language.endonym_name | capitalize }}
+                        </option>
+                      {%- endfor -%}
+                    </select>
+                    <button type="submit" class="fl-btn fl-btn--secondary fl-footer__loc-submit" data-loc-submit>
+                      {{ 'general.localization.update' | t }}
+                    </button>
+                  </fl-localization>
+                {%- endform -%}
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      <div class="fl-footer__meta">
+        <div class="fl-footer__copyright">
+          <span>&copy; {{ 'now' | date: '%Y' }}, {{ shop.name }}</span>
+          {%- if section.settings.legal_menu != blank -%}
+            <ul class="fl-footer__legal-menu" role="list">
+              {%- for link in section.settings.legal_menu.links -%}
+                <li>
+                  <a class="fl-footer__link fl-footer__link--legal" href="{{ link.url }}">{{ link.title | escape }}</a>
+                </li>
+              {%- endfor -%}
+            </ul>
+          {%- endif -%}
+        </div>
+
+        {%- if section.settings.show_payment_icons and shop.enabled_payment_types.size > 0 -%}
+          <ul class="fl-footer__payment" role="list" aria-label="{{ 'general.payment.methods' | t }}">
+            {%- for type in shop.enabled_payment_types -%}
+              <li>{{ type | payment_type_svg_tag: class: 'fl-footer__payment-icon' }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+      </div>
+    </div>
   </div>
 </footer>
 
 {% stylesheet %}
-  footer {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 2rem;
+  .fl-footer {
+    background-color: var(--color-bg);
+    border-top: 1px solid var(--color-line);
   }
-  footer a {
+
+  .fl-footer__inner {
+    width: min(calc(var(--page-width) - var(--page-margin) * 2), calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+  }
+
+  /* --- Blocks grid --- */
+  .fl-footer__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 40px 32px;
+    padding-bottom: 48px;
+  }
+
+  .fl-footer__col {
+    min-width: 0;
+  }
+
+  .fl-footer__heading {
+    margin-bottom: 14px;
+    font-size: 1em;
+    font-weight: 500;
+  }
+
+  .fl-footer__menu {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-footer__link {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--color-muted);
     text-decoration: none;
-    color: var(--color-foreground);
+    transition: color 0.15s ease;
   }
-  footer .footer__links,
-  footer .footer__payment {
+
+  .fl-footer__link:hover {
+    color: var(--color-ink);
+    text-decoration: underline;
+  }
+
+  .fl-footer__text {
+    color: var(--color-muted);
+  }
+
+  /* --- Newsletter --- */
+  .fl-footer__news {
+    margin-top: 16px;
+  }
+
+  .fl-footer__news-row {
     display: flex;
-    gap: 1rem;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .fl-footer__news-row .fl-input {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
+  .fl-footer__news-status {
+    margin-bottom: 12px;
+  }
+
+  /* --- Bottom bar --- */
+  .fl-footer__bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .fl-footer__bottom--ruled {
+    padding-top: 24px;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .fl-footer__utility {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 24px;
+  }
+
+  .fl-footer__localization {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .fl-footer__loc-form {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .fl-footer__loc-select {
+    width: auto;
+    max-width: 100%;
+  }
+
+  .fl-footer__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 24px;
+  }
+
+  .fl-footer__copyright {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 20px;
+    font-size: 0.8125em;
+    color: var(--color-muted);
+  }
+
+  .fl-footer__legal-menu {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 20px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-footer__link--legal {
+    font-size: 1em;
+  }
+
+  .fl-footer__payment {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-footer__payment-icon {
+    display: block;
+    width: 38px;
+    height: auto;
+  }
+
+  @media (max-width: 749px) {
+    .fl-footer__grid {
+      gap: 32px 24px;
+      padding-bottom: 40px;
+    }
   }
 {% endstylesheet %}
 
+{% javascript %}
+  if (!customElements.get('fl-localization')) {
+    customElements.define(
+      'fl-localization',
+      class extends HTMLElement {
+        connectedCallback() {
+          const select = this.querySelector('select');
+          const button = this.querySelector('[data-loc-submit]');
+          if (!select) return;
+          if (button) button.hidden = true;
+          select.addEventListener('change', () => {
+            const form = this.closest('form');
+            if (form) form.submit();
+          });
+        }
+      }
+    );
+  }
+{% endjavascript %}
+
 {% schema %}
 {
-  "name": "t:general.footer",
+  "name": "Footer",
   "settings": [
     {
-      "type": "link_list",
-      "id": "menu",
-      "label": "t:labels.menu"
+      "type": "select",
+      "id": "background",
+      "label": "Background",
+      "options": [
+        {
+          "value": "paper",
+          "label": "White"
+        },
+        {
+          "value": "surface",
+          "label": "Soft gray"
+        }
+      ],
+      "default": "paper"
+    },
+    {
+      "type": "header",
+      "content": "Bottom bar"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_country_selector",
+      "label": "Show country selector",
+      "info": "Only shown when the store has multiple countries enabled.",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_language_selector",
+      "label": "Show language selector",
+      "info": "Only shown when the store has multiple languages enabled.",
+      "default": false
     },
     {
       "type": "checkbox",
       "id": "show_payment_icons",
-      "label": "t:labels.show_payment_icons",
+      "label": "Show payment icons",
       "default": true
+    },
+    {
+      "type": "link_list",
+      "id": "legal_menu",
+      "label": "Policies menu",
+      "info": "Shown next to the copyright."
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "max_blocks": 4,
+  "blocks": [
+    {
+      "type": "menu",
+      "name": "Menu",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Quick links"
+        },
+        {
+          "type": "link_list",
+          "id": "menu",
+          "label": "Menu"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "About"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Share store details, announcements, or brand content with your customers.</p>"
+        }
+      ]
+    },
+    {
+      "type": "newsletter",
+      "name": "Newsletter",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Newsletter"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Subscribe for new arrivals and exclusive offers.</p>"
+        }
+      ]
     }
   ]
 }

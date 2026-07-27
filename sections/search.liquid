@@ -1,70 +1,325 @@
 {% comment %}
-  This section is used in the search template to render search results for
-  products, articles, and pages.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/search
+  Main search results section (search template).
+  Large search field, product results in the shared card grid,
+  page and article results as hairline rows, token-based pagination.
 {% endcomment %}
 
-<h1>{{ 'search.title' | t }}</h1>
+<div class="fl-search">
+  <header class="fl-search__head">
+    <h1 class="fl-search__title">{{ 'search.title' | t }}</h1>
 
-<form action="{{ routes.search_url }}" method="get" role="search">
-  <input
-    type="search"
-    size="50"
-    name="q"
-    value="{{ search.terms | escape }}"
-    placeholder="{{ 'search.placeholder' | t }}"
-  >
-  <button type="submit">{{ 'search.submit' | t }}</button>
-</form>
+    <form action="{{ routes.search_url }}" method="get" role="search" class="fl-search__form">
+      <label class="visually-hidden" for="FlSearchInput-{{ section.id }}">
+        {{ 'search.title' | t }}
+      </label>
+      <input
+        type="search"
+        id="FlSearchInput-{{ section.id }}"
+        class="fl-input fl-search__input"
+        name="q"
+        value="{{ search.terms | escape }}"
+        placeholder="{{ 'search.placeholder' | t }}"
+      >
+      <button type="submit" class="fl-btn fl-search__submit">{{ 'search.submit' | t }}</button>
+    </form>
+  </header>
 
-{% if search.performed %}
-  {% if search.results_count == 0 %}
-    <p>{{ 'search.no_results_html' | t: terms: search.terms }}</p>
-  {% else %}
-    <p>{{ 'search.results_for_html' | t: terms: search.terms, count: search.results_count }}</p>
+  {%- if search.performed -%}
+    {%- assign terms_escaped = search.terms | escape -%}
 
-    <div class="search-results">
-      {% paginate search.results by 20 %}
-        {% # Search result items may be an article, a page, or a product. %}
-        {% for result in search.results %}
-          <div class="search-result">
-            {% assign featured_image = result.featured_image | default: result.image %}
-            {% if featured_image %}
-              {% render 'image', class: 'search-result__image', image: featured_image, url: result.url, width: 400 %}
-            {% endif %}
-            <div class="search-result__content">
-              <p>
-                {{ result.title | link_to: result.url }}
-                {% if result.price %}
-                  {{ result.price | money_with_currency }}
-                {% endif %}
-              </p>
+    {%- if search.results_count == 0 -%}
+      <div class="fl-search__empty">
+        <p class="fl-search__empty-text">{{ 'search.no_results_html' | t: terms: terms_escaped }}</p>
+        <span class="fl-eyebrow">{{ 'search.suggestions' | t }}</span>
+        <div class="fl-search__empty-actions">
+          <a class="fl-btn" href="{{ routes.all_products_collection_url }}">{{ 'cart.continue_shopping' | t }}</a>
+          <a class="fl-btn fl-btn--secondary" href="{{ routes.collections_url }}">{{ 'collections.general.title' | t }}</a>
+        </div>
+      </div>
+    {%- else -%}
+      <div class="fl-search__results">
+        <p class="fl-search__count">
+          {{ 'search.results_for_html' | t: terms: terms_escaped, count: search.results_count }}
+        </p>
+
+        {%- paginate search.results by 24 -%}
+          {%- liquid
+            assign has_products = false
+            assign has_other = false
+            for result in search.results
+              if result.object_type == 'product'
+                assign has_products = true
+              else
+                assign has_other = true
+              endif
+            endfor
+          -%}
+
+          {%- if has_products -%}
+            <div class="fl-search__group">
+              {%- if has_other -%}
+                <span class="fl-eyebrow">{{ 'search.products' | t }}</span>
+              {%- endif -%}
+              <ul class="fl-product-grid fl-search__grid" role="list">
+                {%- for result in search.results -%}
+                  {%- if result.object_type == 'product' -%}
+                    <li class="fl-search__cell">
+                      {% render 'product-card', product: result %}
+                    </li>
+                  {%- endif -%}
+                {%- endfor -%}
+              </ul>
             </div>
-          </div>
-        {% endfor %}
+          {%- endif -%}
 
-        {{ paginate | default_pagination }}
-      {% endpaginate %}
-    </div>
-  {% endif %}
-{% endif %}
+          {%- if has_other -%}
+            <div class="fl-search__group">
+              <ul class="fl-search__rows" role="list">
+                {%- for result in search.results -%}
+                  {%- unless result.object_type == 'product' -%}
+                    {%- liquid
+                      if result.object_type == 'article'
+                        assign row_excerpt = result.excerpt_or_content | strip_html | truncatewords: 30
+                      else
+                        assign row_excerpt = result.content | strip_html | truncatewords: 30
+                      endif
+                    -%}
+                    <li class="fl-search__row">
+                      {%- if result.object_type == 'article' -%}
+                        <span class="fl-eyebrow fl-search__row-type">{{ 'search.articles' | t }}</span>
+                      {%- else -%}
+                        <span class="fl-eyebrow fl-search__row-type">{{ 'search.pages' | t }}</span>
+                      {%- endif -%}
+                      <h3 class="fl-search__row-title">
+                        <a class="fl-search__row-link" href="{{ result.url }}">{{ result.title | escape }}</a>
+                      </h3>
+                      {%- if row_excerpt != blank -%}
+                        <p class="fl-search__row-excerpt">{{ row_excerpt }}</p>
+                      {%- endif -%}
+                    </li>
+                  {%- endunless -%}
+                {%- endfor -%}
+              </ul>
+            </div>
+          {%- endif -%}
+
+          {%- if paginate.pages > 1 -%}
+            {%- assign current_page_str = paginate.current_page | append: '' -%}
+            <nav class="fl-pagination" aria-label="{{ 'general.pagination.label' | t }}">
+              {%- if paginate.previous -%}
+                <a class="fl-pagination__item" href="{{ paginate.previous.url }}">
+                  <span aria-hidden="true">&larr;</span>
+                  <span class="visually-hidden">{{ 'general.pagination.previous' | t }}</span>
+                </a>
+              {%- endif -%}
+              {%- for part in paginate.parts -%}
+                {%- if part.is_link -%}
+                  <a
+                    class="fl-pagination__item"
+                    href="{{ part.url }}"
+                    aria-label="{{ 'general.pagination.page' | t: number: part.title }}"
+                  >
+                    {{- part.title -}}
+                  </a>
+                {%- elsif part.title == current_page_str -%}
+                  <span
+                    class="fl-pagination__item"
+                    aria-current="page"
+                    aria-label="{{ 'general.pagination.current_page' | t: number: part.title }}"
+                  >
+                    {{- part.title -}}
+                  </span>
+                {%- else -%}
+                  <span class="fl-pagination__gap">{{ part.title }}</span>
+                {%- endif -%}
+              {%- endfor -%}
+              {%- if paginate.next -%}
+                <a class="fl-pagination__item" href="{{ paginate.next.url }}">
+                  <span aria-hidden="true">&rarr;</span>
+                  <span class="visually-hidden">{{ 'general.pagination.next' | t }}</span>
+                </a>
+              {%- endif -%}
+            </nav>
+          {%- endif -%}
+        {%- endpaginate -%}
+      </div>
+    {%- endif -%}
+  {%- endif -%}
+</div>
 
 {% stylesheet %}
-  .search-results {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  .fl-search {
+    padding-block: var(--section-spacing) calc(var(--section-spacing) * 1.5);
   }
-  .search-results .prev,
-  .search-results .page,
-  .search-results .next {
-    grid-column: 1 / -1;
+
+  .fl-search__head {
+    max-width: 680px;
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .fl-search__form {
+    display: flex;
+    gap: 12px;
+    margin-top: 32px;
+  }
+
+  .fl-search__input {
+    flex: 1;
+    min-width: 0;
+    min-height: 56px;
+    padding-inline: 20px;
+    font-size: calc(var(--font-size-base) * 1.125);
+    background: var(--color-surface);
+    border-color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .fl-search__input:focus-visible {
+    background: var(--color-bg);
+    border-color: var(--color-ink);
+  }
+
+  .fl-search__submit {
+    min-height: 56px;
+    padding-inline: 28px;
+  }
+
+  .fl-search__results {
+    margin-top: calc(var(--section-spacing) * 0.75);
+  }
+
+  .fl-search__count {
+    margin-bottom: 28px;
+    color: var(--color-muted);
+  }
+
+  .fl-search__group + .fl-search__group {
+    margin-top: var(--section-spacing);
+  }
+
+  .fl-search__group > .fl-eyebrow {
+    margin-bottom: 20px;
+  }
+
+  .fl-search__grid {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-search__cell {
+    min-width: 0;
+  }
+
+  .fl-search__rows {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-search__row {
+    padding-block: 24px;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .fl-search__row:last-child {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-search__row-type {
+    margin-bottom: 6px;
+  }
+
+  .fl-search__row-title {
+    font-size: 1em;
+    font-weight: 500;
+  }
+
+  .fl-search__row-link {
+    text-decoration: none;
+  }
+
+  .fl-search__row-link:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+  }
+
+  .fl-search__row-excerpt {
+    max-width: 65ch;
+    margin-top: 6px;
+    font-size: 0.9375em;
+    color: var(--color-muted);
+  }
+
+  .fl-search__empty {
+    max-width: 680px;
+    margin-inline: auto;
+    margin-top: calc(var(--section-spacing) * 0.75);
+    text-align: center;
+  }
+
+  .fl-search__empty .fl-eyebrow {
+    margin-top: 36px;
+    margin-bottom: 16px;
+  }
+
+  .fl-search__empty-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .fl-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-top: var(--section-spacing);
+  }
+
+  .fl-pagination__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 10px;
+    color: var(--color-muted);
+    text-decoration: none;
+    border-radius: var(--radius-btn);
+    transition: color 0.15s ease, background-color 0.15s ease;
+  }
+
+  a.fl-pagination__item:hover {
+    color: var(--color-ink);
+    background: var(--color-surface);
+  }
+
+  .fl-pagination__item[aria-current='page'] {
+    color: var(--color-ink);
+    border: 1px solid var(--color-line);
+  }
+
+  .fl-pagination__gap {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    color: var(--color-muted);
+  }
+
+  @media (max-width: 749px) {
+    .fl-search__form {
+      flex-direction: column;
+    }
   }
 {% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.search",
+  "name": "Search results",
   "settings": []
 }
 {% endschema %}

@@ -1,47 +1,823 @@
-{% comment %}
-  This section is used in the collection template to render collection page
-  listing all products within a collection.
+{%- liquid
+  assign sort_by = collection.sort_by | default: collection.default_sort_by
+  assign form_id = 'CollectionFilters-' | append: section.id
 
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/collection
-{% endcomment %}
+  assign active_count = 0
+  for f in collection.filters
+    if f.type == 'price_range'
+      if f.min_value.value or f.max_value.value
+        assign active_count = active_count | plus: 1
+      endif
+    else
+      assign active_count = active_count | plus: f.active_values.size
+    endif
+  endfor
 
-<h1>{{ collection.title }}</h1>
+  if section.settings.cols_mobile == '1'
+    assign sizes_mobile = '100vw'
+  else
+    assign sizes_mobile = '50vw'
+  endif
+  if section.settings.cols_desktop == '3'
+    assign sizes_desktop = '33vw'
+  else
+    assign sizes_desktop = '25vw'
+  endif
+  assign card_sizes = '(max-width: 749px) ' | append: sizes_mobile | append: ', (max-width: 989px) 33vw, ' | append: sizes_desktop
+-%}
 
-<div class="collection-products">
-  {% paginate collection.products by 20 %}
-    {% for product in collection.products %}
-      <div class="collection-product">
-        {% if product.featured_image %}
-          {% render 'image',
-            class: 'collection-product__image',
-            image: product.featured_image,
-            url: product.url,
-            width: 400,
-            height: 400,
-            crop: 'center'
-          %}
-        {% endif %}
-        <div class="collection-product__content">
-          <p>{{ product.title | escape | link_to: product.url }}</p>
-          <p>{{ product.price | money }}</p>
+<div
+  class="fl-collection"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+>
+  <header class="fl-collection__head">
+    <h1 class="fl-collection__title">{{ collection.title | escape }}</h1>
+    {%- if section.settings.show_description and collection.description != blank -%}
+      <div class="fl-collection__desc">{{ collection.description }}</div>
+    {%- endif -%}
+    <p class="fl-collection__count">{{ 'collections.general.product_count' | t: count: collection.products_count }}</p>
+  </header>
+
+  <fl-collection-filters class="fl-collection__toolbar">
+    <form
+      id="{{ form_id }}"
+      class="fl-toolbar"
+      method="get"
+      action="{{ collection.url }}"
+      aria-label="{{ 'collections.filters.title' | t }}"
+      data-filter-form
+    >
+      {%- if collection.filters.size > 0 -%}
+        <details class="fl-toolbar__drawer" data-facets-drawer>
+          <summary class="fl-toolbar__drawer-toggle">
+            <span>{{ 'collections.filters.title' | t }}</span>
+            {%- if active_count > 0 -%}
+              <span class="fl-facet__badge" aria-hidden="true">{{ active_count }}</span>
+              <span class="visually-hidden">{{ 'collections.filters.selected' | t: count: active_count }}</span>
+            {%- endif -%}
+            <svg class="fl-caret" aria-hidden="true" focusable="false" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </summary>
+
+          <div class="fl-toolbar__facets">
+            {%- for filter in collection.filters -%}
+              {%- if filter.type == 'price_range' -%}
+                {%- liquid
+                  assign price_active = false
+                  if filter.min_value.value or filter.max_value.value
+                    assign price_active = true
+                  endif
+                  assign max_price = filter.range_max | money
+                  assign max_placeholder = filter.range_max | money_without_currency | replace: ',', ''
+                -%}
+                <details class="fl-facet" data-facet>
+                  <summary class="fl-facet__toggle">
+                    <span class="fl-facet__name">{{ filter.label | escape }}</span>
+                    {%- if price_active -%}
+                      <span class="fl-facet__badge" aria-hidden="true">1</span>
+                      <span class="visually-hidden">{{ 'collections.filters.selected' | t: count: 1 }}</span>
+                    {%- endif -%}
+                    <svg class="fl-caret" aria-hidden="true" focusable="false" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </summary>
+                  <div class="fl-facet__panel">
+                    <p class="fl-facet__note">{{ 'collections.filters.highest_price' | t: price: max_price }}</p>
+                    <div class="fl-facet__price-row">
+                      <div class="fl-facet__price-field">
+                        <label class="fl-label" for="{{ form_id }}-price-min">{{ 'collections.filters.from' | t }}</label>
+                        <input
+                          id="{{ form_id }}-price-min"
+                          class="fl-input fl-facet__price-input"
+                          type="number"
+                          name="{{ filter.min_value.param_name }}"
+                          {%- if filter.min_value.value %}
+                            value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                          {%- endif %}
+                          placeholder="0"
+                          min="0"
+                          max="{{ max_placeholder }}"
+                          step="0.01"
+                          inputmode="decimal"
+                        >
+                      </div>
+                      <div class="fl-facet__price-field">
+                        <label class="fl-label" for="{{ form_id }}-price-max">{{ 'collections.filters.to' | t }}</label>
+                        <input
+                          id="{{ form_id }}-price-max"
+                          class="fl-input fl-facet__price-input"
+                          type="number"
+                          name="{{ filter.max_value.param_name }}"
+                          {%- if filter.max_value.value %}
+                            value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                          {%- endif %}
+                          placeholder="{{ max_placeholder }}"
+                          min="0"
+                          max="{{ max_placeholder }}"
+                          step="0.01"
+                          inputmode="decimal"
+                        >
+                      </div>
+                    </div>
+                    <button type="submit" class="fl-btn fl-btn--secondary fl-facet__price-apply">
+                      {{ 'collections.filters.apply' | t }}
+                    </button>
+                  </div>
+                </details>
+              {%- else -%}
+                <details class="fl-facet" data-facet>
+                  <summary class="fl-facet__toggle">
+                    <span class="fl-facet__name">{{ filter.label | escape }}</span>
+                    {%- if filter.active_values.size > 0 -%}
+                      <span class="fl-facet__badge" aria-hidden="true">{{ filter.active_values.size }}</span>
+                      <span class="visually-hidden">{{ 'collections.filters.selected' | t: count: filter.active_values.size }}</span>
+                    {%- endif -%}
+                    <svg class="fl-caret" aria-hidden="true" focusable="false" width="10" height="6" viewBox="0 0 10 6" fill="none"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </summary>
+                  <div class="fl-facet__panel">
+                    <ul class="fl-facet__list" role="list">
+                      {%- for value in filter.values -%}
+                        <li class="fl-facet__item">
+                          <label class="fl-facet__option{% if value.count == 0 and value.active == false %} fl-facet__option--empty{% endif %}">
+                            <input
+                              type="checkbox"
+                              class="fl-facet__checkbox"
+                              name="{{ value.param_name }}"
+                              value="{{ value.value | escape }}"
+                              {% if value.active %}checked{% endif %}
+                              {% if value.count == 0 and value.active == false %}disabled{% endif %}
+                            >
+                            <span class="fl-facet__option-label">{{ value.label | escape }}</span>
+                            <span class="fl-facet__option-count">{{ value.count }}</span>
+                          </label>
+                        </li>
+                      {%- endfor -%}
+                    </ul>
+                  </div>
+                </details>
+              {%- endif -%}
+            {%- endfor -%}
+
+            <noscript>
+              <button type="submit" class="fl-btn fl-toolbar__apply">
+                {{ 'collections.filters.apply' | t }}
+              </button>
+            </noscript>
+          </div>
+        </details>
+      {%- endif -%}
+
+      <div class="fl-toolbar__end">
+        <span class="fl-toolbar__count">{{ 'collections.general.product_count' | t: count: collection.products_count }}</span>
+        <div class="fl-toolbar__sort">
+          <label class="fl-toolbar__sort-label" for="{{ form_id }}-sort">{{ 'collections.sorting.title' | t }}</label>
+          <select id="{{ form_id }}-sort" class="fl-select" name="sort_by" data-sort>
+            {%- for option in collection.sort_options -%}
+              <option value="{{ option.value | escape }}" {% if option.value == sort_by %}selected{% endif %}>
+                {{- option.name | escape -}}
+              </option>
+            {%- endfor -%}
+          </select>
+          <noscript>
+            <button type="submit" class="fl-btn fl-btn--secondary">{{ 'collections.filters.apply' | t }}</button>
+          </noscript>
         </div>
       </div>
-    {% endfor %}
+    </form>
 
-    {{ paginate | default_pagination }}
-  {% endpaginate %}
+    {%- if active_count > 0 -%}
+      <div class="fl-active-filters">
+        <ul class="fl-active-filters__list" role="list">
+          {%- for filter in collection.filters -%}
+            {%- if filter.type == 'price_range' -%}
+              {%- if filter.min_value.value or filter.max_value.value -%}
+                {%- assign price_min = filter.min_value.value | default: 0 | money -%}
+                {%- assign price_max = filter.max_value.value | default: filter.range_max | money -%}
+                <li>
+                  <a class="fl-active-filters__pill" href="{{ filter.url_to_remove }}">
+                    <span>{{ price_min }} – {{ price_max }}</span>
+                    <span class="visually-hidden">{{ 'collections.filters.remove_filter' | t: name: filter.label }}</span>
+                    <svg aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </a>
+                </li>
+              {%- endif -%}
+            {%- else -%}
+              {%- for value in filter.active_values -%}
+                <li>
+                  <a class="fl-active-filters__pill" href="{{ value.url_to_remove }}">
+                    <span>{{ filter.label | escape }}: {{ value.label | escape }}</span>
+                    <span class="visually-hidden">{{ 'collections.filters.remove_filter' | t: name: value.label }}</span>
+                    <svg aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 1l8 8M9 1L1 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                  </a>
+                </li>
+              {%- endfor -%}
+            {%- endif -%}
+          {%- endfor -%}
+          <li>
+            <a class="fl-active-filters__clear" href="{{ collection.url }}?sort_by={{ sort_by }}">
+              {{- 'collections.filters.clear_all' | t -}}
+            </a>
+          </li>
+        </ul>
+      </div>
+    {%- endif -%}
+  </fl-collection-filters>
+
+  {%- paginate collection.products by 24 -%}
+    {%- if collection.products.size == 0 -%}
+      <div class="fl-collection__empty">
+        {%- if active_count > 0 -%}
+          <p class="fl-collection__empty-text">{{ 'collections.filters.no_results' | t }}</p>
+          <a class="fl-btn fl-btn--secondary" href="{{ collection.url }}?sort_by={{ sort_by }}">
+            {{- 'collections.filters.clear_all' | t -}}
+          </a>
+        {%- else -%}
+          <p class="fl-collection__empty-text">{{ 'collections.general.no_products' | t }}</p>
+        {%- endif -%}
+      </div>
+    {%- else -%}
+      <div
+        class="fl-product-grid fl-collection__grid"
+        style="--grid-cols: {{ section.settings.cols_desktop }}; --grid-cols-mobile: {{ section.settings.cols_mobile }}"
+      >
+        {%- for product in collection.products -%}
+          {% render 'product-card', product: product, sizes: card_sizes %}
+        {%- endfor -%}
+      </div>
+
+      {%- if paginate.pages > 1 -%}
+        {%- assign current_page_str = paginate.current_page | append: '' -%}
+        <nav class="fl-pagination" aria-label="{{ 'general.pagination.label' | t }}">
+          {%- if paginate.previous -%}
+            <a class="fl-pagination__item fl-pagination__item--label" href="{{ paginate.previous.url }}">
+              {{- 'general.pagination.previous' | t -}}
+            </a>
+          {%- endif -%}
+          {%- for part in paginate.parts -%}
+            {%- if part.is_link -%}
+              <a
+                class="fl-pagination__item"
+                href="{{ part.url }}"
+                aria-label="{{ 'general.pagination.page' | t: number: part.title }}"
+              >
+                {{- part.title -}}
+              </a>
+            {%- elsif part.title == current_page_str -%}
+              <span class="fl-pagination__item fl-pagination__item--current" aria-current="page">
+                <span class="visually-hidden">{{ 'general.pagination.current_page' | t: number: part.title }}</span>
+                <span aria-hidden="true">{{ part.title }}</span>
+              </span>
+            {%- else -%}
+              <span class="fl-pagination__gap" aria-hidden="true">{{ part.title }}</span>
+            {%- endif -%}
+          {%- endfor -%}
+          {%- if paginate.next -%}
+            <a class="fl-pagination__item fl-pagination__item--label" href="{{ paginate.next.url }}">
+              {{- 'general.pagination.next' | t -}}
+            </a>
+          {%- endif -%}
+        </nav>
+      {%- endif -%}
+    {%- endif -%}
+  {%- endpaginate -%}
 </div>
 
 {% stylesheet %}
-  .collection-products {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(500px, 1fr));
+  .fl-collection__head {
+    margin-block-end: 24px;
+  }
+
+  .fl-collection__desc {
+    max-width: 60ch;
+    margin-block-start: 12px;
+    color: var(--color-muted);
+  }
+
+  .fl-collection__count {
+    margin-block-start: 10px;
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+
+  fl-collection-filters {
+    display: block;
+  }
+
+  .fl-toolbar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    padding-block: 10px;
+    border-block: 1px solid var(--color-line);
+  }
+
+  .fl-caret {
+    flex: none;
+    transition: transform 0.2s ease;
+  }
+
+  .fl-toolbar__drawer {
+    min-width: 0;
+  }
+
+  .fl-toolbar__drawer-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 8px 14px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-btn);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .fl-toolbar__drawer-toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  .fl-toolbar__drawer-toggle:hover {
+    border-color: var(--color-ink);
+  }
+
+  .fl-toolbar__drawer[open] > .fl-toolbar__drawer-toggle .fl-caret {
+    transform: rotate(180deg);
+  }
+
+  .fl-toolbar__facets {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 40;
+    max-height: 70vh;
+    overflow-y: auto;
+    padding: 4px 16px 16px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 40px rgb(0 0 0 / 12%);
+  }
+
+  .fl-facet {
+    border-block-end: 1px solid var(--color-line);
+  }
+
+  .fl-facet:last-of-type {
+    border-block-end: 0;
+  }
+
+  .fl-facet__toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding-block: 10px;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .fl-facet__toggle::-webkit-details-marker {
+    display: none;
+  }
+
+  .fl-facet__name {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .fl-facet[open] > .fl-facet__toggle .fl-caret {
+    transform: rotate(180deg);
+  }
+
+  .fl-facet__badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding-inline: 5px;
+    border-radius: 999px;
+    background: var(--color-ink);
+    color: var(--color-bg);
+    font-size: 0.6875em;
+    font-weight: 500;
+  }
+
+  .fl-facet__panel {
+    padding-block-end: 14px;
+  }
+
+  .fl-facet__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .fl-facet__option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  .fl-facet__option--empty {
+    color: var(--color-muted);
+    cursor: default;
+  }
+
+  .fl-facet__checkbox {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--color-ink);
+  }
+
+  .fl-facet__option-count {
+    margin-inline-start: auto;
+    font-size: 0.8125em;
+    color: var(--color-muted);
+  }
+
+  .fl-facet__note {
+    margin-block-end: 12px;
+    font-size: 0.8125em;
+    color: var(--color-muted);
+  }
+
+  .fl-facet__price-row {
+    display: flex;
+    gap: 12px;
+  }
+
+  .fl-facet__price-field {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .fl-facet__price-apply {
+    margin-block-start: 12px;
+  }
+
+  .fl-toolbar__apply {
+    width: 100%;
+    margin-block-start: 14px;
+  }
+
+  .fl-toolbar__end {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-inline-start: auto;
+    flex: none;
+  }
+
+  .fl-toolbar__count {
+    font-size: 0.875em;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  .fl-toolbar__sort {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .fl-toolbar__sort-label {
+    font-size: 0.875em;
+    color: var(--color-muted);
+    white-space: nowrap;
+  }
+
+  .fl-toolbar__sort .fl-select {
+    width: auto;
+    padding-block: 8px;
+  }
+
+  /* Desktop with JS: drawer forced open, facets as a horizontal row of dropdowns */
+  .fl-toolbar__drawer--inline > .fl-toolbar__drawer-toggle {
+    display: none;
+  }
+
+  .fl-toolbar__drawer--inline .fl-toolbar__facets {
+    position: static;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    max-height: none;
+    overflow: visible;
+    padding: 0;
+    background: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .fl-toolbar__drawer--inline .fl-facet {
+    position: relative;
+    border-block-end: 0;
+  }
+
+  .fl-toolbar__drawer--inline .fl-facet__toggle {
+    padding: 8px 14px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-btn);
+  }
+
+  .fl-toolbar__drawer--inline .fl-facet__toggle:hover {
+    border-color: var(--color-ink);
+  }
+
+  .fl-toolbar__drawer--inline .fl-facet__name {
+    flex: none;
+  }
+
+  .fl-toolbar__drawer--inline .fl-facet__panel {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 30;
+    min-width: 260px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding: 6px 16px 16px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+    box-shadow: 0 8px 40px rgb(0 0 0 / 12%);
+  }
+
+  .fl-active-filters {
+    padding-block: 14px 0;
+  }
+
+  .fl-active-filters__list {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .fl-active-filters__pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 6px 16px;
+    background: var(--color-surface);
+    border-radius: 999px;
+    font-size: 0.875em;
+    text-decoration: none;
+    transition: background 0.15s ease;
+  }
+
+  .fl-active-filters__pill:hover {
+    background: var(--color-line);
+  }
+
+  .fl-active-filters__clear {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    margin-inline-start: 4px;
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+
+  .fl-collection__grid {
+    margin-block-start: 28px;
+  }
+
+  .fl-collection__empty {
+    padding-block: 72px;
+    text-align: center;
+  }
+
+  .fl-collection__empty-text {
+    margin-block-end: 20px;
+    color: var(--color-muted);
+  }
+
+  .fl-pagination {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    margin-block-start: 48px;
+  }
+
+  .fl-pagination__item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    border-radius: var(--radius-btn);
+    text-decoration: none;
+  }
+
+  .fl-pagination__item:hover {
+    background: var(--color-surface);
+  }
+
+  .fl-pagination__item--current {
+    border: 1px solid var(--color-ink);
+  }
+
+  .fl-pagination__gap {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 24px;
+    min-height: 44px;
+    color: var(--color-muted);
+  }
+
+  @media (max-width: 749px) {
+    .fl-toolbar__count {
+      display: none;
+    }
   }
 {% endstylesheet %}
 
+{% javascript %}
+  class FlCollectionFilters extends HTMLElement {
+    connectedCallback() {
+      this.form = this.querySelector('[data-filter-form]');
+      this.drawer = this.querySelector('[data-facets-drawer]');
+      this.facets = Array.from(this.querySelectorAll('[data-facet]'));
+      this.mq = window.matchMedia('(min-width: 750px)');
+
+      this.onMqChange = this.syncLayout.bind(this);
+      this.onDocClick = this.handleDocClick.bind(this);
+      this.onKeydown = this.handleKeydown.bind(this);
+      this.onFormChange = this.handleFormChange.bind(this);
+
+      if (this.form) this.form.addEventListener('change', this.onFormChange);
+
+      this.facets.forEach((facet) => {
+        facet.addEventListener('toggle', () => {
+          if (!facet.open) return;
+          this.facets.forEach((other) => {
+            if (other !== facet) other.open = false;
+          });
+        });
+      });
+
+      document.addEventListener('click', this.onDocClick);
+      this.addEventListener('keydown', this.onKeydown);
+      if (this.mq.addEventListener) this.mq.addEventListener('change', this.onMqChange);
+
+      this.syncLayout();
+    }
+
+    disconnectedCallback() {
+      document.removeEventListener('click', this.onDocClick);
+      if (this.mq && this.mq.removeEventListener) this.mq.removeEventListener('change', this.onMqChange);
+    }
+
+    syncLayout() {
+      if (!this.drawer) return;
+      if (this.mq.matches) {
+        this.drawer.setAttribute('open', '');
+        this.drawer.classList.add('fl-toolbar__drawer--inline');
+      } else {
+        this.drawer.classList.remove('fl-toolbar__drawer--inline');
+        this.drawer.removeAttribute('open');
+      }
+    }
+
+    handleFormChange(event) {
+      const target = event.target;
+      if (!target) return;
+      if (target.classList.contains('fl-facet__checkbox') || target.hasAttribute('data-sort')) {
+        this.submitForm();
+      }
+    }
+
+    submitForm() {
+      if (!this.form) return;
+      if (this.form.requestSubmit) this.form.requestSubmit();
+      else this.form.submit();
+    }
+
+    handleDocClick(event) {
+      if (this.contains(event.target)) return;
+      this.closeFacets();
+      if (this.drawer && !this.drawer.classList.contains('fl-toolbar__drawer--inline')) {
+        this.drawer.removeAttribute('open');
+      }
+    }
+
+    handleKeydown(event) {
+      if (event.key !== 'Escape') return;
+      const openFacet = this.facets.find((facet) => facet.open);
+      if (openFacet) {
+        openFacet.open = false;
+        const summary = openFacet.querySelector('summary');
+        if (summary) summary.focus();
+        return;
+      }
+      if (this.drawer && this.drawer.open && !this.drawer.classList.contains('fl-toolbar__drawer--inline')) {
+        this.drawer.removeAttribute('open');
+        const toggle = this.drawer.querySelector('summary');
+        if (toggle) toggle.focus();
+      }
+    }
+
+    closeFacets() {
+      this.facets.forEach((facet) => {
+        facet.open = false;
+      });
+    }
+  }
+
+  if (!customElements.get('fl-collection-filters')) {
+    customElements.define('fl-collection-filters', FlCollectionFilters);
+  }
+{% endjavascript %}
+
 {% schema %}
 {
-  "name": "t:general.collection",
-  "settings": []
+  "name": "Collection",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_description",
+      "label": "Show collection description",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Product grid"
+    },
+    {
+      "type": "select",
+      "id": "cols_desktop",
+      "label": "Columns on desktop",
+      "options": [
+        {
+          "value": "3",
+          "label": "3 columns"
+        },
+        {
+          "value": "4",
+          "label": "4 columns"
+        }
+      ],
+      "default": "4"
+    },
+    {
+      "type": "select",
+      "id": "cols_mobile",
+      "label": "Columns on mobile",
+      "options": [
+        {
+          "value": "1",
+          "label": "1 column"
+        },
+        {
+          "value": "2",
+          "label": "2 columns"
+        }
+      ],
+      "default": "2"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ]
 }
 {% endschema %}

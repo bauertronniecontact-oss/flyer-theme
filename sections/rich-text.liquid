@@ -1,0 +1,199 @@
+<section
+  class="fl-richtext full-width{% if section.settings.background == 'surface' %} fl-richtext--surface{% endif %}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  <div class="fl-richtext__inner">
+    {%- for block in section.blocks -%}
+      {%- case block.type -%}
+        {%- when 'eyebrow' -%}
+          {%- if block.settings.text != blank -%}
+            <span class="fl-eyebrow" {{ block.shopify_attributes }}>{{ block.settings.text | escape }}</span>
+          {%- endif -%}
+
+        {%- when 'heading' -%}
+          {%- if block.settings.heading != blank -%}
+            <h2 class="fl-richtext__heading" {{ block.shopify_attributes }}>{{ block.settings.heading | escape }}</h2>
+          {%- endif -%}
+
+        {%- when 'text' -%}
+          {%- if block.settings.text != blank -%}
+            <div class="fl-richtext__text" {{ block.shopify_attributes }}>{{ block.settings.text }}</div>
+          {%- endif -%}
+
+        {%- when 'button' -%}
+          {%- if block.settings.label != blank -%}
+            <div class="fl-richtext__cta" {{ block.shopify_attributes }}>
+              <a
+                class="fl-btn{% if block.settings.style == 'secondary' %} fl-btn--secondary{% endif %}"
+                href="{{ block.settings.link | default: '#' }}"
+              >{{ block.settings.label | escape }}</a>
+            </div>
+          {%- endif -%}
+      {%- endcase -%}
+    {%- endfor -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-richtext {
+    background-color: var(--color-bg);
+  }
+
+  .fl-richtext--surface {
+    background-color: var(--color-surface);
+  }
+
+  .fl-richtext__inner {
+    width: min(720px, calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+    text-align: center;
+  }
+
+  .fl-richtext__heading {
+    margin-bottom: 16px;
+  }
+
+  .fl-richtext__text > p + p {
+    margin-top: 1em;
+  }
+
+  .fl-richtext__cta {
+    margin-top: 28px;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Rich text",
+  "settings": [
+    {
+      "type": "select",
+      "id": "background",
+      "label": "Background",
+      "options": [
+        {
+          "value": "default",
+          "label": "White"
+        },
+        {
+          "value": "surface",
+          "label": "Soft gray"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "eyebrow",
+      "name": "Eyebrow",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Eyebrow",
+          "default": "Our story"
+        }
+      ]
+    },
+    {
+      "type": "heading",
+      "name": "Heading",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Talk about your brand"
+        }
+      ]
+    },
+    {
+      "type": "text",
+      "name": "Text",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Share information about your brand with your customers. Describe a product, make announcements, or welcome customers to your store.</p>"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "Button",
+      "settings": [
+        {
+          "type": "text",
+          "id": "label",
+          "label": "Button label",
+          "default": "Learn more"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Button link"
+        },
+        {
+          "type": "select",
+          "id": "style",
+          "label": "Button style",
+          "options": [
+            {
+              "value": "primary",
+              "label": "Primary"
+            },
+            {
+              "value": "secondary",
+              "label": "Secondary"
+            }
+          ],
+          "default": "primary"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Rich text",
+      "blocks": [
+        {
+          "type": "heading"
+        },
+        {
+          "type": "text"
+        },
+        {
+          "type": "button"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

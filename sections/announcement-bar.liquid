@@ -1,0 +1,337 @@
+{%- liquid
+  assign msg_count = 0
+  for block in section.blocks
+    if block.settings.text != blank
+      assign msg_count = msg_count | plus: 1
+    endif
+  endfor
+-%}
+
+{%- if section.blocks.size > 0 -%}
+  <fl-announcement-bar
+    class="fl-announce full-width{% if section.settings.invert %} fl-announce--invert{% endif %}"
+    role="region"
+    aria-label="{{ 'general.announcement.label' | t }}"
+    data-interval="{{ section.settings.rotate_interval }}"
+  >
+    <div class="fl-announce__inner">
+      {%- if msg_count > 1 -%}
+        <button
+          type="button"
+          class="fl-announce__btn fl-announce__btn--prev"
+          data-prev
+          aria-controls="Announcements-{{ section.id }}"
+        >
+          {{ 'accessibility.previous' | t }}
+        </button>
+      {%- endif -%}
+
+      <div
+        class="fl-announce__rotator"
+        id="Announcements-{{ section.id }}"
+        data-rotator
+        aria-live="off"
+        aria-atomic="true"
+      >
+        {%- assign shown = 0 -%}
+        {%- for block in section.blocks -%}
+          {%- if block.settings.text != blank -%}
+            {%- assign shown = shown | plus: 1 -%}
+            {%- if block.settings.link != blank -%}
+              <a
+                class="fl-announce__msg fl-announce__msg--link{% if shown == 1 %} is-active{% endif %}"
+                href="{{ block.settings.link }}"
+                data-announcement
+                {{ block.shopify_attributes }}
+              >{{ block.settings.text | escape }}</a>
+            {%- else -%}
+              <p
+                class="fl-announce__msg{% if shown == 1 %} is-active{% endif %}"
+                data-announcement
+                {{ block.shopify_attributes }}
+              >{{ block.settings.text | escape }}</p>
+            {%- endif -%}
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+
+      {%- if msg_count > 1 -%}
+        <button
+          type="button"
+          class="fl-announce__btn fl-announce__btn--next"
+          data-next
+          aria-controls="Announcements-{{ section.id }}"
+        >
+          {{ 'accessibility.next' | t }}
+        </button>
+      {%- endif -%}
+    </div>
+  </fl-announcement-bar>
+{%- endif -%}
+
+{% stylesheet %}
+  .fl-announce {
+    display: block;
+    font-size: 0.8125em;
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-announce--invert {
+    background-color: var(--color-ink);
+    color: var(--color-bg);
+    border-bottom: 0;
+  }
+
+  .fl-announce :focus-visible {
+    outline-color: currentcolor;
+  }
+
+  .fl-announce__inner {
+    position: relative;
+  }
+
+  .fl-announce__rotator {
+    display: grid;
+  }
+
+  .fl-announce__msg {
+    grid-area: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    margin: 0;
+    padding: 10px var(--page-margin);
+    text-align: center;
+    opacity: 0;
+    visibility: hidden;
+    transition:
+      opacity 0.3s ease,
+      visibility 0s linear 0.3s;
+  }
+
+  .fl-announce__msg.is-active {
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.3s ease;
+  }
+
+  .fl-announce__msg--link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .fl-announce__msg--link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* Prev/next: visually hidden until keyboard focus reveals them */
+  .fl-announce__btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 1px;
+    height: 1px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: 0.875em;
+    cursor: pointer;
+  }
+
+  .fl-announce__btn--prev {
+    left: 8px;
+  }
+
+  .fl-announce__btn--next {
+    right: 8px;
+  }
+
+  .fl-announce__btn:focus-visible {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    height: auto;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0 12px;
+    overflow: visible;
+    clip: auto;
+    z-index: 1;
+    background-color: var(--color-bg);
+    border-radius: var(--radius-btn);
+  }
+
+  .fl-announce--invert .fl-announce__btn:focus-visible {
+    background-color: var(--color-ink);
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('fl-announcement-bar')) {
+    customElements.define(
+      'fl-announcement-bar',
+      class extends HTMLElement {
+        connectedCallback() {
+          this.messages = Array.from(this.querySelectorAll('[data-announcement]'));
+          this.rotator = this.querySelector('[data-rotator]');
+          if (this.messages.length < 2) return;
+
+          this.index = 0;
+          this.timer = null;
+          this.delay = 5000;
+          const seconds = parseInt(this.dataset.interval, 10);
+          if (seconds > 0) this.delay = seconds * 1000;
+          this.reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+          this.onMotionChange = () => {
+            if (this.reducedMotion.matches) {
+              this.pause();
+            } else {
+              this.play();
+            }
+          };
+          this.reducedMotion.addEventListener('change', this.onMotionChange);
+
+          const prev = this.querySelector('[data-prev]');
+          const next = this.querySelector('[data-next]');
+          if (prev) prev.addEventListener('click', () => this.step(-1));
+          if (next) next.addEventListener('click', () => this.step(1));
+
+          this.addEventListener('mouseenter', () => this.pause());
+          this.addEventListener('mouseleave', () => {
+            if (!this.contains(document.activeElement)) this.play();
+          });
+          this.addEventListener('focusin', () => this.pause());
+          this.addEventListener('focusout', (event) => {
+            if (!this.contains(event.relatedTarget)) this.play();
+          });
+
+          if (window.Shopify && window.Shopify.designMode) {
+            this.onBlockSelect = (event) => {
+              const i = this.messages.indexOf(event.target);
+              if (i > -1) {
+                this.pause();
+                this.show(i);
+              }
+            };
+            this.onBlockDeselect = (event) => {
+              if (this.messages.indexOf(event.target) > -1) this.play();
+            };
+            document.addEventListener('shopify:block:select', this.onBlockSelect);
+            document.addEventListener('shopify:block:deselect', this.onBlockDeselect);
+          }
+
+          this.play();
+        }
+
+        disconnectedCallback() {
+          if (this.timer) clearInterval(this.timer);
+          if (this.reducedMotion && this.onMotionChange) {
+            this.reducedMotion.removeEventListener('change', this.onMotionChange);
+          }
+          if (this.onBlockSelect) document.removeEventListener('shopify:block:select', this.onBlockSelect);
+          if (this.onBlockDeselect) document.removeEventListener('shopify:block:deselect', this.onBlockDeselect);
+        }
+
+        show(i) {
+          const count = this.messages.length;
+          this.index = ((i % count) + count) % count;
+          this.messages.forEach((msg, j) => msg.classList.toggle('is-active', j === this.index));
+        }
+
+        step(delta) {
+          if (this.rotator) this.rotator.setAttribute('aria-live', 'polite');
+          this.show(this.index + delta);
+        }
+
+        play() {
+          if (this.reducedMotion.matches) return;
+          if (this.timer) clearInterval(this.timer);
+          if (this.rotator) this.rotator.setAttribute('aria-live', 'off');
+          this.timer = setInterval(() => this.show(this.index + 1), this.delay);
+        }
+
+        pause() {
+          if (this.timer) clearInterval(this.timer);
+          this.timer = null;
+          if (this.rotator) this.rotator.setAttribute('aria-live', 'polite');
+        }
+      }
+    );
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Announcement bar",
+  "max_blocks": 3,
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "invert",
+      "label": "Invert colors",
+      "info": "Dark bar with light text.",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "rotate_interval",
+      "min": 3,
+      "max": 10,
+      "step": 1,
+      "unit": "s",
+      "label": "Rotation speed",
+      "info": "Used when there is more than one announcement.",
+      "default": 5
+    }
+  ],
+  "blocks": [
+    {
+      "type": "announcement",
+      "name": "Announcement",
+      "settings": [
+        {
+          "type": "text",
+          "id": "text",
+          "label": "Text",
+          "default": "Free shipping on all orders"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link",
+          "info": "Makes the whole bar clickable."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Announcement bar",
+      "blocks": [
+        {
+          "type": "announcement"
+        },
+        {
+          "type": "announcement",
+          "settings": {
+            "text": "New arrivals just landed"
+          }
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}
