@@ -13,6 +13,13 @@ body {
   min-height: 100svh;
 }
 
+/* Completes the sticky-footer pattern: without this the footer floats up on
+   short pages instead of sitting at the bottom of the viewport. */
+main {
+  flex: 1 0 auto;
+  min-width: 0;
+}
+
 html:has(dialog[scroll-lock][open], details[scroll-lock][open]) {
   overflow: hidden;
 }
@@ -111,6 +118,12 @@ a {
   color: var(--color-bg);
 }
 
+/* Offset used by sticky columns so they clear the sticky header.
+   Overridden by the header section when sticky mode is on. */
+:root {
+  --sticky-offset: 24px;
+}
+
 /* --- Accessibility utilities --- */
 .visually-hidden {
   position: absolute !important;
@@ -198,7 +211,7 @@ a {
   min-height: 44px;
   color: var(--color-ink);
   background: var(--color-bg);
-  border: 1px solid var(--color-line);
+  border: 1px solid var(--color-control-border);
   border-radius: var(--radius-input);
 }
 .fl-input:focus-visible,
@@ -322,11 +335,18 @@ a {
   border-radius: var(--radius-card);
   background: var(--color-surface);
 }
-.fl-card__media img {
+.fl-card__media img,
+.fl-card__placeholder {
   width: 100%;
   aspect-ratio: var(--card-ratio);
   object-fit: cover;
   transition: transform 0.4s ease;
+}
+
+/* Shopify's placeholder SVGs inherit `fill`, which defaults to solid black. */
+.fl-card__placeholder {
+  fill: var(--color-muted);
+  opacity: 0.35;
 }
 .fl-card:hover .fl-card__media img {
   transform: scale(1.03);

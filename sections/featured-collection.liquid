@@ -55,7 +55,11 @@
         {% render 'product-card', product: product, sizes: card_sizes %}
       {%- endfor -%}
     </div>
-  {%- elsif col == blank -%}
+  {%- else -%}
+    {%- comment -%}
+      Also covers a chosen but empty collection, which used to render a heading
+      with nothing under it.
+    {%- endcomment -%}
     <div
       class="fl-product-grid"
       style="--grid-cols: {{ cols }}; --grid-cols-tablet: 3; --grid-cols-mobile: 2"

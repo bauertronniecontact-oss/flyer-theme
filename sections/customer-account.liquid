@@ -30,7 +30,7 @@
                   </div>
                   <div class="fl-account__cell">
                     <span class="fl-account__cell-label">{{ 'customer.account.date' | t }}</span>
-                    {{ order.created_at | date: '%B %-d, %Y' }}
+                    {{ order.created_at | date: format: 'month_day_year' }}
                   </div>
                   <div class="fl-account__cell">
                     <span class="fl-account__cell-label">{{ 'customer.account.payment_status' | t }}</span>

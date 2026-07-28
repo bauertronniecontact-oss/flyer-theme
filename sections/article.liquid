@@ -8,7 +8,7 @@
       <p class="fl-eyebrow">
         {%- if section.settings.show_date -%}
           <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">
-            {{- article.published_at | date: '%B %-d, %Y' -}}
+            {{- article.published_at | date: format: 'month_day_year' -}}
           </time>
         {%- endif -%}
         {%- if section.settings.show_date and section.settings.show_author %} — {% endif -%}
@@ -51,7 +51,7 @@
             {%- for comment in article.comments -%}
               <li class="fl-comment">
                 <p class="fl-comment__meta">
-                  {{ comment.author }} — {{ comment.created_at | date: '%B %-d, %Y' }}
+                  {{ comment.author }} — {{ comment.created_at | date: format: 'month_day_year' }}
                 </p>
                 <div class="fl-comment__body">{{ comment.content }}</div>
               </li>

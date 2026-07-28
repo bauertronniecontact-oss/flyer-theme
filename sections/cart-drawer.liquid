@@ -364,7 +364,7 @@
   .fl-cart__qty {
     display: inline-flex;
     align-items: center;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-control-border);
     border-radius: var(--radius-btn);
   }
 
@@ -404,9 +404,13 @@
   }
 
   .fl-cart__remove {
-    display: inline-block;
-    padding: 10px 0;
-    margin: -10px 0;
+    display: inline-flex;
+    align-items: center;
+    /* 44px minimum touch target, absorbed by negative margin so the visual
+       rhythm is unchanged. */
+    min-height: 44px;
+    padding-block: 0;
+    margin-block: -12px;
     font-size: 0.8125em;
     color: var(--color-muted);
     transition: color 0.15s ease;
@@ -562,6 +566,10 @@
     handleDocSubmit(event) {
       const form = event.target.closest('[data-quick-add], [data-product-form]');
       if (!form) return;
+      // While a previous add is still in flight, let the browser submit natively
+      // instead of swallowing the event: preventing it and then bailing on the
+      // isBusy guard lost the second add entirely on a fast double click.
+      if (this.isBusy) return;
       event.preventDefault();
       this.addToCart(form, event.submitter);
     }
@@ -635,15 +643,18 @@
 
     setLoading(button) {
       if (!button) return function () {};
-      const original = button.innerHTML;
-      const addingText = this.dataset.addingText;
+      // Only the label's text is swapped. Overwriting the button's innerHTML
+      // detached the [data-add-label] node that <fl-product> holds a reference
+      // to, so the product button stayed stuck on "Adding…" after the first add.
+      const label = button.querySelector('[data-add-label]') || button;
+      const original = label.textContent;
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
-      button.textContent = addingText;
+      label.textContent = this.dataset.addingText;
       return function () {
         button.disabled = false;
         button.removeAttribute('aria-busy');
-        button.innerHTML = original;
+        label.textContent = original;
       };
     }
 

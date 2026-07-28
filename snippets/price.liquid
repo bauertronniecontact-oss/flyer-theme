@@ -1,17 +1,29 @@
 {% doc %}
   Renders a consistent price (sale, sold out, "from", unit price).
 
-  @param {object} product - product object (takes priority)
+  Pass `variant` on the product page so the price tracks the selected variant.
+  Without it the product-level (minimum) price is shown, which is what listings
+  want alongside the "From" prefix.
+
+  @param {object} product - product object
+  @param {object} [variant] - show this variant's price instead of the product minimum
   @param {number} [price] - raw price when no product is given
   @param {boolean} [show_from] - prefix "From" when the price varies (default true)
 
   @example
   {% render 'price', product: product %}
+  {% render 'price', product: product, variant: current_variant, show_from: false %}
 {% enddoc %}
 
 {%- liquid
   assign show_from = show_from | default: true, allow_false: true
-  if product
+  if variant
+    assign p = variant.price
+    assign compare = variant.compare_at_price
+    assign varies = false
+    assign available = variant.available
+    assign sel_variant = variant
+  elsif product
     assign p = product.price
     assign compare = product.compare_at_price
     assign varies = product.price_varies
@@ -30,29 +42,35 @@
   endif
 -%}
 
-<span class="fl-price{% if on_sale %} fl-price--sale{% endif %}">
-  {%- if product and available == false -%}
-    <span class="fl-price__current">{{ 'products.card.sold_out' | t }}</span>
-  {%- else -%}
-    {%- if show_from and varies -%}
-      <span class="fl-price__from">{{ 'products.card.from' | t }}</span>
-    {%- endif -%}
-    <span class="fl-price__current">{{ p | money }}</span>
-    {%- if on_sale -%}
-      <s class="fl-price__compare">
-        <span class="visually-hidden">{{ 'products.card.regular_price' | t }}</span>
-        {{- compare | money -}}
-      </s>
-    {%- endif -%}
-    {%- if sel_variant.unit_price_measurement -%}
-      <span class="fl-price__unit">
-        {{ sel_variant.unit_price | money }}
-        /
-        {%- if sel_variant.unit_price_measurement.reference_value != 1 -%}
-          {{ sel_variant.unit_price_measurement.reference_value }}
-        {%- endif -%}
-        {{ sel_variant.unit_price_measurement.reference_unit }}
-      </span>
-    {%- endif -%}
+{%- comment -%}
+  The amount is always rendered, including when unavailable: hiding it left the
+  product page with no price at all on a fully sold-out product. Availability is
+  conveyed by the card badge, the buy button, and the hidden label below.
+{%- endcomment -%}
+<span
+  class="fl-price{% if on_sale %} fl-price--sale{% endif %}{% unless available %} fl-price--soldout{% endunless %}"
+>
+  {%- unless available -%}
+    <span class="visually-hidden">{{ 'products.card.sold_out' | t }}</span>
+  {%- endunless -%}
+  {%- if show_from and varies -%}
+    <span class="fl-price__from">{{ 'products.card.from' | t }}</span>
+  {%- endif -%}
+  <span class="fl-price__current">{{ p | money }}</span>
+  {%- if on_sale -%}
+    <s class="fl-price__compare">
+      <span class="visually-hidden">{{ 'products.card.regular_price' | t }}</span>
+      {{- compare | money -}}
+    </s>
+  {%- endif -%}
+  {%- if sel_variant.unit_price_measurement -%}
+    <span class="fl-price__unit">
+      {{ sel_variant.unit_price | money }}
+      /
+      {%- if sel_variant.unit_price_measurement.reference_value != 1 -%}
+        {{ sel_variant.unit_price_measurement.reference_value }}
+      {%- endif -%}
+      {{ sel_variant.unit_price_measurement.reference_unit }}
+    </span>
   {%- endif -%}
 </span>

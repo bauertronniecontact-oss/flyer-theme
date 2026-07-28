@@ -8,7 +8,12 @@
   {% if section.settings.sticky_header %}
     data-sticky
   {% endif %}
-  data-cart-label-template="{{ 'accessibility.cart_count' | t: count: '%COUNT%' | escape }}"
+  {%- comment -%}
+    Both plural forms are exposed because a pluralised key cannot be rendered
+    with a placeholder count — passing '%COUNT%' always resolves to "other".
+  {%- endcomment -%}
+  data-cart-label-one="{{ 'accessibility.cart_count' | t: count: 1 | replace: '1', '%COUNT%' | escape }}"
+  data-cart-label-other="{{ 'accessibility.cart_count' | t: count: 2 | replace: '2', '%COUNT%' | escape }}"
 >
   <div class="fl-header__bar">
     <button
@@ -255,6 +260,11 @@
     position: sticky;
     top: 0;
     z-index: 50;
+  }
+
+  /* Sticky columns elsewhere read this so they don't slide under the header. */
+  :root:has(.fl-header-section [data-sticky]) {
+    --sticky-offset: 88px;
   }
 
   .fl-header {
@@ -702,7 +712,7 @@
         el.textContent = count;
         el.classList.toggle('is-empty', count === 0);
       });
-      const template = this.dataset.cartLabelTemplate || '';
+      const template = count === 1 ? this.dataset.cartLabelOne : this.dataset.cartLabelOther;
       if (!template) return;
       const label = template.replace('%COUNT%', count);
       if (this.cartLink) this.cartLink.setAttribute('aria-label', label);

@@ -67,7 +67,10 @@
                     assign price_active = true
                   endif
                   assign max_price = filter.range_max | money
-                  assign max_placeholder = filter.range_max | money_without_currency | replace: ',', ''
+                  # Number inputs need a dot-decimal value. Going through
+                  # money_without_currency yields "53,33" in comma-decimal
+                  # locales, and stripping the comma multiplied it by 100.
+                  assign max_placeholder = filter.range_max | divided_by: 100.0
                 -%}
                 <details class="fl-facet" data-facet>
                   <summary class="fl-facet__toggle">
@@ -89,7 +92,7 @@
                           type="number"
                           name="{{ filter.min_value.param_name }}"
                           {%- if filter.min_value.value %}
-                            value="{{ filter.min_value.value | money_without_currency | replace: ',', '' }}"
+                            value="{{ filter.min_value.value | divided_by: 100.0 }}"
                           {%- endif %}
                           placeholder="0"
                           min="0"
@@ -106,7 +109,7 @@
                           type="number"
                           name="{{ filter.max_value.param_name }}"
                           {%- if filter.max_value.value %}
-                            value="{{ filter.max_value.value | money_without_currency | replace: ',', '' }}"
+                            value="{{ filter.max_value.value | divided_by: 100.0 }}"
                           {%- endif %}
                           placeholder="{{ max_placeholder }}"
                           min="0"
@@ -238,7 +241,7 @@
         style="--grid-cols: {{ section.settings.cols_desktop }}; --grid-cols-mobile: {{ section.settings.cols_mobile }}"
       >
         {%- for product in collection.products -%}
-          {% render 'product-card', product: product, sizes: card_sizes %}
+          {% render 'product-card', product: product, sizes: card_sizes, heading_level: 'h2' %}
         {%- endfor -%}
       </div>
 
@@ -473,7 +476,10 @@
     align-items: center;
     gap: 16px;
     margin-inline-start: auto;
-    flex: none;
+    /* Must stay shrinkable: flex:none plus an unbounded <select> of long sort
+       labels pushed the page 108px wider than the viewport. */
+    flex: 0 1 auto;
+    min-width: 0;
   }
 
   .fl-toolbar__count {
@@ -486,6 +492,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    min-width: 0;
   }
 
   .fl-toolbar__sort-label {
@@ -496,6 +503,8 @@
 
   .fl-toolbar__sort .fl-select {
     width: auto;
+    max-width: 100%;
+    min-width: 0;
     padding-block: 8px;
   }
 

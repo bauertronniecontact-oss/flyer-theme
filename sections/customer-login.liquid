@@ -16,7 +16,7 @@
 {%- capture recover_pane -%}
   <div class="fl-login__pane fl-login__pane--recover" id="recover" data-pane="recover">
     <div class="fl-account__head">
-      <h2 class="fl-account__title">{{ 'customer.recover_password.title' | t }}</h2>
+      <h1 class="fl-account__title">{{ 'customer.recover_password.title' | t }}</h1>
       <p class="fl-account__subtext">{{ 'customer.recover_password.subtext' | t }}</p>
     </div>
 
@@ -58,9 +58,14 @@
   </div>
 {%- endcapture -%}
 
+{%- comment -%}
+  The attribute is only emitted when the recovery form was posted. Rendering
+  data-recover-open="false" made its CSS rule outrank the :target fallback and
+  hid BOTH panes for visitors without JavaScript.
+{%- endcomment -%}
 <fl-login
   class="fl-account"
-  data-recover-open="{% if recover_posted %}true{% else %}false{% endif %}"
+  {% if recover_posted %}data-recover-open="true"{% endif %}
 >
   <div class="fl-account__inner">
     <div class="fl-login__pane fl-login__pane--login" id="login" data-pane="login">
@@ -146,13 +151,6 @@
     display: none;
   }
 
-  fl-login[data-recover-open='false'] .fl-login__pane--recover {
-    display: none;
-  }
-
-  fl-login[data-recover-open='false'] .fl-login__pane--login {
-    display: block;
-  }
 {% endstylesheet %}
 
 {% javascript %}
@@ -162,22 +160,25 @@
       class FlLogin extends HTMLElement {
         connectedCallback() {
           this.addEventListener('click', this._onClick);
-          if (window.location.hash === '#recover') this.setAttribute('data-recover-open', 'true');
         }
 
         disconnectedCallback() {
           this.removeEventListener('click', this._onClick);
         }
 
+        // The anchors are allowed to change the hash so the :target rules stay
+        // the single source of truth; JS only clears the posted-state attribute
+        // and moves focus into the pane that just appeared.
         _onClick = (event) => {
           const show = event.target.closest('[data-recover-show]');
           const hide = event.target.closest('[data-recover-hide]');
           if (!show && !hide) return;
-          event.preventDefault();
-          this.setAttribute('data-recover-open', show ? 'true' : 'false');
+          this.removeAttribute('data-recover-open');
           const pane = this.querySelector(show ? '[data-pane="recover"]' : '[data-pane="login"]');
-          const field = pane.querySelector('input');
-          if (field) field.focus();
+          window.requestAnimationFrame(() => {
+            const field = pane.querySelector('input');
+            if (field) field.focus();
+          });
         };
       }
     );

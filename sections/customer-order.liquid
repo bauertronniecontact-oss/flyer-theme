@@ -13,11 +13,11 @@
     <div class="fl-account__head">
       <h1 class="fl-account__title">{{ 'customer.order.title' | t: name: order.name }}</h1>
       <p class="fl-account__subtext">
-        {%- assign order_date = order.created_at | date: '%B %-d, %Y' -%}
+        {%- assign order_date = order.created_at | date: format: 'month_day_year' -%}
         {{ 'customer.order.date_html' | t: date: order_date }}
       </p>
       {%- if order.cancelled -%}
-        {%- assign cancelled_date = order.cancelled_at | date: '%B %-d, %Y' -%}
+        {%- assign cancelled_date = order.cancelled_at | date: format: 'month_day_year' -%}
         <p class="fl-form-status" role="status">
           {{ 'customer.order.cancelled_html' | t: date: cancelled_date }}
           {%- if order.cancel_reason -%}
@@ -48,7 +48,7 @@
               <span class="fl-order__meta">{{ 'customer.order.sku' | t }}: {{ line_item.sku }}</span>
             {%- endif -%}
             {%- if line_item.fulfillment -%}
-              {%- assign fulfilled_date = line_item.fulfillment.created_at | date: '%B %-d, %Y' -%}
+              {%- assign fulfilled_date = line_item.fulfillment.created_at | date: format: 'month_day_year' -%}
               <span class="fl-order__meta">
                 {{ 'customer.order.fulfilled_at_html' | t: date: fulfilled_date }}
                 {%- if line_item.fulfillment.tracking_url -%}

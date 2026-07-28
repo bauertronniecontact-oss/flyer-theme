@@ -20,9 +20,11 @@
   data-predictive-url="{{ routes.predictive_search_url }}"
   data-search-url="{{ routes.search_url }}"
   data-currency="{{ cart.currency.iso_code }}"
+  data-money-format="{{ shop.money_format | escape }}"
   data-label-loading="{{ 'accessibility.loading' | t | escape }}"
   data-label-empty="{{ 'search.no_results_html' | t: terms: '%TERMS%' | escape }}"
-  data-label-results="{{ 'search.results_for_html' | t: count: '%COUNT%', terms: '%TERMS%' | escape }}"
+  data-label-results-one="{{ 'search.results_for_html' | t: count: 1, terms: '%TERMS%' | replace: '1', '%COUNT%' | escape }}"
+  data-label-results="{{ 'search.results_for_html' | t: count: 2, terms: '%TERMS%' | replace: '2', '%COUNT%' | escape }}"
   data-label-from="{{ 'products.card.from' | t | escape }}"
   data-label-suggestions="{{ 'search.suggestions' | t | escape }}"
   data-label-products="{{ 'search.products' | t | escape }}"
@@ -359,10 +361,12 @@
       this.predictiveUrl = this.dataset.predictiveUrl || '/search/suggest';
       this.searchUrl = this.dataset.searchUrl || '/search';
       this.currency = this.dataset.currency || 'USD';
+      this.moneyFormat = this.dataset.moneyFormat || '';
       this.labels = {
         loading: this.dataset.labelLoading || 'Loading',
         empty: this.dataset.labelEmpty || 'No results for %TERMS%',
         results: this.dataset.labelResults || '%COUNT% results for %TERMS%',
+        resultsOne: this.dataset.labelResultsOne || '%COUNT% result for %TERMS%',
         from: this.dataset.labelFrom || 'From',
         suggestions: this.dataset.labelSuggestions || 'Suggestions',
         products: this.dataset.labelProducts || 'Products',
@@ -479,11 +483,14 @@
     }
 
     async search(query) {
+      // Abort first, unconditionally: bailing out early on a short query used to
+      // leave the previous request in flight, so stale results landed after the
+      // field was cleared.
+      if (this.controller) this.controller.abort();
       if (!query || query.length < 2) {
         this.renderEmpty();
         return;
       }
-      if (this.controller) this.controller.abort();
       this.controller = new AbortController();
       this.setStatus(this.labels.loading);
       const endpoint =
@@ -524,7 +531,8 @@
       if (articles.length) frag.appendChild(this.buildTextGroup('articles', this.labels.articles, articles));
       this.results.appendChild(frag);
 
-      this.setStatus(this.labels.results.replace('%COUNT%', total).replace('%TERMS%', query));
+      const resultsLabel = total === 1 ? this.labels.resultsOne : this.labels.results;
+      this.setStatus(resultsLabel.replace('%COUNT%', total).replace('%TERMS%', query));
       if (this.viewAll) {
         this.viewAll.href = this.searchUrl + '?q=' + encodeURIComponent(query);
         this.viewAll.hidden = false;
@@ -622,13 +630,42 @@
       return out;
     }
 
+    // Honours the shop's own money_format (symbol placement, separators) rather
+    // than guessing with Intl, which produced a different string from every
+    // price rendered server-side.
     formatMoney(value) {
+      if (this.moneyFormat) {
+        const rendered = this.moneyFormat.replace(
+          /\{\{\s*(\w+)\s*\}\}/,
+          (match, token) => this.formatAmount(value, token)
+        );
+        if (rendered !== this.moneyFormat) return rendered;
+      }
       const locale = document.documentElement.lang || 'en';
       try {
         return new Intl.NumberFormat(locale, { style: 'currency', currency: this.currency }).format(value);
       } catch (err) {
         return this.currency + ' ' + value.toFixed(2);
       }
+    }
+
+    formatAmount(value, token) {
+      const noDecimals = token.indexOf('no_decimals') !== -1;
+      const comma = token.indexOf('comma_separator') !== -1;
+      const apostrophe = token.indexOf('apostrophe_separator') !== -1;
+      const decimals = noDecimals ? 0 : 2;
+      const fixed = Number(value).toFixed(decimals);
+      const parts = fixed.split('.');
+      let thousands = ',';
+      let decimalMark = '.';
+      if (comma) {
+        thousands = '.';
+        decimalMark = ',';
+      } else if (apostrophe) {
+        thousands = "'";
+      }
+      parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousands);
+      return parts.length > 1 ? parts[0] + decimalMark + parts[1] : parts[0];
     }
   }
 

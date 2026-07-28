@@ -5,9 +5,12 @@
   @param {object} product - product object
   @param {boolean} [show_quick_add] - override theme setting
   @param {string} [sizes] - sizes attribute for the image (default grid sizing)
+  @param {string} [heading_level] - h2 or h3 (default h3); use h2 when the grid
+    sits directly under the page h1, so the outline has no gap
 
   @example
   {% render 'product-card', product: product %}
+  {% render 'product-card', product: product, heading_level: 'h2' %}
 {% enddoc %}
 
 {%- liquid
@@ -48,9 +51,10 @@
     {%- if settings.card_show_vendor and product.vendor != blank -%}
       <span class="fl-card__vendor">{{ product.vendor | escape }}</span>
     {%- endif -%}
-    <h3 class="fl-card__title">
+    {%- assign card_heading = heading_level | default: 'h3' -%}
+    <{{ card_heading }} class="fl-card__title">
       <a class="fl-card__link" href="{{ product.url }}">{{ product.title | escape }}</a>
-    </h3>
+    </{{ card_heading }}>
     {% render 'price', product: product %}
     {%- if quick and product.available -%}
       <div class="fl-card__quick">

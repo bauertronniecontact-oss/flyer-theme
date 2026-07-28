@@ -80,18 +80,28 @@
             {%- endif -%}
 
           {%- when 'buttons' -%}
-            {%- if block.settings.button_label_1 != blank or block.settings.button_label_2 != blank -%}
+            {%- liquid
+              assign show_btn_1 = false
+              assign show_btn_2 = false
+              if block.settings.button_label_1 != blank and block.settings.button_link_1 != blank
+                assign show_btn_1 = true
+              endif
+              if block.settings.button_label_2 != blank and block.settings.button_link_2 != blank
+                assign show_btn_2 = true
+              endif
+            -%}
+            {%- if show_btn_1 or show_btn_2 -%}
               <div class="fl-banner__btns" {{ block.shopify_attributes }}>
-                {%- if block.settings.button_label_1 != blank -%}
+                {%- if show_btn_1 -%}
                   <a
                     class="fl-banner__btn{% if block.settings.button_style_1 == 'secondary' %} fl-banner__btn--secondary{% endif %}"
-                    href="{{ block.settings.button_link_1 | default: '#' }}"
+                    href="{{ block.settings.button_link_1 }}"
                   >{{ block.settings.button_label_1 | escape }}</a>
                 {%- endif -%}
-                {%- if block.settings.button_label_2 != blank -%}
+                {%- if show_btn_2 -%}
                   <a
                     class="fl-banner__btn{% if block.settings.button_style_2 == 'secondary' %} fl-banner__btn--secondary{% endif %}"
-                    href="{{ block.settings.button_link_2 | default: '#' }}"
+                    href="{{ block.settings.button_link_2 }}"
                   >{{ block.settings.button_label_2 | escape }}</a>
                 {%- endif -%}
               </div>

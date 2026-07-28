@@ -43,7 +43,7 @@
 
             {%- if section.settings.show_date -%}
               <time class="fl-blog__date" datetime="{{ article.published_at | date: '%Y-%m-%d' }}">
-                {{- article.published_at | date: '%B %-d, %Y' -}}
+                {{- article.published_at | date: format: 'month_day_year' -}}
               </time>
             {%- endif -%}
 

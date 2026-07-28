@@ -42,11 +42,11 @@
               {%- endif -%}
 
             {%- when 'button' -%}
-              {%- if block.settings.label != blank -%}
+              {%- if block.settings.label != blank and block.settings.link != blank -%}
                 <div class="fl-imgtext__cta" {{ block.shopify_attributes }}>
                   <a
                     class="fl-btn{% if block.settings.style == 'secondary' %} fl-btn--secondary{% endif %}"
-                    href="{{ block.settings.link | default: '#' }}"
+                    href="{{ block.settings.link }}"
                   >{{ block.settings.label | escape }}</a>
                 </div>
               {%- endif -%}

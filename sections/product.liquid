@@ -105,7 +105,7 @@
           {%- when 'price' -%}
             <div class="fl-product__block" {{ block.shopify_attributes }}>
               <div class="fl-product__price" data-price aria-live="polite">
-                {% render 'price', product: product, show_from: false %}
+                {% render 'price', product: product, variant: current_variant, show_from: false %}
               </div>
               {%- if cart.taxes_included -%}
                 <p class="fl-product__tax">{{ 'products.product.taxes_included' | t }}</p>
@@ -242,7 +242,14 @@
   <script type="application/json" data-money-json>
     {
       {%- for v in product.variants -%}
-        "{{ v.id }}": { "price": {{ v.price | money | json }}, "compare": {% if v.compare_at_price > v.price %}{{ v.compare_at_price | money | json }}{% else %}null{% endif %} }
+        "{{ v.id }}": {
+          "price": {{ v.price | money | json }},
+          "compare": {% if v.compare_at_price > v.price %}{{ v.compare_at_price | money | json }}{% else %}null{% endif %},
+          "available": {{ v.available | json }},
+          "unit": {% if v.unit_price_measurement %}{{ v.unit_price | money | json }}{% else %}null{% endif %},
+          "unitRef": {% if v.unit_price_measurement %}{{ v.unit_price_measurement.reference_value | json }}{% else %}null{% endif %},
+          "unitUnit": {% if v.unit_price_measurement %}{{ v.unit_price_measurement.reference_unit | json }}{% else %}null{% endif %}
+        }
         {%- unless forloop.last -%},{%- endunless -%}
       {%- endfor -%}
     }
@@ -386,7 +393,7 @@
     min-width: 44px;
     min-height: 44px;
     padding: 8px 16px;
-    border: 1px solid var(--color-line);
+    border: 1px solid var(--color-control-border);
     border-radius: var(--radius-btn);
     background: var(--color-bg);
     cursor: pointer;
@@ -578,7 +585,7 @@
 
     .fl-product__info {
       position: sticky;
-      top: 24px;
+      top: var(--sticky-offset);
     }
   }
 {% endstylesheet %}
@@ -733,7 +740,14 @@
           if (!this.priceTarget || !variant) return;
           const money = this.money[String(variant.id)];
           if (!money) return;
-          let html = '<span class="fl-price' + (money.compare ? ' fl-price--sale' : '') + '">';
+          const classes =
+            'fl-price' +
+            (money.compare ? ' fl-price--sale' : '') +
+            (money.available === false ? ' fl-price--soldout' : '');
+          let html = '<span class="' + classes + '">';
+          if (money.available === false) {
+            html += '<span class="visually-hidden">' + this.dataset.textSoldout + '</span>';
+          }
           html += '<span class="fl-price__current">' + money.price + '</span>';
           if (money.compare) {
             html +=
@@ -742,6 +756,11 @@
               '</span>' +
               money.compare +
               '</s>';
+          }
+          // Keep the unit price in sync; it used to be wiped on the first change.
+          if (money.unit) {
+            const ref = money.unitRef && money.unitRef !== 1 ? money.unitRef + ' ' : '';
+            html += '<span class="fl-price__unit">' + money.unit + ' / ' + ref + money.unitUnit + '</span>';
           }
           html += '</span>';
           this.priceTarget.innerHTML = html;

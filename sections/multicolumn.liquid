@@ -65,8 +65,8 @@
               <div class="fl-multicol__text">{{ block.settings.text }}</div>
             {%- endif -%}
 
-            {%- if block.settings.link_label != blank -%}
-              <a class="fl-multicol__link" href="{{ block.settings.link | default: '#' }}">
+            {%- if block.settings.link_label != blank and block.settings.link != blank -%}
+              <a class="fl-multicol__link" href="{{ block.settings.link }}">
                 {{- block.settings.link_label | escape -}}
               </a>
             {%- endif -%}

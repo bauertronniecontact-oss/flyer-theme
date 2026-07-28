@@ -19,6 +19,11 @@
     --color-ink: {{ settings.color_ink }};
     --color-muted: {{ settings.color_muted }};
     --color-line: {{ settings.color_line }};
+    /* Decorative rules may be faint, but form controls need a 3:1 border
+       (WCAG 1.4.11). Derived from the merchant's ink so it follows the palette;
+       the flat value is the fallback for browsers without color-mix. */
+    --color-control-border: #767676;
+    --color-control-border: color-mix(in srgb, {{ settings.color_ink }} 58%, {{ settings.color_background }});
     --color-accent: {{ settings.color_accent }};
     --color-on-accent: {{ settings.color_on_accent }};
 

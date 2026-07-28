@@ -1,11 +1,19 @@
 {
+  "date_formats": {
+    "month_day_year": "%B %-d, %Y",
+    "month_day": "%B %-d",
+    "month_year": "%B %Y"
+  },
   "accessibility": {
     "skip_to_content": "Skip to content",
     "close": "Close",
     "open_menu": "Open menu",
     "close_menu": "Close menu",
     "cart": "Cart",
-    "cart_count": "{{ count }} items in cart",
+    "cart_count": {
+      "one": "{{ count }} item in cart",
+      "other": "{{ count }} items in cart"
+    },
     "search": "Search",
     "previous": "Previous",
     "next": "Next",
@@ -142,7 +150,10 @@
     "submit": "Search",
     "clear": "Clear search",
     "no_results_html": "No results found for “{{ terms }}”.",
-    "results_for_html": "{{ count }} results for “{{ terms }}”",
+    "results_for_html": {
+      "one": "{{ count }} result for “{{ terms }}”",
+      "other": "{{ count }} results for “{{ terms }}”"
+    },
     "suggestions": "Suggestions",
     "products": "Products",
     "pages": "Pages",
