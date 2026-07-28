@@ -1,0 +1,193 @@
+{% comment %}
+  Featured collection.
+  Row header (heading + optional "View all" link) above a product grid built
+  with the shared product-card snippet. Falls back to four placeholder cards
+  when no collection is selected so the section previews in the editor.
+{% endcomment %}
+
+{%- liquid
+  assign col = section.settings.collection
+  assign limit = section.settings.products_to_show
+  assign cols = section.settings.cols_desktop
+
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = col.title
+  endif
+
+  assign show_link = false
+  if section.settings.show_view_all and col != blank
+    assign show_link = true
+  endif
+
+  if cols == '3'
+    assign sizes_desktop = '33vw'
+  else
+    assign sizes_desktop = '25vw'
+  endif
+  assign card_sizes = '(max-width: 749px) 50vw, (max-width: 989px) 33vw, ' | append: sizes_desktop
+-%}
+
+<section
+  class="fl-featured"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+>
+  {%- if heading != blank or show_link -%}
+    <div class="fl-featured__head">
+      {%- if heading != blank -%}
+        <h2 class="fl-featured__heading">{{ heading | escape }}</h2>
+      {%- endif -%}
+      {%- if show_link -%}
+        <a class="fl-featured__viewall" href="{{ col.url }}">
+          {{- 'collections.general.view_all' | t -}}
+          <span class="visually-hidden"> {{ col.title | escape }}</span>
+        </a>
+      {%- endif -%}
+    </div>
+  {%- endif -%}
+
+  {%- if col.products.size > 0 -%}
+    <div
+      class="fl-product-grid"
+      style="--grid-cols: {{ cols }}; --grid-cols-tablet: 3; --grid-cols-mobile: 2"
+    >
+      {%- for product in col.products limit: limit -%}
+        {% render 'product-card', product: product, sizes: card_sizes %}
+      {%- endfor -%}
+    </div>
+  {%- elsif col == blank -%}
+    <div
+      class="fl-product-grid"
+      style="--grid-cols: {{ cols }}; --grid-cols-tablet: 3; --grid-cols-mobile: 2"
+    >
+      {%- for i in (1..4) -%}
+        {%- assign placeholder_name = 'product-' | append: i -%}
+        <article class="fl-card">
+          <div class="fl-card__media">
+            {{ placeholder_name | placeholder_svg_tag: 'fl-featured__ph' }}
+          </div>
+          <div class="fl-card__info">
+            <h3 class="fl-card__title">{{ 'products.card.placeholder_title' | t }}</h3>
+          </div>
+        </article>
+      {%- endfor -%}
+    </div>
+  {%- endif -%}
+</section>
+
+{% stylesheet %}
+  .fl-featured__head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 4px 24px;
+    margin-block-end: 28px;
+  }
+
+  .fl-featured__heading {
+    min-width: 0;
+  }
+
+  .fl-featured__viewall {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.875em;
+    white-space: nowrap;
+    color: var(--color-muted);
+    transition: color 0.15s ease;
+  }
+
+  .fl-featured__viewall:hover {
+    color: var(--color-ink);
+  }
+
+  .fl-featured__ph {
+    width: 100%;
+    aspect-ratio: var(--card-ratio);
+    object-fit: cover;
+    fill: var(--color-muted);
+    opacity: 0.4;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Featured collection",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Featured collection",
+      "info": "Leave blank to use the collection name."
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "range",
+      "id": "products_to_show",
+      "min": 2,
+      "max": 12,
+      "step": 1,
+      "label": "Products to show",
+      "default": 8
+    },
+    {
+      "type": "select",
+      "id": "cols_desktop",
+      "label": "Columns on desktop",
+      "options": [
+        {
+          "value": "3",
+          "label": "3 columns"
+        },
+        {
+          "value": "4",
+          "label": "4 columns"
+        }
+      ],
+      "default": "4"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_all",
+      "label": "Show “View all” link",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Featured collection"
+    }
+  ]
+}
+{% endschema %}

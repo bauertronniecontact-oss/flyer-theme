@@ -1,0 +1,90 @@
+{% comment %}
+  FLYER — Create account (templates/customers/register.json).
+{% endcomment %}
+
+{% render 'customer-styles' %}
+
+<div class="fl-account">
+  <div class="fl-account__inner">
+    <div class="fl-account__head">
+      <h1 class="fl-account__title">{{ 'customer.register.title' | t }}</h1>
+    </div>
+
+    {%- form 'create_customer', class: 'fl-account__form' -%}
+      {%- if form.errors -%}
+        <ul class="fl-account__errors" role="alert">
+          {%- for field in form.errors -%}
+            <li>{{ form.errors.messages[field] }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlRegisterFirst">{{ 'customer.register.first_name' | t }}</label>
+        <input
+          class="fl-input"
+          type="text"
+          name="customer[first_name]"
+          id="FlRegisterFirst"
+          value="{{ form.first_name }}"
+          autocomplete="given-name"
+        >
+      </div>
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlRegisterLast">{{ 'customer.register.last_name' | t }}</label>
+        <input
+          class="fl-input"
+          type="text"
+          name="customer[last_name]"
+          id="FlRegisterLast"
+          value="{{ form.last_name }}"
+          autocomplete="family-name"
+        >
+      </div>
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlRegisterEmail">{{ 'customer.register.email' | t }}</label>
+        <input
+          class="fl-input"
+          type="email"
+          name="customer[email]"
+          id="FlRegisterEmail"
+          value="{{ form.email }}"
+          autocomplete="email"
+          autocapitalize="off"
+          required
+        >
+      </div>
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlRegisterPassword">{{ 'customer.register.password' | t }}</label>
+        <input
+          class="fl-input"
+          type="password"
+          name="customer[password]"
+          id="FlRegisterPassword"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="fl-account__actions">
+        <button type="submit" class="fl-btn">{{ 'customer.register.submit' | t }}</button>
+      </div>
+    {%- endform -%}
+
+    <p class="fl-account__aside">
+      {{ 'customer.register.already_have_account' | t }}
+      <a href="{{ routes.account_login_url }}">{{ 'customer.register.log_in' | t }}</a>
+    </p>
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Register",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

@@ -1,0 +1,134 @@
+{% doc %}
+  Address form fields shared by the "edit" and "add" forms on the addresses page.
+  The country select carries data-country-select; the province wrapper is matched
+  by data-province-wrapper with the same uid, and filled by <fl-addresses>.
+
+  @param {object} form - the customer_address form object
+  @param {string} uid - unique suffix for element ids (address id, or 'new')
+
+  @example
+  {% render 'address-fields', form: form, uid: address.id %}
+{% enddoc %}
+
+<div class="fl-account__grid">
+  <div class="fl-field">
+    <label class="fl-label" for="FlAddrFirst-{{ uid }}">{{ 'customer.addresses.first_name' | t }}</label>
+    <input
+      class="fl-input"
+      type="text"
+      id="FlAddrFirst-{{ uid }}"
+      name="address[first_name]"
+      value="{{ form.first_name }}"
+      autocomplete="given-name"
+    >
+  </div>
+
+  <div class="fl-field">
+    <label class="fl-label" for="FlAddrLast-{{ uid }}">{{ 'customer.addresses.last_name' | t }}</label>
+    <input
+      class="fl-input"
+      type="text"
+      id="FlAddrLast-{{ uid }}"
+      name="address[last_name]"
+      value="{{ form.last_name }}"
+      autocomplete="family-name"
+    >
+  </div>
+
+  <div class="fl-field fl-account__field--full">
+    <label class="fl-label" for="FlAddrCompany-{{ uid }}">{{ 'customer.addresses.company' | t }}</label>
+    <input
+      class="fl-input"
+      type="text"
+      id="FlAddrCompany-{{ uid }}"
+      name="address[company]"
+      value="{{ form.company }}"
+      autocomplete="organization"
+    >
+  </div>
+
+  <div class="fl-field fl-account__field--full">
+    <label class="fl-label" for="FlAddrOne-{{ uid }}">{{ 'customer.addresses.address1' | t }}</label>
+    <input
+      class="fl-input"
+      type="text"
+      id="FlAddrOne-{{ uid }}"
+      name="address[address1]"
+      value="{{ form.address1 }}"
+      autocomplete="address-line1"
+    >
+  </div>
+
+  <div class="fl-field fl-account__field--full">
+    <label class="fl-label" for="FlAddrTwo-{{ uid }}">{{ 'customer.addresses.address2' | t }}</label>
+    <input
+      class="fl-input"
+      type="text"
+      id="FlAddrTwo-{{ uid }}"
+      name="address[address2]"
+      value="{{ form.address2 }}"
+      autocomplete="address-line2"
+    >
+  </div>
+
+  <div class="fl-field">
+    <label class="fl-label" for="FlAddrCity-{{ uid }}">{{ 'customer.addresses.city' | t }}</label>
+    <input
+      class="fl-input"
+      type="text"
+      id="FlAddrCity-{{ uid }}"
+      name="address[city]"
+      value="{{ form.city }}"
+      autocomplete="address-level2"
+    >
+  </div>
+
+  <div class="fl-field">
+    <label class="fl-label" for="FlAddrZip-{{ uid }}">{{ 'customer.addresses.zip' | t }}</label>
+    <input
+      class="fl-input"
+      type="text"
+      id="FlAddrZip-{{ uid }}"
+      name="address[zip]"
+      value="{{ form.zip }}"
+      autocomplete="postal-code"
+    >
+  </div>
+
+  <div class="fl-field fl-account__field--full">
+    <label class="fl-label" for="FlAddrCountry-{{ uid }}">{{ 'customer.addresses.country' | t }}</label>
+    <select
+      class="fl-select"
+      id="FlAddrCountry-{{ uid }}"
+      name="address[country]"
+      autocomplete="country"
+      data-country-select="{{ uid }}"
+      data-default="{{ form.country }}"
+    >
+      {{ all_country_option_tags }}
+    </select>
+  </div>
+
+  <div class="fl-field fl-account__field--full" data-province-wrapper="{{ uid }}" hidden>
+    <label class="fl-label" for="FlAddrProvince-{{ uid }}">{{ 'customer.addresses.province' | t }}</label>
+    <select
+      class="fl-select"
+      id="FlAddrProvince-{{ uid }}"
+      name="address[province]"
+      autocomplete="address-level1"
+      data-default="{{ form.province }}"
+    ></select>
+  </div>
+
+  <div class="fl-field fl-account__field--full">
+    <label class="fl-label" for="FlAddrPhone-{{ uid }}">{{ 'customer.addresses.phone' | t }}</label>
+    <input
+      class="fl-input"
+      type="tel"
+      id="FlAddrPhone-{{ uid }}"
+      name="address[phone]"
+      value="{{ form.phone }}"
+      autocomplete="tel"
+    >
+  </div>
+</div>

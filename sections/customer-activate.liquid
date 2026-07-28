@@ -1,0 +1,65 @@
+{% comment %}
+  FLYER — Activate account (templates/customers/activate_account.json).
+{% endcomment %}
+
+{% render 'customer-styles' %}
+
+<div class="fl-account">
+  <div class="fl-account__inner">
+    <div class="fl-account__head">
+      <h1 class="fl-account__title">{{ 'customer.activate_account.title' | t }}</h1>
+      <p class="fl-account__subtext">{{ 'customer.activate_account.subtext' | t }}</p>
+    </div>
+
+    {%- form 'activate_customer_password', class: 'fl-account__form' -%}
+      {%- if form.errors -%}
+        <ul class="fl-account__errors" role="alert">
+          {%- for field in form.errors -%}
+            <li>{{ form.errors.messages[field] }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlActivatePassword">{{ 'customer.activate_account.password' | t }}</label>
+        <input
+          class="fl-input"
+          type="password"
+          name="customer[password]"
+          id="FlActivatePassword"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlActivateConfirm">
+          {{- 'customer.activate_account.password_confirm' | t -}}
+        </label>
+        <input
+          class="fl-input"
+          type="password"
+          name="customer[password_confirmation]"
+          id="FlActivateConfirm"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="fl-account__actions">
+        <button type="submit" class="fl-btn">{{ 'customer.activate_account.submit' | t }}</button>
+        <button type="submit" name="decline" class="fl-account__link">
+          {{- 'customer.activate_account.cancel' | t -}}
+        </button>
+      </div>
+    {%- endform -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Activate account",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

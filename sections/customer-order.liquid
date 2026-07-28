@@ -1,0 +1,209 @@
+{% comment %}
+  FLYER — Order detail (templates/customers/order.json).
+{% endcomment %}
+
+{% render 'customer-styles' %}
+
+<div class="fl-account">
+  <div class="fl-account__inner fl-account__inner--wide">
+    <a class="fl-account__back" href="{{ routes.account_url }}">
+      {{- 'customer.addresses.back_to_account' | t -}}
+    </a>
+
+    <div class="fl-account__head">
+      <h1 class="fl-account__title">{{ 'customer.order.title' | t: name: order.name }}</h1>
+      <p class="fl-account__subtext">
+        {%- assign order_date = order.created_at | date: '%B %-d, %Y' -%}
+        {{ 'customer.order.date_html' | t: date: order_date }}
+      </p>
+      {%- if order.cancelled -%}
+        {%- assign cancelled_date = order.cancelled_at | date: '%B %-d, %Y' -%}
+        <p class="fl-form-status" role="status">
+          {{ 'customer.order.cancelled_html' | t: date: cancelled_date }}
+          {%- if order.cancel_reason -%}
+            <br>{{ 'customer.order.cancelled_reason' | t: reason: order.cancel_reason_label }}
+          {%- endif -%}
+        </p>
+      {%- endif -%}
+    </div>
+
+    <div class="fl-order__lines">
+      {%- for line_item in order.line_items -%}
+        <div class="fl-order__line">
+          <div class="fl-order__media">
+            {%- if line_item.image -%}
+              {{
+                line_item.image
+                | image_url: width: 200
+                | image_tag: widths: '100, 200', sizes: '80px', alt: line_item.title, loading: 'lazy'
+              }}
+            {%- endif -%}
+          </div>
+          <div class="fl-order__info">
+            <a href="{{ line_item.product.url }}">{{ line_item.title }}</a>
+            {%- unless line_item.product.has_only_default_variant -%}
+              <span class="fl-order__meta">{{ line_item.variant.title }}</span>
+            {%- endunless -%}
+            {%- if line_item.sku != blank -%}
+              <span class="fl-order__meta">{{ 'customer.order.sku' | t }}: {{ line_item.sku }}</span>
+            {%- endif -%}
+            {%- if line_item.fulfillment -%}
+              {%- assign fulfilled_date = line_item.fulfillment.created_at | date: '%B %-d, %Y' -%}
+              <span class="fl-order__meta">
+                {{ 'customer.order.fulfilled_at_html' | t: date: fulfilled_date }}
+                {%- if line_item.fulfillment.tracking_url -%}
+                  — <a href="{{ line_item.fulfillment.tracking_url }}">
+                    {{- 'customer.order.track_shipment' | t -}}
+                  </a>
+                {%- endif -%}
+              </span>
+            {%- endif -%}
+          </div>
+          <div class="fl-order__qty">
+            <span class="fl-account__cell-label">{{ 'customer.order.quantity' | t }}</span>
+            {{ line_item.quantity }}
+          </div>
+          <div class="fl-order__amount">
+            <span class="fl-account__cell-label">{{ 'customer.order.total' | t }}</span>
+            {{ line_item.final_line_price | money }}
+          </div>
+        </div>
+      {%- endfor -%}
+    </div>
+
+    <div class="fl-order__foot">
+      <div class="fl-order__totals">
+        <div class="fl-order__total-row">
+          <span>{{ 'customer.order.subtotal' | t }}</span>
+          <span>{{ order.line_items_subtotal_price | money }}</span>
+        </div>
+        {%- for discount_application in order.cart_level_discount_applications -%}
+          <div class="fl-order__total-row">
+            <span>{{ 'customer.order.discount' | t }} — {{ discount_application.title }}</span>
+            <span>-{{ discount_application.total_allocated_amount | money }}</span>
+          </div>
+        {%- endfor -%}
+        <div class="fl-order__total-row">
+          <span>{{ 'customer.order.shipping' | t }}</span>
+          <span>{{ order.shipping_price | money }}</span>
+        </div>
+        <div class="fl-order__total-row">
+          <span>{{ 'customer.order.tax' | t }}</span>
+          <span>{{ order.tax_price | money }}</span>
+        </div>
+        <div class="fl-order__total-row fl-order__total-row--grand">
+          <span>{{ 'customer.order.total' | t }}</span>
+          <span>{{ order.total_price | money }}</span>
+        </div>
+        <div class="fl-order__total-row">
+          <span>{{ 'customer.order.payment_status' | t }}</span>
+          <span>{{ order.financial_status_label }}</span>
+        </div>
+        <div class="fl-order__total-row">
+          <span>{{ 'customer.order.fulfillment_status' | t }}</span>
+          <span>{{ order.fulfillment_status_label }}</span>
+        </div>
+      </div>
+
+      <div class="fl-order__addresses">
+        <div>
+          <h2 class="fl-order__addr-title">{{ 'customer.order.billing_address' | t }}</h2>
+          <address class="fl-account__address">{{ order.billing_address | format_address }}</address>
+        </div>
+        <div>
+          <h2 class="fl-order__addr-title">{{ 'customer.order.shipping_address' | t }}</h2>
+          <address class="fl-account__address">{{ order.shipping_address | format_address }}</address>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .fl-order__lines {
+    border-top: 1px solid var(--color-line);
+  }
+
+  .fl-order__line {
+    display: grid;
+    grid-template-columns: 80px minmax(0, 1fr) auto auto;
+    gap: 12px 20px;
+    align-items: start;
+    padding: 20px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  @media screen and (max-width: 749px) {
+    .fl-order__line {
+      grid-template-columns: 64px minmax(0, 1fr);
+    }
+  }
+
+  .fl-order__media img {
+    width: 100%;
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+
+  .fl-order__info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .fl-order__meta {
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+
+  .fl-order__foot {
+    display: grid;
+    gap: 40px;
+    margin-top: 40px;
+  }
+
+  @media screen and (min-width: 990px) {
+    .fl-order__foot {
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 56px;
+    }
+
+    .fl-order__addresses {
+      order: -1;
+    }
+  }
+
+  .fl-order__addresses {
+    display: grid;
+    gap: 28px;
+  }
+
+  .fl-order__addr-title {
+    margin-bottom: 8px;
+    font-size: 0.75em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .fl-order__total-row {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-order__total-row--grand {
+    font-weight: 600;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Order",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

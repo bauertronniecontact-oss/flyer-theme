@@ -1,0 +1,60 @@
+{% comment %}
+  FLYER — Reset password (templates/customers/reset_password.json).
+{% endcomment %}
+
+{% render 'customer-styles' %}
+
+<div class="fl-account">
+  <div class="fl-account__inner">
+    <div class="fl-account__head">
+      <h1 class="fl-account__title">{{ 'customer.reset_password.title' | t }}</h1>
+      <p class="fl-account__subtext">{{ 'customer.reset_password.subtext' | t }}</p>
+    </div>
+
+    {%- form 'reset_customer_password', class: 'fl-account__form' -%}
+      {%- if form.errors -%}
+        <ul class="fl-account__errors" role="alert">
+          {%- for field in form.errors -%}
+            <li>{{ form.errors.messages[field] }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlResetPassword">{{ 'customer.reset_password.password' | t }}</label>
+        <input
+          class="fl-input"
+          type="password"
+          name="customer[password]"
+          id="FlResetPassword"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlResetConfirm">{{ 'customer.reset_password.password_confirm' | t }}</label>
+        <input
+          class="fl-input"
+          type="password"
+          name="customer[password_confirmation]"
+          id="FlResetConfirm"
+          autocomplete="new-password"
+          required
+        >
+      </div>
+
+      <div class="fl-account__actions">
+        <button type="submit" class="fl-btn">{{ 'customer.reset_password.submit' | t }}</button>
+      </div>
+    {%- endform -%}
+  </div>
+</div>
+
+{% schema %}
+{
+  "name": "Reset password",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

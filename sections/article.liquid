@@ -1,68 +1,248 @@
 {% comment %}
-  This section is used in the article template to render the article page, which
-  displays the full content of the blog post and can optionally include a
-  comments section for customers (not shown in this example).
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/article
+  FLYER — Article (templates/article.json).
 {% endcomment %}
 
-{% if article.image %}
-  {{ article.image | image_url: width: 1000 | image_tag }}
-{% endif %}
+<article class="fl-article">
+  <header class="fl-article__head">
+    {%- if section.settings.show_date or section.settings.show_author -%}
+      <p class="fl-eyebrow">
+        {%- if section.settings.show_date -%}
+          <time datetime="{{ article.published_at | date: '%Y-%m-%d' }}">
+            {{- article.published_at | date: '%B %-d, %Y' -}}
+          </time>
+        {%- endif -%}
+        {%- if section.settings.show_date and section.settings.show_author %} — {% endif -%}
+        {%- if section.settings.show_author -%}
+          {{ article.author }}
+        {%- endif -%}
+      </p>
+    {%- endif -%}
 
-<h1>{{ article.title }}</h1>
+    <h1 class="fl-article__title">{{ article.title | escape }}</h1>
+  </header>
 
-{% assign date = article.published_at | time_tag: format: 'date' %}
-<p>{{ 'blog.article_metadata_html' | t: date: date, author: article.author }}</p>
+  {%- if section.settings.show_featured_image and article.image -%}
+    <div class="fl-article__media">
+      {{
+        article.image
+        | image_url: width: 1400
+        | image_tag: widths: '480, 720, 1000, 1400', sizes: '(max-width: 749px) 100vw, 720px', alt: article.image.alt
+      }}
+    </div>
+  {%- endif -%}
 
-{{ article.content }}
-
-{% if blog.comments_enabled? %}
-  <h2>{{ 'blog.article_comments' | t }}</h2>
-
-  <div id="comments">
-    {% paginate article.comments by 10 %}
-      {% for comment in article.comments %}
-        <div>
-          <p>{{ comment.author }}</p>
-          <p>
-            {{- comment.created_at | time_tag: format: 'date' -}}
-          </p>
-          <p>{{ comment.content }}</p>
-        </div>
-      {% endfor %}
-
-      {{ paginate | default_pagination: anchor: 'comments' }}
-    {% endpaginate %}
+  <div class="fl-article__body fl-rte">
+    {{ article.content }}
   </div>
 
-  {% form 'new_comment', article %}
-    <h2>{{ 'blog.comment_form_title' | t }}</h2>
+  <p class="fl-article__back">
+    <a href="{{ blog.url }}">{{ 'blog.back_to_blog' | t: title: blog.title }}</a>
+  </p>
 
-    {{ form.errors | default_errors }}
+  {%- if blog.comments_enabled? -%}
+    <section class="fl-article__comments">
+      <h2 class="fl-article__comments-title">
+        {{- 'blog.comments' | t: count: article.comments_count -}}
+      </h2>
 
-    <div>
-      <label for="author">{{ 'blog.comment_form_name' | t }}</label>
-      <input type="text" name="comment[author]" id="author" value="{{ form.author }}" required>
-    </div>
+      {%- paginate article.comments by 20 -%}
+        {%- if article.comments_count > 0 -%}
+          <ul class="fl-comments" role="list">
+            {%- for comment in article.comments -%}
+              <li class="fl-comment">
+                <p class="fl-comment__meta">
+                  {{ comment.author }} — {{ comment.created_at | date: '%B %-d, %Y' }}
+                </p>
+                <div class="fl-comment__body">{{ comment.content }}</div>
+              </li>
+            {%- endfor -%}
+          </ul>
 
-    <div>
-      <label for="email">{{ 'blog.comment_form_email' | t }}</label>
-      <input type="email" name="comment[email]" id="email" value="{{ form.email }}" required>
-    </div>
+          {%- if paginate.pages > 1 -%}
+            <nav class="fl-article__pagination" aria-label="{{ 'general.pagination.label' | t }}">
+              {%- if paginate.previous -%}
+                <a href="{{ paginate.previous.url }}">{{ 'general.pagination.previous' | t }}</a>
+              {%- endif -%}
+              {%- if paginate.next -%}
+                <a href="{{ paginate.next.url }}">{{ 'general.pagination.next' | t }}</a>
+              {%- endif -%}
+            </nav>
+          {%- endif -%}
+        {%- endif -%}
+      {%- endpaginate -%}
 
-    <div>
-      <label for="body">{{ 'blog.comment_form_body' | t }}</label>
-      <textarea name="comment[body]" id="body" required>{{ form.body }}</textarea>
-    </div>
+      {%- form 'new_comment', article, class: 'fl-article__form' -%}
+        <h3 class="fl-article__form-title">{{ 'blog.comment_form.title' | t }}</h3>
 
-    <input type="submit" value="{{ 'blog.comment_form_submit' | t }}">
-  {% endform %}
-{% endif %}
+        {%- if form.posted_successfully? -%}
+          <p class="fl-form-status" role="status">
+            {%- if blog.moderated? -%}
+              {{ 'blog.comment_form.success_moderated' | t }}
+            {%- else -%}
+              {{ 'blog.comment_form.success' | t }}
+            {%- endif -%}
+          </p>
+        {%- endif -%}
+
+        {%- if form.errors -%}
+          <ul class="fl-article__errors" role="alert">
+            {%- for field in form.errors -%}
+              <li>{{ form.errors.messages[field] }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        <div class="fl-field">
+          <label class="fl-label" for="FlCommentName">{{ 'blog.comment_form.name' | t }}</label>
+          <input
+            class="fl-input"
+            type="text"
+            id="FlCommentName"
+            name="comment[author]"
+            value="{{ form.author }}"
+            autocomplete="name"
+            required
+          >
+        </div>
+
+        <div class="fl-field">
+          <label class="fl-label" for="FlCommentEmail">{{ 'blog.comment_form.email' | t }}</label>
+          <input
+            class="fl-input"
+            type="email"
+            id="FlCommentEmail"
+            name="comment[email]"
+            value="{{ form.email }}"
+            autocomplete="email"
+            autocapitalize="off"
+            required
+          >
+        </div>
+
+        <div class="fl-field">
+          <label class="fl-label" for="FlCommentBody">{{ 'blog.comment_form.body' | t }}</label>
+          <textarea class="fl-textarea" id="FlCommentBody" name="comment[body]" rows="5" required>
+            {{- form.body -}}
+          </textarea>
+        </div>
+
+        {%- if blog.moderated? -%}
+          <p class="fl-article__note">{{ 'blog.comment_form.moderated' | t }}</p>
+        {%- endif -%}
+
+        <button type="submit" class="fl-btn">{{ 'blog.comment_form.submit' | t }}</button>
+      {%- endform -%}
+    </section>
+  {%- endif -%}
+</article>
+
+{% stylesheet %}
+  .fl-article {
+    width: min(720px, 100%);
+    margin-inline: auto;
+    padding-block: 48px 80px;
+  }
+
+  .fl-article__head {
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .fl-article__title {
+    margin: 0;
+  }
+
+  .fl-article__media {
+    margin-bottom: 40px;
+  }
+
+  .fl-article__media img {
+    width: 100%;
+    border-radius: var(--radius-card);
+    background: var(--color-surface);
+  }
+
+  .fl-article__back {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .fl-article__comments {
+    margin-top: 56px;
+  }
+
+  .fl-article__comments-title,
+  .fl-article__form-title {
+    margin-bottom: 24px;
+    font-size: 1em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .fl-comments {
+    margin: 0 0 48px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-comment {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-comment__meta {
+    margin-bottom: 8px;
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+
+  .fl-article__errors {
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    list-style: none;
+    border: 1px solid var(--color-ink);
+    border-radius: var(--radius-input);
+    background: var(--color-surface);
+  }
+
+  .fl-article__note {
+    margin-bottom: 16px;
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+
+  .fl-article__pagination {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 40px;
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.article",
-  "settings": []
+  "name": "Blog post",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_date",
+      "label": "Show publication date",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_author",
+      "label": "Show author",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_featured_image",
+      "label": "Show featured image",
+      "default": true
+    }
+  ]
 }
 {% endschema %}

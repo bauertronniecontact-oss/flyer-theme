@@ -1,17 +1,31 @@
 {% comment %}
-  This section is used in the page template to render store pages like About us
-  or Contact us.
-
-  https://shopify.dev/docs/storefronts/themes/architecture/templates/page
+  FLYER — Page (templates/page.json).
 {% endcomment %}
 
-<h1>{{ page.title }}</h1>
+<div class="fl-page">
+  <h1 class="fl-page__title">{{ page.title | escape }}</h1>
 
-{{ page.content }}
+  {%- if page.content != blank -%}
+    <div class="fl-page__content fl-rte">{{ page.content }}</div>
+  {%- endif -%}
+</div>
+
+{% stylesheet %}
+  .fl-page {
+    width: min(720px, 100%);
+    margin-inline: auto;
+    padding-block: 48px 80px;
+  }
+
+  .fl-page__title {
+    margin-bottom: 32px;
+  }
+{% endstylesheet %}
 
 {% schema %}
 {
-  "name": "t:general.page",
+  "name": "Page",
+  "tag": "section",
   "settings": []
 }
 {% endschema %}

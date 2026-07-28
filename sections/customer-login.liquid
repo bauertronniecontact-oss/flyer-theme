@@ -1,0 +1,193 @@
+{% comment %}
+  FLYER — Customer login (templates/customers/login.json).
+  Two panes: sign in, and password recovery. Without JS the recovery pane is
+  reached through the #recover anchor (:target); with JS the toggle links swap
+  panes without a jump. Shopify re-opens the recovery pane after a submit via
+  form.posted_successfully?.
+{% endcomment %}
+
+{% render 'customer-styles' %}
+
+{%- comment -%}
+  The recovery pane is captured first so the form object can flip
+  `recover_posted`; the flag then drives which pane opens on load.
+{%- endcomment -%}
+{%- assign recover_posted = false -%}
+{%- capture recover_pane -%}
+  <div class="fl-login__pane fl-login__pane--recover" id="recover" data-pane="recover">
+    <div class="fl-account__head">
+      <h2 class="fl-account__title">{{ 'customer.recover_password.title' | t }}</h2>
+      <p class="fl-account__subtext">{{ 'customer.recover_password.subtext' | t }}</p>
+    </div>
+
+    {%- form 'recover_customer_password', class: 'fl-account__form' -%}
+      {%- if form.posted_successfully? -%}
+        {%- assign recover_posted = true -%}
+        <p class="fl-form-status" role="status">{{ 'customer.recover_password.success' | t }}</p>
+      {%- endif -%}
+
+      {%- if form.errors -%}
+        {%- assign recover_posted = true -%}
+        <ul class="fl-account__errors" role="alert">
+          {%- for field in form.errors -%}
+            <li>{{ form.errors.messages[field] }}</li>
+          {%- endfor -%}
+        </ul>
+      {%- endif -%}
+
+      <div class="fl-field">
+        <label class="fl-label" for="FlRecoverEmail">{{ 'customer.login.email' | t }}</label>
+        <input
+          class="fl-input"
+          type="email"
+          name="email"
+          id="FlRecoverEmail"
+          autocomplete="email"
+          autocapitalize="off"
+          required
+        >
+      </div>
+
+      <div class="fl-account__actions">
+        <button type="submit" class="fl-btn">{{ 'customer.recover_password.submit' | t }}</button>
+        <a class="fl-account__link" href="#login" data-recover-hide>
+          {{- 'customer.recover_password.cancel' | t -}}
+        </a>
+      </div>
+    {%- endform -%}
+  </div>
+{%- endcapture -%}
+
+<fl-login
+  class="fl-account"
+  data-recover-open="{% if recover_posted %}true{% else %}false{% endif %}"
+>
+  <div class="fl-account__inner">
+    <div class="fl-login__pane fl-login__pane--login" id="login" data-pane="login">
+      <div class="fl-account__head">
+        <h1 class="fl-account__title">{{ 'customer.login.title' | t }}</h1>
+      </div>
+
+      {%- form 'customer_login', class: 'fl-account__form' -%}
+        {%- if form.errors -%}
+          <ul class="fl-account__errors" role="alert">
+            {%- for field in form.errors -%}
+              <li>{{ form.errors.messages[field] }}</li>
+            {%- endfor -%}
+          </ul>
+        {%- endif -%}
+
+        <div class="fl-field">
+          <label class="fl-label" for="FlLoginEmail">{{ 'customer.login.email' | t }}</label>
+          <input
+            class="fl-input"
+            type="email"
+            name="customer[email]"
+            id="FlLoginEmail"
+            autocomplete="email"
+            autocapitalize="off"
+            required
+          >
+        </div>
+
+        <div class="fl-field">
+          <label class="fl-label" for="FlLoginPassword">{{ 'customer.login.password' | t }}</label>
+          <input
+            class="fl-input"
+            type="password"
+            name="customer[password]"
+            id="FlLoginPassword"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <div class="fl-account__actions">
+          <button type="submit" class="fl-btn">{{ 'customer.login.submit' | t }}</button>
+          <a class="fl-account__link" href="#recover" data-recover-show>
+            {{- 'customer.login.forgot_password' | t -}}
+          </a>
+        </div>
+      {%- endform -%}
+
+      {%- if shop.customer_accounts_enabled -%}
+        <p class="fl-account__aside">
+          {{ 'customer.login.new_customer' | t }}
+          <a href="{{ routes.account_register_url }}">{{ 'customer.login.create_account' | t }}</a>
+        </p>
+      {%- endif -%}
+    </div>
+
+    {{ recover_pane }}
+  </div>
+</fl-login>
+
+{% stylesheet %}
+  /* Sign-in pane shows by default; recovery pane is opt-in. */
+  .fl-login__pane--recover {
+    display: none;
+  }
+
+  /* No-JS fallback: the #recover anchor swaps the panes. */
+  .fl-login__pane--recover:target {
+    display: block;
+  }
+
+  .fl-account__inner:has(.fl-login__pane--recover:target) .fl-login__pane--login {
+    display: none;
+  }
+
+  /* Enhanced: the custom element drives the state without an anchor jump. */
+  fl-login[data-recover-open='true'] .fl-login__pane--recover {
+    display: block;
+  }
+
+  fl-login[data-recover-open='true'] .fl-login__pane--login {
+    display: none;
+  }
+
+  fl-login[data-recover-open='false'] .fl-login__pane--recover {
+    display: none;
+  }
+
+  fl-login[data-recover-open='false'] .fl-login__pane--login {
+    display: block;
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('fl-login')) {
+    customElements.define(
+      'fl-login',
+      class FlLogin extends HTMLElement {
+        connectedCallback() {
+          this.addEventListener('click', this._onClick);
+          if (window.location.hash === '#recover') this.setAttribute('data-recover-open', 'true');
+        }
+
+        disconnectedCallback() {
+          this.removeEventListener('click', this._onClick);
+        }
+
+        _onClick = (event) => {
+          const show = event.target.closest('[data-recover-show]');
+          const hide = event.target.closest('[data-recover-hide]');
+          if (!show && !hide) return;
+          event.preventDefault();
+          this.setAttribute('data-recover-open', show ? 'true' : 'false');
+          const pane = this.querySelector(show ? '[data-pane="recover"]' : '[data-pane="login"]');
+          const field = pane.querySelector('input');
+          if (field) field.focus();
+        };
+      }
+    );
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Login",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

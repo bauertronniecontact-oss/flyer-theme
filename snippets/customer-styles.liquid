@@ -1,0 +1,210 @@
+{% doc %}
+  Shared styles for every customer account section (login, register, reset,
+  activate, account, addresses, order). Rendered once at the top of each
+  customer section so the pages stay visually consistent.
+
+  @example
+  {% render 'customer-styles' %}
+{% enddoc %}
+
+{% stylesheet %}
+  .fl-account {
+    padding-block: 56px 80px;
+  }
+
+  .fl-account__inner {
+    width: min(420px, 100%);
+    margin-inline: auto;
+  }
+
+  .fl-account__inner--wide {
+    width: 100%;
+    max-width: var(--page-width);
+  }
+
+  .fl-account__head {
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-account__head--row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .fl-account__title {
+    margin: 0;
+  }
+
+  .fl-account__subtext {
+    margin-top: 8px;
+    color: var(--color-muted);
+  }
+
+  .fl-account__back {
+    display: inline-block;
+    margin-bottom: 20px;
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+
+  .fl-account__form {
+    margin: 0;
+  }
+
+  .fl-account__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 20px;
+    align-items: center;
+    margin-top: 8px;
+  }
+
+  .fl-account__actions .fl-btn {
+    flex: 0 0 auto;
+  }
+
+  .fl-account__link {
+    padding: 0;
+    font: inherit;
+    font-size: 0.9375em;
+    color: var(--color-muted);
+    background: none;
+    border: 0;
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    cursor: pointer;
+  }
+
+  .fl-account__link:hover {
+    color: var(--color-ink);
+  }
+
+  .fl-account__aside {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid var(--color-line);
+    font-size: 0.9375em;
+    color: var(--color-muted);
+  }
+
+  .fl-account__errors {
+    margin: 0 0 18px;
+    padding: 12px 14px;
+    list-style: none;
+    border: 1px solid var(--color-ink);
+    border-radius: var(--radius-input);
+    background: var(--color-surface);
+  }
+
+  .fl-account__errors li + li {
+    margin-top: 6px;
+  }
+
+  .fl-account__grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 16px;
+  }
+
+  .fl-account__field--full {
+    grid-column: 1 / -1;
+  }
+
+  @media screen and (max-width: 599px) {
+    .fl-account__grid {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  .fl-account__checkbox {
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+    margin-bottom: 18px;
+    cursor: pointer;
+  }
+
+  .fl-account__empty {
+    padding: 40px 0;
+    color: var(--color-muted);
+    text-align: center;
+  }
+
+  /* Record list — orders, addresses */
+  .fl-account__list {
+    display: grid;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .fl-account__row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px 20px;
+    padding: 18px 20px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+  }
+
+  .fl-account__cell {
+    min-width: 0;
+  }
+
+  .fl-account__cell-label {
+    display: block;
+    margin-bottom: 4px;
+    font-size: 0.75em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .fl-account__details {
+    margin-bottom: 16px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-card);
+  }
+
+  .fl-account__summary {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    min-height: 44px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .fl-account__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .fl-account__summary::after {
+    content: '+';
+    flex: 0 0 auto;
+    color: var(--color-muted);
+  }
+
+  .fl-account__details[open] > .fl-account__summary::after {
+    content: '–';
+  }
+
+  .fl-account__details-body {
+    padding: 4px 20px 20px;
+    border-top: 1px solid var(--color-line);
+  }
+
+  .fl-account__address {
+    margin-bottom: 16px;
+    color: var(--color-muted);
+    font-style: normal;
+  }
+{% endstylesheet %}

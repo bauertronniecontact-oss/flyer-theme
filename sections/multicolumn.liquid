@@ -1,0 +1,323 @@
+{% comment %}
+  Multicolumn.
+  Optional heading above a grid of column blocks (square image, heading,
+  text, optional link). Columns wrap when there are more blocks than the
+  selected column count.
+{% endcomment %}
+
+{%- liquid
+  assign cols = section.settings.columns
+  assign centered = false
+  if section.settings.alignment == 'center'
+    assign centered = true
+  endif
+
+  case cols
+    when '2'
+      assign sizes_desktop = '50vw'
+    when '4'
+      assign sizes_desktop = '25vw'
+    else
+      assign sizes_desktop = '33vw'
+  endcase
+  assign img_sizes = '(max-width: 749px) 100vw, (max-width: 989px) 50vw, ' | append: sizes_desktop
+-%}
+
+<section
+  class="fl-multicol full-width{% if section.settings.background == 'surface' %} fl-multicol--surface{% endif %}{% if centered %} fl-multicol--center{% endif %}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+>
+  <div class="fl-multicol__inner">
+    {%- if section.settings.heading != blank -%}
+      <div class="fl-section-head{% if centered %} fl-section-head--center{% endif %}">
+        <h2>{{ section.settings.heading | escape }}</h2>
+      </div>
+    {%- endif -%}
+
+    {%- if section.blocks.size > 0 -%}
+      <div class="fl-multicol__grid" style="--cols: {{ cols }}">
+        {%- for block in section.blocks -%}
+          <div class="fl-multicol__col" {{ block.shopify_attributes }}>
+            {%- if block.settings.show_image -%}
+              <div class="fl-multicol__media">
+                {%- if block.settings.image -%}
+                  {{
+                    block.settings.image
+                    | image_url: width: 900
+                    | image_tag:
+                      widths: '300, 450, 600, 900',
+                      sizes: img_sizes,
+                      alt: block.settings.image.alt,
+                      loading: 'lazy',
+                      class: 'fl-multicol__img'
+                  }}
+                {%- else -%}
+                  {{ 'collection-1' | placeholder_svg_tag: 'fl-multicol__ph' }}
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+
+            {%- if block.settings.heading != blank -%}
+              <h3 class="fl-multicol__heading">{{ block.settings.heading | escape }}</h3>
+            {%- endif -%}
+
+            {%- if block.settings.text != blank -%}
+              <div class="fl-multicol__text">{{ block.settings.text }}</div>
+            {%- endif -%}
+
+            {%- if block.settings.link_label != blank -%}
+              <a class="fl-multicol__link" href="{{ block.settings.link | default: '#' }}">
+                {{- block.settings.link_label | escape -}}
+              </a>
+            {%- endif -%}
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-multicol {
+    background-color: var(--color-bg);
+  }
+
+  .fl-multicol--surface {
+    background-color: var(--color-surface);
+  }
+
+  .fl-multicol__inner {
+    width: var(--content-width);
+    margin-inline: auto;
+  }
+
+  .fl-multicol__grid {
+    display: grid;
+    grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr));
+    gap: 40px 24px;
+  }
+
+  .fl-multicol__col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .fl-multicol--center .fl-multicol__col {
+    align-items: center;
+    text-align: center;
+  }
+
+  .fl-multicol__media {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+    border-radius: var(--radius-card);
+    background-color: var(--color-surface);
+  }
+
+  .fl-multicol--surface .fl-multicol__media {
+    background-color: var(--color-bg);
+  }
+
+  .fl-multicol__img,
+  .fl-multicol__ph {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fl-multicol__ph {
+    fill: var(--color-muted);
+    opacity: 0.4;
+  }
+
+  .fl-multicol__heading {
+    font-size: 1.0625em;
+    font-weight: 500;
+    margin-block-start: 4px;
+  }
+
+  .fl-multicol__text {
+    color: var(--color-muted);
+  }
+
+  .fl-multicol__text > p + p {
+    margin-block-start: 1em;
+  }
+
+  .fl-multicol__col > .fl-multicol__link {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 44px;
+    font-size: 0.9375em;
+  }
+
+  .fl-multicol--center .fl-multicol__link {
+    align-self: center;
+  }
+
+  @media (max-width: 989px) {
+    .fl-multicol__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 749px) {
+    .fl-multicol__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 32px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Multicolumn",
+  "max_blocks": 12,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Why shop with us",
+      "info": "Leave blank to hide the heading."
+    },
+    {
+      "type": "select",
+      "id": "columns",
+      "label": "Columns on desktop",
+      "options": [
+        {
+          "value": "2",
+          "label": "2 columns"
+        },
+        {
+          "value": "3",
+          "label": "3 columns"
+        },
+        {
+          "value": "4",
+          "label": "4 columns"
+        }
+      ],
+      "default": "3"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "background",
+      "label": "Background",
+      "options": [
+        {
+          "value": "default",
+          "label": "White"
+        },
+        {
+          "value": "surface",
+          "label": "Soft gray"
+        }
+      ],
+      "default": "default"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "column",
+      "name": "Column",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_image",
+          "label": "Show image",
+          "default": true
+        },
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Column heading"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Add a short description of the product, service, or benefit you want to highlight here.</p>"
+        },
+        {
+          "type": "text",
+          "id": "link_label",
+          "label": "Link label"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Multicolumn",
+      "blocks": [
+        {
+          "type": "column"
+        },
+        {
+          "type": "column"
+        },
+        {
+          "type": "column"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

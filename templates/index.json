@@ -1,0 +1,112 @@
+{
+  "sections": {
+    "banner": {
+      "type": "image-banner",
+      "blocks": {
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "New season, clean lines"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "Everyday pieces made to last."
+          }
+        },
+        "buttons": {
+          "type": "buttons",
+          "settings": {
+            "button_label_1": "Shop all"
+          }
+        }
+      },
+      "block_order": ["heading", "text", "buttons"],
+      "settings": {
+        "height": "medium",
+        "overlay_opacity": 20,
+        "content_position": "middle-center"
+      }
+    },
+    "featured": {
+      "type": "featured-collection",
+      "settings": {
+        "heading": "Featured collection",
+        "products_to_show": 8,
+        "cols_desktop": "4",
+        "show_view_all": true
+      }
+    },
+    "image-with-text": {
+      "type": "image-with-text",
+      "blocks": {
+        "heading": {
+          "type": "heading",
+          "settings": {
+            "heading": "Made with care"
+          }
+        },
+        "text": {
+          "type": "text",
+          "settings": {
+            "text": "<p>Tell customers where your products come from, who makes them, and why that matters. A short paragraph goes a long way.</p>"
+          }
+        },
+        "button": {
+          "type": "button",
+          "settings": {
+            "label": "Our story",
+            "style": "secondary"
+          }
+        }
+      },
+      "block_order": ["heading", "text", "button"],
+      "settings": {
+        "layout": "image_first",
+        "image_ratio": "adapt"
+      }
+    },
+    "multicolumn": {
+      "type": "multicolumn",
+      "blocks": {
+        "column-1": {
+          "type": "column",
+          "settings": {
+            "heading": "Free shipping",
+            "text": "<p>On every order over $50, anywhere in the country.</p>"
+          }
+        },
+        "column-2": {
+          "type": "column",
+          "settings": {
+            "heading": "Easy returns",
+            "text": "<p>Changed your mind? Send it back within 30 days.</p>"
+          }
+        },
+        "column-3": {
+          "type": "column",
+          "settings": {
+            "heading": "Here to help",
+            "text": "<p>Questions about sizing or care? Just ask.</p>"
+          }
+        }
+      },
+      "block_order": ["column-1", "column-2", "column-3"],
+      "settings": {
+        "heading": "Why shop with us",
+        "columns": "3",
+        "alignment": "left",
+        "background": "surface"
+      }
+    },
+    "newsletter": {
+      "type": "newsletter",
+      "settings": {
+        "heading": "Stay in the loop",
+        "text": "<p>New arrivals and occasional news. No spam.</p>"
+      }
+    }
+  },
+  "order": ["banner", "featured", "image-with-text", "multicolumn", "newsletter"]
+}

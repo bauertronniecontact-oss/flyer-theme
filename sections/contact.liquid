@@ -1,0 +1,131 @@
+{% comment %}
+  FLYER — Contact form (templates/page.contact.json).
+{% endcomment %}
+
+<div class="fl-contact">
+  <div class="fl-contact__head">
+    <h1 class="fl-contact__title">
+      {%- if section.settings.heading != blank -%}
+        {{ section.settings.heading | escape }}
+      {%- else -%}
+        {{ page.title | escape }}
+      {%- endif -%}
+    </h1>
+
+    {%- if section.settings.intro != blank -%}
+      <div class="fl-contact__intro fl-rte">{{ section.settings.intro }}</div>
+    {%- elsif page.content != blank -%}
+      <div class="fl-contact__intro fl-rte">{{ page.content }}</div>
+    {%- endif -%}
+  </div>
+
+  {%- form 'contact', class: 'fl-contact__form' -%}
+    {%- if form.posted_successfully? -%}
+      <p class="fl-form-status" role="status">{{ 'contact.form.success' | t }}</p>
+    {%- endif -%}
+
+    {%- if form.errors -%}
+      <div class="fl-form-status fl-form-status--error" role="alert">
+        <p>{{ 'contact.form.error' | t }}</p>
+        <ul class="fl-contact__errors">
+          {%- for field in form.errors -%}
+            <li>{{ form.errors.messages[field] }}</li>
+          {%- endfor -%}
+        </ul>
+      </div>
+    {%- endif -%}
+
+    <div class="fl-field">
+      <label class="fl-label" for="FlContactName">{{ 'contact.form.name' | t }}</label>
+      <input
+        class="fl-input"
+        type="text"
+        id="FlContactName"
+        name="contact[name]"
+        value="{{ form.name }}"
+        autocomplete="name"
+      >
+    </div>
+
+    <div class="fl-field">
+      <label class="fl-label" for="FlContactEmail">{{ 'contact.form.email' | t }}</label>
+      <input
+        class="fl-input"
+        type="email"
+        id="FlContactEmail"
+        name="contact[email]"
+        value="{{ form.email }}"
+        autocomplete="email"
+        autocapitalize="off"
+        required
+      >
+    </div>
+
+    <div class="fl-field">
+      <label class="fl-label" for="FlContactPhone">{{ 'contact.form.phone' | t }}</label>
+      <input
+        class="fl-input"
+        type="tel"
+        id="FlContactPhone"
+        name="contact[phone]"
+        value="{{ form.phone }}"
+        autocomplete="tel"
+      >
+    </div>
+
+    <div class="fl-field">
+      <label class="fl-label" for="FlContactBody">{{ 'contact.form.message' | t }}</label>
+      <textarea class="fl-textarea" id="FlContactBody" name="contact[body]" rows="6" required>
+        {{- form.body -}}
+      </textarea>
+    </div>
+
+    <button type="submit" class="fl-btn">{{ 'contact.form.submit' | t }}</button>
+  {%- endform -%}
+</div>
+
+{% stylesheet %}
+  .fl-contact {
+    width: min(560px, 100%);
+    margin-inline: auto;
+    padding-block: 48px 80px;
+  }
+
+  .fl-contact__head {
+    margin-bottom: 32px;
+  }
+
+  .fl-contact__title {
+    margin: 0 0 16px;
+  }
+
+  .fl-contact__intro {
+    color: var(--color-muted);
+  }
+
+  .fl-contact__errors {
+    margin: 8px 0 0;
+    padding-left: 1.2em;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Contact form",
+  "tag": "section",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Leave empty to use the page title."
+    },
+    {
+      "type": "richtext",
+      "id": "intro",
+      "label": "Intro text",
+      "info": "Leave empty to use the page content."
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,149 @@
+{% comment %}
+  FLYER — Addresses (templates/customers/addresses.json).
+  Each saved address gets an expandable edit form; a final panel adds a new one.
+  Country/province pairs are wired natively from the country option tags, so the
+  province select fills in without Shopify's legacy helper script.
+{% endcomment %}
+
+{% render 'customer-styles' %}
+
+<fl-addresses class="fl-account">
+  <div class="fl-account__inner fl-account__inner--wide">
+    <a class="fl-account__back" href="{{ routes.account_url }}">
+      {{- 'customer.addresses.back_to_account' | t -}}
+    </a>
+
+    <div class="fl-account__head">
+      <h1 class="fl-account__title">{{ 'customer.addresses.title' | t }}</h1>
+    </div>
+
+    {%- paginate customer.addresses by 20 -%}
+      {%- for address in customer.addresses -%}
+        <details class="fl-account__details">
+          <summary class="fl-account__summary">
+            <span>
+              {{ address.first_name }} {{ address.last_name }} — {{ address.city }}
+              {%- if address == customer.default_address %}
+                ({{ 'customer.addresses.default' | t }})
+              {%- endif -%}
+            </span>
+          </summary>
+          <div class="fl-account__details-body">
+            <address class="fl-account__address">{{ address | format_address }}</address>
+
+            {%- form 'customer_address', address, class: 'fl-account__form' -%}
+              {% render 'address-fields', form: form, uid: address.id %}
+
+              <label class="fl-account__checkbox">
+                {{ form.set_as_default_checkbox }}
+                <span>{{ 'customer.addresses.set_default' | t }}</span>
+              </label>
+
+              <div class="fl-account__actions">
+                <button type="submit" class="fl-btn">{{ 'customer.addresses.update' | t }}</button>
+              </div>
+            {%- endform -%}
+
+            <form
+              method="post"
+              action="{{ routes.account_addresses_url }}/{{ address.id }}"
+              data-confirm="{{ 'customer.addresses.delete_confirm' | t | escape }}"
+            >
+              <input type="hidden" name="_method" value="delete">
+              <button type="submit" class="fl-account__link">{{ 'customer.addresses.delete' | t }}</button>
+            </form>
+          </div>
+        </details>
+      {%- endfor -%}
+    {%- endpaginate -%}
+
+    <details class="fl-account__details">
+      <summary class="fl-account__summary">
+        <span>{{ 'customer.addresses.add_new' | t }}</span>
+      </summary>
+      <div class="fl-account__details-body">
+        {%- form 'customer_address', customer.new_address, class: 'fl-account__form' -%}
+          {% render 'address-fields', form: form, uid: 'new' %}
+
+          <label class="fl-account__checkbox">
+            {{ form.set_as_default_checkbox }}
+            <span>{{ 'customer.addresses.set_default' | t }}</span>
+          </label>
+
+          <div class="fl-account__actions">
+            <button type="submit" class="fl-btn">{{ 'customer.addresses.add' | t }}</button>
+          </div>
+        {%- endform -%}
+      </div>
+    </details>
+  </div>
+</fl-addresses>
+
+{% javascript %}
+  if (!customElements.get('fl-addresses')) {
+    customElements.define(
+      'fl-addresses',
+      class FlAddresses extends HTMLElement {
+        connectedCallback() {
+          this.querySelectorAll('[data-country-select]').forEach((select) => {
+            this._wireProvinces(select);
+          });
+          this.addEventListener('submit', this._onSubmit);
+        }
+
+        disconnectedCallback() {
+          this.removeEventListener('submit', this._onSubmit);
+        }
+
+        _onSubmit = (event) => {
+          const form = event.target.closest('[data-confirm]');
+          if (!form) return;
+          if (!window.confirm(form.getAttribute('data-confirm'))) event.preventDefault();
+        };
+
+        _wireProvinces(select) {
+          const wrapper = this.querySelector(`[data-province-wrapper="${select.dataset.countrySelect}"]`);
+          if (!wrapper) return;
+          const province = wrapper.querySelector('select');
+
+          const fill = () => {
+            const option = select.options[select.selectedIndex];
+            let values = [];
+            try {
+              values = JSON.parse(option.getAttribute('data-provinces') || '[]');
+            } catch (error) {
+              values = [];
+            }
+            province.innerHTML = '';
+            if (!values.length) {
+              wrapper.hidden = true;
+              return;
+            }
+            values.forEach((pair) => {
+              const opt = document.createElement('option');
+              opt.value = pair[0];
+              opt.textContent = pair[1];
+              province.appendChild(opt);
+            });
+            const preset = province.getAttribute('data-default');
+            if (preset) province.value = preset;
+            wrapper.hidden = false;
+          };
+
+          const preset = select.getAttribute('data-default');
+          if (preset) select.value = preset;
+          select.addEventListener('change', fill);
+          fill();
+        }
+      }
+    );
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Addresses",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}

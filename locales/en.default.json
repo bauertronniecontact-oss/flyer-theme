@@ -65,6 +65,7 @@
       "sold_out": "Sold out",
       "quick_add": "Add to cart",
       "choose_options": "Choose options",
+      "placeholder_title": "Example product",
       "regular_price": "Regular price",
       "sale_price": "Sale price"
     },
@@ -96,7 +97,8 @@
         "one": "{{ count }} product",
         "other": "{{ count }} products"
       },
-      "all_products": "Products"
+      "all_products": "Products",
+      "view_all": "View all"
     },
     "sorting": {
       "title": "Sort by"
@@ -149,6 +151,7 @@
   },
   "blog": {
     "read_more": "Read more",
+    "no_articles": "No posts yet.",
     "back_to_blog": "Back to {{ title }}",
     "comments": {
       "one": "{{ count }} comment",

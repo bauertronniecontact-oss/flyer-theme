@@ -1,0 +1,114 @@
+{% comment %}
+  FLYER — Account overview (templates/customers/account.json).
+  Order history plus the default address. Records are rendered as a responsive
+  definition list rather than a table so they stay readable on small screens.
+{% endcomment %}
+
+{% render 'customer-styles' %}
+
+<div class="fl-account">
+  <div class="fl-account__inner fl-account__inner--wide">
+    <div class="fl-account__head fl-account__head--row">
+      <h1 class="fl-account__title">{{ 'customer.account.title' | t }}</h1>
+      <a class="fl-account__link" href="{{ routes.account_logout_url }}">
+        {{- 'customer.account.log_out' | t -}}
+      </a>
+    </div>
+
+    <div class="fl-account__cols">
+      <section class="fl-account__orders">
+        <h2 class="fl-account__subtitle">{{ 'customer.account.orders' | t }}</h2>
+
+        {%- paginate customer.orders by 20 -%}
+          {%- if customer.orders.size > 0 -%}
+            <ul class="fl-account__list" role="list">
+              {%- for order in customer.orders -%}
+                <li class="fl-account__row">
+                  <div class="fl-account__cell">
+                    <span class="fl-account__cell-label">{{ 'customer.account.order_number' | t }}</span>
+                    <a href="{{ order.customer_url }}">{{ order.name }}</a>
+                  </div>
+                  <div class="fl-account__cell">
+                    <span class="fl-account__cell-label">{{ 'customer.account.date' | t }}</span>
+                    {{ order.created_at | date: '%B %-d, %Y' }}
+                  </div>
+                  <div class="fl-account__cell">
+                    <span class="fl-account__cell-label">{{ 'customer.account.payment_status' | t }}</span>
+                    {{ order.financial_status_label }}
+                  </div>
+                  <div class="fl-account__cell">
+                    <span class="fl-account__cell-label">{{ 'customer.account.fulfillment_status' | t }}</span>
+                    {{ order.fulfillment_status_label }}
+                  </div>
+                  <div class="fl-account__cell">
+                    <span class="fl-account__cell-label">{{ 'customer.account.total' | t }}</span>
+                    {{ order.total_price | money }}
+                  </div>
+                </li>
+              {%- endfor -%}
+            </ul>
+
+            {%- if paginate.pages > 1 -%}
+              <nav class="fl-account__pagination" aria-label="{{ 'general.pagination.label' | t }}">
+                {%- if paginate.previous -%}
+                  <a href="{{ paginate.previous.url }}">{{ 'general.pagination.previous' | t }}</a>
+                {%- endif -%}
+                {%- if paginate.next -%}
+                  <a href="{{ paginate.next.url }}">{{ 'general.pagination.next' | t }}</a>
+                {%- endif -%}
+              </nav>
+            {%- endif -%}
+          {%- else -%}
+            <p class="fl-account__empty">{{ 'customer.account.no_orders' | t }}</p>
+          {%- endif -%}
+        {%- endpaginate -%}
+      </section>
+
+      <aside class="fl-account__side">
+        <h2 class="fl-account__subtitle">{{ 'customer.account.details' | t }}</h2>
+        {%- if customer.default_address -%}
+          <address class="fl-account__address">{{ customer.default_address | format_address }}</address>
+        {%- endif -%}
+        <a class="fl-btn fl-btn--secondary" href="{{ routes.account_addresses_url }}">
+          {{- 'customer.account.view_addresses' | t -}}
+        </a>
+      </aside>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  .fl-account__cols {
+    display: grid;
+    gap: 40px;
+  }
+
+  @media screen and (min-width: 990px) {
+    .fl-account__cols {
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 56px;
+    }
+  }
+
+  .fl-account__subtitle {
+    margin-bottom: 20px;
+    font-size: 1em;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  .fl-account__pagination {
+    display: flex;
+    gap: 20px;
+    margin-top: 28px;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Account",
+  "tag": "section",
+  "settings": []
+}
+{% endschema %}
