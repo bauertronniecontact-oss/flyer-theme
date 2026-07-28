@@ -1,5 +1,12 @@
 name: CI
 on: [push]
+
+# theme-check-action publishes its results as a GitHub check run,
+# which the default token cannot create without these scopes.
+permissions:
+  contents: read
+  checks: write
+
 jobs:
   theme-check:
     name: Theme Check
