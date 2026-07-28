@@ -6,7 +6,9 @@
         "heading": {
           "type": "heading",
           "settings": {
-            "heading": "New season, clean lines"
+            "heading": "New season, clean lines",
+            "heading_tag": "h1",
+            "heading_size": "large"
           }
         },
         "text": {

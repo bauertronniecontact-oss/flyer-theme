@@ -43,9 +43,17 @@
     {%- endif -%}
   </div>
 
+  {%- comment -%}
+    With no image the placeholder is light, so the merchant's overlay setting is
+    floored at 45% — otherwise the default banner ships with unreadable text.
+  {%- endcomment -%}
+  {%- assign overlay = section.settings.overlay_opacity -%}
+  {%- if section.settings.image == blank and overlay < 45 -%}
+    {%- assign overlay = 45 -%}
+  {%- endif -%}
   <div
     class="fl-banner__overlay"
-    style="background-color: rgb(0 0 0 / {{ section.settings.overlay_opacity }}%);"
+    style="background-color: rgb(0 0 0 / {{ overlay }}%);"
   ></div>
 
   {%- if section.blocks.size > 0 -%}
@@ -57,12 +65,13 @@
         {%- case block.type -%}
           {%- when 'heading' -%}
             {%- if block.settings.heading != blank -%}
-              <h2
+              {%- assign heading_tag = block.settings.heading_tag | default: 'h2' -%}
+              <{{ heading_tag }}
                 class="fl-banner__heading fl-banner__heading--{{ block.settings.heading_size }}"
                 {{ block.shopify_attributes }}
               >
                 {{ block.settings.heading | escape }}
-              </h2>
+              </{{ heading_tag }}>
             {%- endif -%}
 
           {%- when 'text' -%}
@@ -302,6 +311,27 @@
           "id": "heading",
           "label": "Heading",
           "default": "New season essentials"
+        },
+        {
+          "type": "select",
+          "id": "heading_tag",
+          "label": "Heading level",
+          "info": "Use H1 when this is the main banner of the page.",
+          "options": [
+            {
+              "value": "h1",
+              "label": "H1"
+            },
+            {
+              "value": "h2",
+              "label": "H2"
+            },
+            {
+              "value": "h3",
+              "label": "H3"
+            }
+          ],
+          "default": "h2"
         },
         {
           "type": "select",
