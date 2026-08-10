@@ -1,0 +1,84 @@
+{% comment %}
+  Apps.
+  Bare container for app blocks: merchants drop an app block in and the theme
+  only supplies the colour scheme, the vertical rhythm and the page gutters.
+  Turn “Add side margins” off to let an app run edge to edge.
+{% endcomment %}
+
+<section
+  class="fl-apps full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+>
+  <div class="fl-apps__inner{% unless section.settings.include_margins %} fl-apps__inner--flush{% endunless %}">
+    {%- for block in section.blocks -%}
+      {% render block %}
+    {%- endfor -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-apps__inner {
+    width: min(calc(var(--page-width) - var(--page-margin) * 2), calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+    min-width: 0;
+  }
+
+  .fl-apps__inner--flush {
+    width: 100%;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Apps",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "include_margins",
+      "label": "Add side margins",
+      "info": "Turn off to let the app span the full width of the screen.",
+      "default": true
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "@app"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Apps"
+    }
+  ]
+}
+{% endschema %}

@@ -99,8 +99,7 @@
       "settings": {
         "heading": "Why shop with us",
         "columns": "3",
-        "alignment": "left",
-        "background": "surface"
+        "alignment": "left"
       }
     },
     "newsletter": {

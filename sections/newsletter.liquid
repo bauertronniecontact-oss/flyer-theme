@@ -1,7 +1,7 @@
 {%- assign form_id = 'Newsletter-' | append: section.id -%}
 
 <section
-  class="fl-newsletter full-width{% if section.settings.background == 'surface' %} fl-newsletter--surface{% endif %}"
+  class="fl-newsletter full-width color-{{ section.settings.color_scheme }}"
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
   <div class="fl-newsletter__inner">
@@ -65,14 +65,6 @@
 </section>
 
 {% stylesheet %}
-  .fl-newsletter {
-    background-color: var(--color-bg);
-  }
-
-  .fl-newsletter--surface {
-    background-color: var(--color-surface);
-  }
-
   .fl-newsletter__inner {
     width: min(560px, calc(100% - var(--page-margin) * 2));
     margin-inline: auto;
@@ -110,14 +102,6 @@
     border-end-start-radius: 0;
   }
 
-  .fl-newsletter--surface .fl-newsletter__row .fl-input {
-    border-color: transparent;
-  }
-
-  .fl-newsletter--surface .fl-newsletter__row .fl-input:focus-visible {
-    border-color: var(--color-ink);
-  }
-
   @media (max-width: 479px) {
     .fl-newsletter__row {
       flex-direction: column;
@@ -140,6 +124,12 @@
   "name": "Newsletter",
   "settings": [
     {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
       "type": "text",
       "id": "eyebrow",
       "label": "Eyebrow",
@@ -156,22 +146,6 @@
       "id": "text",
       "label": "Text",
       "default": "<p>Be the first to know about new arrivals and exclusive offers.</p>"
-    },
-    {
-      "type": "select",
-      "id": "background",
-      "label": "Background",
-      "options": [
-        {
-          "value": "default",
-          "label": "White"
-        },
-        {
-          "value": "surface",
-          "label": "Soft gray"
-        }
-      ],
-      "default": "default"
     },
     {
       "type": "header",

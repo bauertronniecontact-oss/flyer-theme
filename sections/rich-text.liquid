@@ -1,5 +1,5 @@
 <section
-  class="fl-richtext full-width{% if section.settings.background == 'surface' %} fl-richtext--surface{% endif %}"
+  class="fl-richtext full-width color-{{ section.settings.color_scheme }}"
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
   <div class="fl-richtext__inner">
@@ -35,14 +35,6 @@
 </section>
 
 {% stylesheet %}
-  .fl-richtext {
-    background-color: var(--color-bg);
-  }
-
-  .fl-richtext--surface {
-    background-color: var(--color-surface);
-  }
-
   .fl-richtext__inner {
     width: min(720px, calc(100% - var(--page-margin) * 2));
     margin-inline: auto;
@@ -67,20 +59,10 @@
   "name": "Rich text",
   "settings": [
     {
-      "type": "select",
-      "id": "background",
-      "label": "Background",
-      "options": [
-        {
-          "value": "default",
-          "label": "White"
-        },
-        {
-          "value": "surface",
-          "label": "Soft gray"
-        }
-      ],
-      "default": "default"
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
     },
     {
       "type": "header",

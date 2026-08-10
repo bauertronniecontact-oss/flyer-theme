@@ -1,0 +1,472 @@
+{% comment %}
+  Email signup banner.
+  Full-bleed image with a solid content box holding the newsletter form.
+  The box keeps its own background so the copy stays readable on any photo —
+  no dark overlay needed, which suits FLYER’s light art direction.
+  Works with JS disabled: the form posts natively to Shopify.
+{% endcomment %}
+
+{%- liquid
+  assign image = section.settings.image
+  assign show_image = section.settings.show_background_image
+  assign height = section.settings.image_height
+  assign form_id = 'EmailSignup-' | append: section.id
+
+  assign ratio_pad = 56.25
+  if image != blank
+    assign ratio_pad = 100 | divided_by: image.aspect_ratio | round: 2
+  endif
+
+  assign frame_class = 'fl-esb__frame'
+  if show_image
+    assign frame_class = frame_class | append: ' fl-esb__frame--media fl-esb__frame--'
+    assign frame_class = frame_class | append: height
+  endif
+
+  case section.settings.desktop_content_position
+    when 'top'
+      assign justify = 'flex-start'
+    when 'bottom'
+      assign justify = 'flex-end'
+    else
+      assign justify = 'center'
+  endcase
+
+  case section.settings.desktop_content_alignment
+    when 'left'
+      assign align = 'flex-start'
+      assign text_align = 'left'
+    when 'right'
+      assign align = 'flex-end'
+      assign text_align = 'right'
+    else
+      assign align = 'center'
+      assign text_align = 'center'
+  endcase
+
+  assign box_class = 'fl-esb__box'
+  if show_image
+    assign box_class = 'fl-esb__box fl-esb__box--card fl-box'
+  endif
+-%}
+
+<section
+  class="fl-esb full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  <div class="{{ frame_class }}" style="--fl-esb-pad: {{ ratio_pad }}%;">
+    {%- if show_image -%}
+      <div class="fl-esb__media">
+        {%- if image != blank -%}
+          {{
+            image
+            | image_url: width: 3840
+            | image_tag:
+              widths: '375, 750, 1100, 1500, 1920, 2560, 3840',
+              sizes: '100vw',
+              class: 'fl-esb__img',
+              loading: 'lazy'
+          }}
+        {%- else -%}
+          {{ 'lifestyle-1' | placeholder_svg_tag: 'fl-esb__ph' }}
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div
+      class="fl-esb__content"
+      style="justify-content: {{ justify }}; align-items: {{ align }}; text-align: {{ text_align }};"
+    >
+      <div class="{{ box_class }}">
+        {%- for block in section.blocks -%}
+          {%- case block.type -%}
+            {%- when 'heading' -%}
+              {%- if block.settings.heading != blank -%}
+                <h2
+                  class="fl-esb__heading fl-esb__heading--{{ block.settings.heading_size }}"
+                  {{ block.shopify_attributes }}
+                >
+                  {{ block.settings.heading | escape }}
+                </h2>
+              {%- endif -%}
+
+            {%- when 'paragraph' -%}
+              {%- if block.settings.text != blank -%}
+                <div class="fl-esb__text" {{ block.shopify_attributes }}>{{ block.settings.text }}</div>
+              {%- endif -%}
+
+            {%- when 'email_form' -%}
+              <div class="fl-esb__form" {{ block.shopify_attributes }}>
+                {%- form 'customer', id: form_id -%}
+                  <input type="hidden" name="contact[tags]" value="newsletter">
+
+                  {%- if form.posted_successfully? -%}
+                    <p
+                      class="fl-form-status fl-esb__status"
+                      aria-live="polite"
+                      tabindex="-1"
+                      autofocus
+                    >
+                      {{ 'general.newsletter.success' | t }}
+                    </p>
+                  {%- else -%}
+                    {%- if form.errors -%}
+                      <p
+                        class="fl-form-status fl-form-status--error fl-esb__status"
+                        id="{{ form_id }}-error"
+                        aria-live="polite"
+                      >
+                        {{ 'general.newsletter.error' | t }}
+                      </p>
+                    {%- endif -%}
+
+                    <div class="fl-esb__row">
+                      <label class="visually-hidden" for="{{ form_id }}-email">
+                        {{- 'general.newsletter.label' | t -}}
+                      </label>
+                      <input
+                        id="{{ form_id }}-email"
+                        class="fl-input"
+                        type="email"
+                        name="contact[email]"
+                        value="{{ form.email }}"
+                        placeholder="{{ 'general.newsletter.placeholder' | t }}"
+                        required
+                        autocomplete="email"
+                        autocapitalize="off"
+                        autocorrect="off"
+                        {% if form.errors %}
+                          autofocus
+                          aria-invalid="true"
+                          aria-describedby="{{ form_id }}-error"
+                        {% endif %}
+                      >
+                      <button type="submit" class="fl-btn">{{ 'general.newsletter.submit' | t }}</button>
+                    </div>
+                  {%- endif -%}
+                {%- endform -%}
+              </div>
+          {%- endcase -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-esb {
+    display: block;
+  }
+
+  .fl-esb__frame {
+    position: relative;
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .fl-esb__frame--media {
+    background-color: var(--color-surface);
+  }
+
+  /* Zero-width spacer: percentage padding resolves against the frame width, so
+     the banner keeps the image ratio without capping taller content. */
+  .fl-esb__frame--adapt::before {
+    content: '';
+    display: block;
+    flex: 0 0 auto;
+    width: 0;
+    padding-block-end: var(--fl-esb-pad, 56.25%);
+  }
+
+  .fl-esb__frame--small {
+    min-height: 40vh;
+    min-height: 40svh;
+  }
+
+  .fl-esb__frame--medium {
+    min-height: 60vh;
+    min-height: 60svh;
+  }
+
+  .fl-esb__frame--large {
+    min-height: 80vh;
+    min-height: 80svh;
+  }
+
+  .fl-esb__media {
+    position: absolute;
+    inset: 0;
+    min-width: 0;
+  }
+
+  .fl-esb__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fl-esb__ph {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    fill: var(--color-muted);
+    opacity: 0.35;
+  }
+
+  .fl-esb__content {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    width: 100%;
+    max-width: var(--page-width);
+    min-width: 0;
+    margin-inline: auto;
+    padding: clamp(24px, 5vw, 56px) var(--page-margin);
+  }
+
+  .fl-esb__box {
+    width: min(520px, 100%);
+    min-width: 0;
+  }
+
+  .fl-esb__box--card {
+    padding: clamp(24px, 4vw, 40px);
+    background-color: var(--color-bg);
+  }
+
+  .fl-esb__heading {
+    margin-bottom: 12px;
+  }
+
+  .fl-esb__heading--small {
+    font-size: clamp(1.5rem, 2.5vw, 1.875rem);
+  }
+
+  .fl-esb__heading--medium {
+    font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  }
+
+  .fl-esb__heading--large {
+    font-size: clamp(2rem, 5vw, 3rem);
+  }
+
+  .fl-esb__text {
+    margin-bottom: 20px;
+    color: var(--color-muted);
+  }
+
+  .fl-esb__text > p + p {
+    margin-top: 1em;
+  }
+
+  .fl-esb__status {
+    text-align: start;
+  }
+
+  .fl-esb__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .fl-esb__row .fl-input {
+    flex: 1 1 200px;
+    min-width: 0;
+  }
+
+  .fl-esb__row .fl-btn {
+    flex: 0 0 auto;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Email signup banner",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "show_background_image",
+      "label": "Show background image",
+      "default": true
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "label": "Banner height",
+      "info": "Applies when the background image is shown.",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "Adapt to image"
+        },
+        {
+          "value": "small",
+          "label": "Small (40% of screen)"
+        },
+        {
+          "value": "medium",
+          "label": "Medium (60% of screen)"
+        },
+        {
+          "value": "large",
+          "label": "Large (80% of screen)"
+        }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_position",
+      "label": "Content position",
+      "options": [
+        {
+          "value": "top",
+          "label": "Top"
+        },
+        {
+          "value": "middle",
+          "label": "Middle"
+        },
+        {
+          "value": "bottom",
+          "label": "Bottom"
+        }
+      ],
+      "default": "middle"
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_alignment",
+      "label": "Content alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "heading",
+      "name": "Heading",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Sign up for our emails"
+        },
+        {
+          "type": "select",
+          "id": "heading_size",
+          "label": "Heading size",
+          "options": [
+            {
+              "value": "small",
+              "label": "Small"
+            },
+            {
+              "value": "medium",
+              "label": "Medium"
+            },
+            {
+              "value": "large",
+              "label": "Large"
+            }
+          ],
+          "default": "medium"
+        }
+      ]
+    },
+    {
+      "type": "paragraph",
+      "name": "Paragraph",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Be the first to know about new arrivals and exclusive offers.</p>"
+        }
+      ]
+    },
+    {
+      "type": "email_form",
+      "name": "Email form",
+      "limit": 1,
+      "settings": []
+    }
+  ],
+  "presets": [
+    {
+      "name": "Email signup banner",
+      "blocks": [
+        {
+          "type": "heading"
+        },
+        {
+          "type": "paragraph"
+        },
+        {
+          "type": "email_form"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

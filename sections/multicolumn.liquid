@@ -24,7 +24,7 @@
 -%}
 
 <section
-  class="fl-multicol full-width{% if section.settings.background == 'surface' %} fl-multicol--surface{% endif %}{% if centered %} fl-multicol--center{% endif %}"
+  class="fl-multicol full-width color-{{ section.settings.color_scheme }}{% if centered %} fl-multicol--center{% endif %}"
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
 >
   <div class="fl-multicol__inner">
@@ -78,14 +78,6 @@
 </section>
 
 {% stylesheet %}
-  .fl-multicol {
-    background-color: var(--color-bg);
-  }
-
-  .fl-multicol--surface {
-    background-color: var(--color-surface);
-  }
-
   .fl-multicol__inner {
     width: var(--content-width);
     margin-inline: auto;
@@ -115,10 +107,6 @@
     overflow: hidden;
     border-radius: var(--radius-card);
     background-color: var(--color-surface);
-  }
-
-  .fl-multicol--surface .fl-multicol__media {
-    background-color: var(--color-bg);
   }
 
   .fl-multicol__img,
@@ -179,6 +167,12 @@
   "max_blocks": 12,
   "settings": [
     {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
       "type": "text",
       "id": "heading",
       "label": "Heading",
@@ -220,22 +214,6 @@
         }
       ],
       "default": "left"
-    },
-    {
-      "type": "select",
-      "id": "background",
-      "label": "Background",
-      "options": [
-        {
-          "value": "default",
-          "label": "White"
-        },
-        {
-          "value": "surface",
-          "label": "Soft gray"
-        }
-      ],
-      "default": "default"
     },
     {
       "type": "header",

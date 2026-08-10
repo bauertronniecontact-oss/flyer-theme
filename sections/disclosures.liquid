@@ -1,0 +1,211 @@
+{% comment %}
+  Disclosures.
+  Country/currency and language pickers as a standalone section, for stores that
+  would rather surface them in the page body than in the footer.
+  Native <select> elements inside {% form 'localization' %}: with JavaScript a
+  change submits the form straight away, without it the <noscript> button does.
+  A picker is only rendered when the store actually offers more than one option.
+{% endcomment %}
+
+{%- liquid
+  assign show_country = false
+  if section.settings.enable_country_selector and localization.available_countries.size > 1
+    assign show_country = true
+  endif
+
+  assign show_language = false
+  if section.settings.enable_language_selector and localization.available_languages.size > 1
+    assign show_language = true
+  endif
+-%}
+
+{%- if show_country or show_language -%}
+  <section
+    class="fl-disclosures full-width color-{{ section.settings.color_scheme }}"
+    style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+  >
+    <div class="fl-disclosures__inner">
+      {%- if show_country -%}
+        {%- form 'localization', id: 'FlDisclosuresCountryForm', class: 'fl-disclosures__form' -%}
+          <fl-locale-form class="fl-disclosures__field">
+            <label class="fl-label" for="FlDisclosuresCountry">
+              {{- 'general.localization.country_label' | t -}}
+            </label>
+            <select
+              id="FlDisclosuresCountry"
+              class="fl-select fl-disclosures__select"
+              name="country_code"
+            >
+              {%- for country in localization.available_countries -%}
+                <option
+                  value="{{ country.iso_code }}"
+                  {% if country.iso_code == localization.country.iso_code %}
+                    selected
+                  {% endif %}
+                >
+                  {{ country.name }} ({{ country.currency.iso_code }} {{ country.currency.symbol }})
+                </option>
+              {%- endfor -%}
+            </select>
+            <noscript>
+              <button type="submit" class="fl-btn fl-btn--secondary fl-disclosures__submit">
+                {{ 'general.localization.update' | t }}
+              </button>
+            </noscript>
+          </fl-locale-form>
+        {%- endform -%}
+      {%- endif -%}
+
+      {%- if show_language -%}
+        {%- form 'localization', id: 'FlDisclosuresLanguageForm', class: 'fl-disclosures__form' -%}
+          <fl-locale-form class="fl-disclosures__field">
+            <label class="fl-label" for="FlDisclosuresLanguage">
+              {{- 'general.localization.language_label' | t -}}
+            </label>
+            <select
+              id="FlDisclosuresLanguage"
+              class="fl-select fl-disclosures__select"
+              name="locale_code"
+            >
+              {%- for language in localization.available_languages -%}
+                <option
+                  value="{{ language.iso_code }}"
+                  lang="{{ language.iso_code }}"
+                  {% if language.iso_code == localization.language.iso_code %}
+                    selected
+                  {% endif %}
+                >
+                  {{ language.endonym_name | capitalize }}
+                </option>
+              {%- endfor -%}
+            </select>
+            <noscript>
+              <button type="submit" class="fl-btn fl-btn--secondary fl-disclosures__submit">
+                {{ 'general.localization.update' | t }}
+              </button>
+            </noscript>
+          </fl-locale-form>
+        {%- endform -%}
+      {%- endif -%}
+    </div>
+  </section>
+{%- endif -%}
+
+{% stylesheet %}
+  .fl-disclosures__inner {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px 40px;
+    width: min(calc(var(--page-width) - var(--page-margin) * 2), calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+  }
+
+  .fl-disclosures__form {
+    min-width: 0;
+  }
+
+  .fl-disclosures__field {
+    display: block;
+    min-width: 0;
+  }
+
+  .fl-disclosures__select {
+    width: auto;
+    min-width: 240px;
+    max-width: 100%;
+  }
+
+  .fl-disclosures__submit {
+    margin-block-start: 10px;
+  }
+
+  @media (max-width: 749px) {
+    .fl-disclosures__select {
+      min-width: 0;
+      width: 100%;
+    }
+
+    .fl-disclosures__form {
+      flex: 1 1 100%;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('fl-locale-form')) {
+    customElements.define(
+      'fl-locale-form',
+      class extends HTMLElement {
+        connectedCallback() {
+          if (this.ready) return;
+          this.ready = true;
+          const select = this.querySelector('select');
+          if (!select) return;
+          select.addEventListener('change', () => {
+            const form = this.closest('form');
+            if (form) form.submit();
+          });
+        }
+      }
+    );
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Disclosures",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Each picker only appears when the store offers more than one country or language."
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_country_selector",
+      "label": "Show country/region picker",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_language_selector",
+      "label": "Show language picker",
+      "default": true
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Disclosures"
+    }
+  ]
+}
+{% endschema %}

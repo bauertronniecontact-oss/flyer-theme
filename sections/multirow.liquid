@@ -1,0 +1,443 @@
+{% comment %}
+  Multirow.
+  Alternating image / text rows. Each row block owns its image and copy; the
+  section owns the geometry (image height, image width, which side the image
+  sits on) so every row stays consistent. Rows stack, image first, on mobile.
+{% endcomment %}
+
+{%- liquid
+  assign img_width = section.settings.desktop_image_width
+  assign layout = section.settings.image_layout
+
+  case img_width
+    when 'small'
+      assign media_sizes = '(max-width: 749px) 100vw, 33vw'
+    when 'large'
+      assign media_sizes = '(max-width: 749px) 100vw, 67vw'
+    else
+      assign media_sizes = '(max-width: 749px) 100vw, 50vw'
+  endcase
+
+  case section.settings.desktop_content_position
+    when 'top'
+      assign content_position = 'start'
+    when 'bottom'
+      assign content_position = 'end'
+    else
+      assign content_position = 'center'
+  endcase
+
+  assign btn_class = 'fl-btn'
+  if section.settings.button_style == 'secondary'
+    assign btn_class = 'fl-btn fl-btn--secondary'
+  endif
+-%}
+
+<section
+  class="fl-multirow full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px; --row-align: {{ content_position }}; --row-text: {{ section.settings.desktop_content_alignment }}"
+>
+  <div class="fl-multirow__inner">
+    {%- for block in section.blocks -%}
+      {%- liquid
+        assign reverse = false
+        assign remainder = forloop.index0 | modulo: 2
+        case layout
+          when 'right'
+            assign reverse = true
+          when 'alternate-left'
+            if remainder == 1
+              assign reverse = true
+            endif
+          when 'alternate-right'
+            if remainder == 0
+              assign reverse = true
+            endif
+        endcase
+      -%}
+      <div
+        class="fl-multirow__row fl-multirow__row--{{ img_width }}{% if reverse %} fl-multirow__row--reverse{% endif %}"
+        {{ block.shopify_attributes }}
+      >
+        <div class="fl-multirow__media fl-media fl-multirow__media--{{ section.settings.image_height }}">
+          {%- if block.settings.image -%}
+            {{
+              block.settings.image
+              | image_url: width: 1600
+              | image_tag:
+                widths: '300, 500, 700, 900, 1200, 1600',
+                sizes: media_sizes,
+                alt: block.settings.image.alt,
+                loading: 'lazy',
+                class: 'fl-multirow__img'
+            }}
+          {%- else -%}
+            {{ 'lifestyle-2' | placeholder_svg_tag: 'fl-multirow__ph' }}
+          {%- endif -%}
+        </div>
+
+        <div class="fl-multirow__content fl-box color-{{ section.settings.row_color_scheme }}">
+          {%- if block.settings.caption != blank -%}
+            <span class="fl-eyebrow">{{ block.settings.caption | escape }}</span>
+          {%- endif -%}
+
+          {%- if block.settings.heading != blank -%}
+            <h2 class="fl-multirow__heading">{{ block.settings.heading | escape }}</h2>
+          {%- endif -%}
+
+          {%- if block.settings.text != blank -%}
+            <div class="fl-multirow__text">{{ block.settings.text }}</div>
+          {%- endif -%}
+
+          {%- if block.settings.button_label != blank and block.settings.button_link != blank -%}
+            <div class="fl-multirow__cta">
+              <a class="{{ btn_class }}" href="{{ block.settings.button_link }}">
+                {{- block.settings.button_label | escape -}}
+              </a>
+            </div>
+          {%- endif -%}
+        </div>
+      </div>
+    {%- endfor -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-multirow__inner {
+    display: grid;
+    gap: clamp(32px, 5vw, 72px);
+    width: var(--content-width);
+    margin-inline: auto;
+  }
+
+  .fl-multirow__row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .fl-multirow__media {
+    min-width: 0;
+  }
+
+  .fl-multirow__img,
+  .fl-multirow__ph {
+    width: 100%;
+  }
+
+  .fl-multirow__ph {
+    fill: var(--color-muted);
+    opacity: 0.4;
+  }
+
+  .fl-multirow__media--small .fl-multirow__img,
+  .fl-multirow__media--small .fl-multirow__ph {
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+  }
+
+  .fl-multirow__media--medium .fl-multirow__img,
+  .fl-multirow__media--medium .fl-multirow__ph {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .fl-multirow__media--large .fl-multirow__img,
+  .fl-multirow__media--large .fl-multirow__ph {
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+  }
+
+  .fl-multirow__content {
+    min-width: 0;
+    padding: clamp(20px, 3vw, 36px);
+  }
+
+  .fl-multirow__heading {
+    margin-block-end: 14px;
+  }
+
+  .fl-multirow__text > p + p {
+    margin-block-start: 1em;
+  }
+
+  .fl-multirow__cta {
+    margin-block-start: 26px;
+  }
+
+  @media screen and (min-width: 750px) {
+    .fl-multirow__row {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+      gap: clamp(24px, 3vw, 48px);
+    }
+
+    .fl-multirow__row--small {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+
+    .fl-multirow__row--large {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    }
+
+    /* Reversed rows swap the image to the right, so the column widths swap too
+       — otherwise the image would inherit the text column’s width. */
+    .fl-multirow__row--small.fl-multirow__row--reverse {
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    }
+
+    .fl-multirow__row--large.fl-multirow__row--reverse {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+    }
+
+    .fl-multirow__row--reverse .fl-multirow__media {
+      order: 2;
+    }
+
+    .fl-multirow__content {
+      align-self: var(--row-align, center);
+      text-align: var(--row-text, left);
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Multirow",
+  "max_blocks": 8,
+  "settings": [
+    {
+      "type": "header",
+      "content": "Image"
+    },
+    {
+      "type": "select",
+      "id": "image_height",
+      "label": "Image height",
+      "options": [
+        {
+          "value": "adapt",
+          "label": "Adapt to image"
+        },
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "default": "medium"
+    },
+    {
+      "type": "select",
+      "id": "desktop_image_width",
+      "label": "Image width on desktop",
+      "options": [
+        {
+          "value": "small",
+          "label": "Small"
+        },
+        {
+          "value": "medium",
+          "label": "Medium"
+        },
+        {
+          "value": "large",
+          "label": "Large"
+        }
+      ],
+      "default": "medium",
+      "info": "On mobile the image is always full width."
+    },
+    {
+      "type": "select",
+      "id": "image_layout",
+      "label": "Image placement",
+      "options": [
+        {
+          "value": "alternate-left",
+          "label": "Alternate from left"
+        },
+        {
+          "value": "alternate-right",
+          "label": "Alternate from right"
+        },
+        {
+          "value": "left",
+          "label": "Always left"
+        },
+        {
+          "value": "right",
+          "label": "Always right"
+        }
+      ],
+      "default": "alternate-left"
+    },
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_position",
+      "label": "Content position on desktop",
+      "options": [
+        {
+          "value": "top",
+          "label": "Top"
+        },
+        {
+          "value": "middle",
+          "label": "Middle"
+        },
+        {
+          "value": "bottom",
+          "label": "Bottom"
+        }
+      ],
+      "default": "middle"
+    },
+    {
+      "type": "select",
+      "id": "desktop_content_alignment",
+      "label": "Content alignment on desktop",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "Button style",
+      "options": [
+        {
+          "value": "primary",
+          "label": "Primary"
+        },
+        {
+          "value": "secondary",
+          "label": "Secondary"
+        }
+      ],
+      "default": "secondary"
+    },
+    {
+      "type": "header",
+      "content": "Colours"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "color_scheme",
+      "id": "row_color_scheme",
+      "label": "Row colour scheme",
+      "default": "scheme-1",
+      "info": "Applied to the text side of every row."
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "row",
+      "name": "Row",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "text",
+          "id": "caption",
+          "label": "Caption",
+          "default": "Add a caption"
+        },
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Row heading"
+        },
+        {
+          "type": "richtext",
+          "id": "text",
+          "label": "Text",
+          "default": "<p>Pair a large image with a short story. Use this space to walk customers through your process, your materials, or the people behind the brand.</p>"
+        },
+        {
+          "type": "text",
+          "id": "button_label",
+          "label": "Button label",
+          "info": "Add a label and a link to show the button."
+        },
+        {
+          "type": "url",
+          "id": "button_link",
+          "label": "Button link"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Multirow",
+      "blocks": [
+        {
+          "type": "row"
+        },
+        {
+          "type": "row"
+        },
+        {
+          "type": "row"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

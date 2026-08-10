@@ -14,7 +14,7 @@
       },
       "block_order": ["announcement-1"],
       "settings": {
-        "invert": true
+        "color_scheme": "scheme-3"
       }
     },
     "header": {

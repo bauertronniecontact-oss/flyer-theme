@@ -1,6 +1,16 @@
 {% comment %}
   FLYER — Collections list (templates/list-collections.json).
+  Card shape/colour comes from the "Collection cards" theme settings
+  (--coll-card-* tokens + collection_card_color_scheme).
 {% endcomment %}
+
+{%- liquid
+  assign card_classes = 'fl-collections__link'
+  if settings.collection_card_style == 'card'
+    assign card_classes = card_classes | append: ' fl-collections__link--card color-'
+    assign card_classes = card_classes | append: settings.collection_card_color_scheme
+  endif
+-%}
 
 <div
   class="fl-collections"
@@ -12,7 +22,7 @@
     <ul class="fl-collections__grid" role="list">
       {%- for collection in collections -%}
         <li class="fl-collections__item">
-          <a class="fl-collections__link" href="{{ collection.url }}">
+          <a class="{{ card_classes }}" href="{{ collection.url }}">
             <span class="fl-collections__media">
               {%- if collection.featured_image -%}
                 {{
@@ -86,17 +96,29 @@
     min-width: 0;
   }
 
+  /* Shape/shadow/alignment come from the Collection cards theme settings. */
   .fl-collections__link {
     display: flex;
     flex-direction: column;
     gap: 12px;
     text-decoration: none;
+    text-align: var(--coll-card-text-align, left);
+    border: var(--coll-card-border-width, 0) solid
+      rgba(var(--color-ink-rgb), var(--coll-card-border-opacity, 0.1));
+    border-radius: var(--coll-card-radius, 8px);
+    box-shadow: var(--coll-card-shadow);
+  }
+
+  /* "Card" style wraps the whole tile in the collection card colour scheme. */
+  .fl-collections__link--card {
+    padding: var(--coll-card-image-padding, 0);
+    background: var(--color-bg);
   }
 
   .fl-collections__media {
     display: block;
     overflow: hidden;
-    border-radius: var(--radius-card);
+    border-radius: var(--coll-card-radius, 8px);
     background: var(--color-surface);
   }
 

@@ -5,6 +5,8 @@
   Without it the product-level (minimum) price is shown, which is what listings
   want alongside the "From" prefix.
 
+  Every amount honours the theme setting Currency format > Show currency codes.
+
   @param {object} product - product object
   @param {object} [variant] - show this variant's price instead of the product minimum
   @param {number} [price] - raw price when no product is given
@@ -40,6 +42,18 @@
   if compare and compare > p
     assign on_sale = true
   endif
+
+  # Theme setting: Currency format > Show currency codes. Liquid has no dynamic
+  # filter name, so both formats are resolved up front and printed as strings.
+  if settings.currency_code_enabled
+    assign amount = p | money_with_currency
+    assign compare_amount = compare | money_with_currency
+    assign unit_amount = sel_variant.unit_price | money_with_currency
+  else
+    assign amount = p | money
+    assign compare_amount = compare | money
+    assign unit_amount = sel_variant.unit_price | money
+  endif
 -%}
 
 {%- comment -%}
@@ -56,16 +70,16 @@
   {%- if show_from and varies -%}
     <span class="fl-price__from">{{ 'products.card.from' | t }}</span>
   {%- endif -%}
-  <span class="fl-price__current">{{ p | money }}</span>
+  <span class="fl-price__current">{{ amount }}</span>
   {%- if on_sale -%}
     <s class="fl-price__compare">
       <span class="visually-hidden">{{ 'products.card.regular_price' | t }}</span>
-      {{- compare | money -}}
+      {{- compare_amount -}}
     </s>
   {%- endif -%}
   {%- if sel_variant.unit_price_measurement -%}
     <span class="fl-price__unit">
-      {{ sel_variant.unit_price | money }}
+      {{ unit_amount }}
       /
       {%- if sel_variant.unit_price_measurement.reference_value != 1 -%}
         {{ sel_variant.unit_price_measurement.reference_value }}

@@ -25,7 +25,9 @@
   endcase
 -%}
 
-<section class="fl-banner fl-banner--{{ section.settings.height }} full-width">
+<section
+  class="fl-banner fl-banner--{{ section.settings.height }} full-width color-{{ section.settings.color_scheme }}"
+>
   <div class="fl-banner__media">
     {%- if section.settings.image -%}
       {{
@@ -117,7 +119,6 @@
     position: relative;
     display: flex;
     overflow: hidden;
-    background-color: var(--color-surface);
   }
 
   .fl-banner--small {
@@ -230,6 +231,12 @@
 {
   "name": "Image banner",
   "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
     {
       "type": "image_picker",
       "id": "image",

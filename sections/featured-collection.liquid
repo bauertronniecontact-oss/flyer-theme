@@ -29,7 +29,7 @@
 -%}
 
 <section
-  class="fl-featured"
+  class="fl-featured color-{{ section.settings.color_scheme }}"
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
 >
   {%- if heading != blank or show_link -%}
@@ -120,6 +120,12 @@
 {
   "name": "Featured collection",
   "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
     {
       "type": "text",
       "id": "heading",

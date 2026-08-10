@@ -1,5 +1,5 @@
 <div
-  class="fl-custom-liquid"
+  class="fl-custom-liquid color-{{ section.settings.color_scheme }}"
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
   {{ section.settings.custom_liquid }}
@@ -15,6 +15,12 @@
 {
   "name": "Custom Liquid",
   "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
     {
       "type": "liquid",
       "id": "custom_liquid",

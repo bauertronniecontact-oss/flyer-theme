@@ -1,0 +1,85 @@
+{% doc %}
+  Marks a section so it fades in when it scrolls into view.
+
+  Renders nothing but the `data-fl-reveal` attribute, and only when the theme
+  setting Animations > Reveal sections on scroll is on. Drop it inside the
+  opening tag of the section’s outermost element.
+
+  The hiding class (`fl-reveal`, defined in assets/critical.css) is never
+  printed server-side: the script below adds it only once it holds an
+  IntersectionObserver able to take it off again. Visitors without JS — and
+  visitors who asked for reduced motion — therefore always see the content.
+
+  @example
+  <section
+    class="fl-thing color-{{ section.settings.color_scheme }}"
+    {% render 'reveal' %}
+  >
+{% enddoc %}
+
+{% javascript %}
+  (function () {
+    if (window.flRevealLoaded) return;
+    window.flRevealLoaded = true;
+
+    var SELECTOR = '[data-fl-reveal]';
+    var HIDDEN_CLASS = 'fl-reveal';
+    var SHOWN_CLASS = 'is-revealed';
+    var BOUND_KEY = 'flRevealBound';
+    var observer = null;
+
+    function motionAllowed() {
+      if (!window.matchMedia) return true;
+      return !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+
+    function getObserver() {
+      if (observer) return observer;
+      observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add(SHOWN_CLASS);
+            observer.unobserve(entry.target);
+          });
+        },
+        { rootMargin: '0px 0px -8% 0px', threshold: 0 }
+      );
+      return observer;
+    }
+
+    function collect(root) {
+      var scope = root && root.querySelectorAll ? root : document;
+      var found = Array.prototype.slice.call(scope.querySelectorAll(SELECTOR));
+      if (scope.matches && scope.matches(SELECTOR)) found.unshift(scope);
+      return found;
+    }
+
+    function init(root) {
+      // No observer, or motion turned down: leave every element untouched so it
+      // simply stays visible.
+      var skip = !('IntersectionObserver' in window) || !motionAllowed();
+      collect(root).forEach(function (el) {
+        if (el.dataset[BOUND_KEY] === 'true') return;
+        el.dataset[BOUND_KEY] = 'true';
+        if (skip) return;
+        el.classList.add(HIDDEN_CLASS);
+        getObserver().observe(el);
+      });
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', function () {
+        init(document);
+      });
+    } else {
+      init(document);
+    }
+
+    document.addEventListener('shopify:section:load', function (event) {
+      init(event.target);
+    });
+  })();
+{% endjavascript %}
+
+{%- if settings.animations_reveal_on_scroll -%}data-fl-reveal{%- endif -%}

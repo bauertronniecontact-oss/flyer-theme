@@ -1,0 +1,656 @@
+{% comment %}
+  Collage.
+  Mosaic of up to three tiles: one large block flanked by two small ones.
+  Which block is large is driven by the desktop layout setting, so the grid
+  placement is written per layout instead of relying on auto-placement.
+  Blocks: image, product, collection and video (YouTube / Vimeo).
+{% endcomment %}
+
+{%- liquid
+  assign count = section.blocks.size
+  assign layout = section.settings.desktop_layout
+
+  assign large_index = 1
+  assign grid_layout = 'left'
+  if layout == 'right'
+    assign large_index = count
+    assign grid_layout = 'right'
+  elsif layout == 'center' and count == 3
+    assign large_index = 2
+    assign grid_layout = 'center'
+  endif
+
+  assign boxed = false
+  if section.settings.card_styles == 'product-card-wrapper'
+    assign boxed = true
+  endif
+
+  comment
+    Tiles carry the only headings in the section when the merchant hides the
+    section heading, so they step up to h2 to keep the outline gapless.
+  endcomment
+  assign tile_heading = 'h3'
+  if section.settings.heading == blank
+    assign tile_heading = 'h2'
+  endif
+
+  assign mobile_small = '(max-width: 749px) 100vw, '
+  if section.settings.mobile_layout == 'collage'
+    assign mobile_small = '(max-width: 749px) 50vw, '
+  endif
+  assign small_sizes = mobile_small | append: '33vw'
+  assign large_sizes = '(max-width: 749px) 100vw, 66vw'
+
+  assign video_label = 'accessibility.play_video' | t
+-%}
+
+<section
+  class="fl-collage full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+>
+  <div class="fl-collage__inner">
+    {%- if section.settings.heading != blank -%}
+      <div class="fl-section-head">
+        <h2>{{ section.settings.heading | escape }}</h2>
+      </div>
+    {%- endif -%}
+
+    {%- if count > 0 -%}
+      <div
+        class="fl-collage__grid fl-collage__grid--{{ grid_layout }} fl-collage__grid--mobile-{{ section.settings.mobile_layout }}"
+      >
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign is_large = false
+            if forloop.index == large_index
+              assign is_large = true
+            endif
+
+            assign tile_sizes = small_sizes
+            if is_large
+              assign tile_sizes = large_sizes
+            endif
+          -%}
+          <div
+            class="fl-collage__item{% if is_large %} fl-collage__item--large{% endif %}"
+            {{ block.shopify_attributes }}
+          >
+            {%- case block.type -%}
+              {%- when 'image' -%}
+                {%- liquid
+                  assign tile_tag = 'div'
+                  if block.settings.link != blank
+                    assign tile_tag = 'a'
+                  endif
+                -%}
+                <{{ tile_tag }}
+                  class="fl-collage__tile{% if tile_tag == 'a' %} fl-collage__tile--link{% endif %}{% if boxed %} fl-collage__tile--card color-{{ settings.card_color_scheme }}{% endif %}"
+                  {% if tile_tag == 'a' %}
+                    href="{{ block.settings.link }}"
+                  {% endif %}
+                >
+                  <div class="fl-collage__media{% unless boxed %} fl-media{% endunless %}">
+                    {%- if block.settings.image -%}
+                      {{
+                        block.settings.image
+                        | image_url: width: 1600
+                        | image_tag:
+                          widths: '300, 500, 700, 900, 1200, 1600',
+                          sizes: tile_sizes,
+                          alt: block.settings.image.alt,
+                          loading: 'lazy',
+                          class: 'fl-collage__img'
+                      }}
+                    {%- else -%}
+                      {{ 'lifestyle-1' | placeholder_svg_tag: 'fl-collage__ph' }}
+                    {%- endif -%}
+                  </div>
+                </{{ tile_tag }}>
+
+              {%- when 'product' -%}
+                {%- if block.settings.product != blank -%}
+                  <div class="fl-collage__tile fl-collage__product">
+                    {% render 'product-card',
+                      product: block.settings.product,
+                      sizes: tile_sizes,
+                      show_quick_add: block.settings.quick_add,
+                      heading_level: tile_heading
+                    %}
+                    {%- if block.settings.second_image and block.settings.product.images[1] -%}
+                      {%- comment -%}
+                        Layered over the card rather than inside it: the shared
+                        product-card snippet is reused untouched.
+                      {%- endcomment -%}
+                      {{
+                        block.settings.product.images[1]
+                        | image_url: width: 1200
+                        | image_tag:
+                          widths: '300, 500, 700, 900, 1200',
+                          sizes: tile_sizes,
+                          alt: '',
+                          loading: 'lazy',
+                          class: 'fl-collage__second'
+                      }}
+                    {%- endif -%}
+                  </div>
+                {%- else -%}
+                  <article class="fl-card fl-collage__tile">
+                    <div class="fl-card__media">
+                      {{ 'product-1' | placeholder_svg_tag: 'fl-card__placeholder' }}
+                    </div>
+                    <div class="fl-card__info">
+                      <{{ tile_heading }} class="fl-card__title">
+                        {{- 'products.card.placeholder_title' | t -}}
+                      </{{ tile_heading }}>
+                    </div>
+                  </article>
+                {%- endif -%}
+
+              {%- when 'collection' -%}
+                {%- liquid
+                  assign coll = block.settings.collection
+                  assign tile_tag = 'div'
+                  if coll != blank
+                    assign tile_tag = 'a'
+                  endif
+                -%}
+                <{{ tile_tag }}
+                  class="fl-collage__tile{% if tile_tag == 'a' %} fl-collage__tile--link{% endif %}{% if boxed %} fl-collage__tile--card color-{{ settings.card_color_scheme }}{% endif %}"
+                  {% if tile_tag == 'a' %}
+                    href="{{ coll.url }}"
+                  {% endif %}
+                >
+                  <div class="fl-collage__media{% unless boxed %} fl-media{% endunless %}">
+                    {%- if coll.featured_image -%}
+                      {{
+                        coll.featured_image
+                        | image_url: width: 1600
+                        | image_tag:
+                          widths: '300, 500, 700, 900, 1200, 1600',
+                          sizes: tile_sizes,
+                          alt: coll.featured_image.alt,
+                          loading: 'lazy',
+                          class: 'fl-collage__img'
+                      }}
+                    {%- elsif coll.products.first.featured_image -%}
+                      {{
+                        coll.products.first.featured_image
+                        | image_url: width: 1600
+                        | image_tag:
+                          widths: '300, 500, 700, 900, 1200, 1600',
+                          sizes: tile_sizes,
+                          alt: coll.title,
+                          loading: 'lazy',
+                          class: 'fl-collage__img'
+                      }}
+                    {%- else -%}
+                      {{ 'collection-1' | placeholder_svg_tag: 'fl-collage__ph' }}
+                    {%- endif -%}
+                  </div>
+                  {%- if coll != blank -%}
+                    <{{ tile_heading }} class="fl-collage__title">{{ coll.title | escape }}</{{ tile_heading }}>
+                  {%- else -%}
+                    <{{ tile_heading }} class="fl-collage__title">
+                      {{- 'collections.general.title' | t -}}
+                    </{{ tile_heading }}>
+                  {%- endif -%}
+                </{{ tile_tag }}>
+
+              {%- when 'video' -%}
+                {%- liquid
+                  assign video_id = block.settings.video_url.id
+                  if block.settings.video_url.type == 'vimeo'
+                    assign video_src = 'https://player.vimeo.com/video/' | append: video_id | append: '?autoplay=1'
+                    assign video_href = 'https://vimeo.com/' | append: video_id
+                  else
+                    assign video_src = 'https://www.youtube.com/embed/' | append: video_id | append: '?autoplay=1'
+                    assign video_href = 'https://www.youtube.com/watch?v=' | append: video_id
+                  endif
+                -%}
+                <fl-video-tile
+                  class="fl-collage__tile{% if boxed %} fl-collage__tile--card color-{{ settings.card_color_scheme }}{% endif %}"
+                  data-video-src="{{ video_src }}"
+                  data-video-title="{{ video_label | escape }}"
+                >
+                  <div class="fl-collage__media{% unless boxed %} fl-media{% endunless %}" data-video-holder>
+                    {%- if block.settings.cover_image -%}
+                      {{
+                        block.settings.cover_image
+                        | image_url: width: 1600
+                        | image_tag:
+                          widths: '300, 500, 700, 900, 1200, 1600',
+                          sizes: tile_sizes,
+                          alt: '',
+                          loading: 'lazy',
+                          class: 'fl-collage__img'
+                      }}
+                    {%- else -%}
+                      {{ 'lifestyle-2' | placeholder_svg_tag: 'fl-collage__ph' }}
+                    {%- endif -%}
+
+                    {%- if video_id != blank -%}
+                      {%- comment -%}
+                        A real link, so the video still opens (on YouTube or
+                        Vimeo) when JavaScript never runs.
+                      {%- endcomment -%}
+                      <a
+                        class="fl-collage__play"
+                        href="{{ video_href }}"
+                        target="_blank"
+                        rel="noopener"
+                        data-video-play
+                      >
+                        <span class="fl-collage__play-icon" aria-hidden="true">
+                          <svg width="20" height="22" viewBox="0 0 20 22" fill="none" focusable="false">
+                            <path d="M19 11 1 21.4V.6L19 11Z" fill="currentColor"/>
+                          </svg>
+                        </span>
+                        <span class="visually-hidden">{{ video_label }}</span>
+                      </a>
+                    {%- endif -%}
+                  </div>
+                </fl-video-tile>
+            {%- endcase -%}
+          </div>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-collage__inner {
+    width: var(--content-width);
+    margin-inline: auto;
+  }
+
+  .fl-collage__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--grid-gap-y, 28px) var(--grid-gap-x, 20px);
+  }
+
+  .fl-collage__grid--mobile-collage {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .fl-collage__grid--mobile-collage .fl-collage__item--large {
+    grid-column: 1 / -1;
+  }
+
+  /* Every tile shares one ratio token, so the two stacked small tiles are
+     exactly as tall as the large tile beside them. Product cards read the same
+     token, which keeps them aligned with the plain media tiles. */
+  .fl-collage__item {
+    --card-ratio: 1 / 1;
+
+    min-width: 0;
+  }
+
+  .fl-collage__tile {
+    display: block;
+    height: 100%;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .fl-collage__tile--card {
+    padding: var(--card-image-padding, 0);
+    border: var(--card-border-width, 0) solid
+      rgba(var(--color-ink-rgb), var(--card-border-opacity, 0.1));
+    border-radius: var(--radius-card);
+    box-shadow: var(--card-shadow);
+  }
+
+  .fl-collage__media {
+    position: relative;
+    overflow: hidden;
+    aspect-ratio: var(--card-ratio);
+  }
+
+  .fl-collage__tile--card .fl-collage__media {
+    border-radius: var(--radius-card);
+    background-color: var(--color-surface);
+  }
+
+  .fl-collage__img,
+  .fl-collage__ph {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fl-collage__ph {
+    fill: var(--color-muted);
+    opacity: 0.35;
+  }
+
+  .fl-collage__img {
+    transition: transform 0.4s ease;
+  }
+
+  .fl-collage__tile--link:hover .fl-collage__img {
+    transform: scale(1.03);
+  }
+
+  .fl-collage__title {
+    margin-block-start: 12px;
+    font-size: 1em;
+    font-weight: 500;
+  }
+
+  .fl-collage__tile--link:hover .fl-collage__title {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  /* Second product image: layered over the shared card, faded in on hover. */
+  .fl-collage__product {
+    position: relative;
+  }
+
+  .fl-collage__second {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+    width: 100%;
+    aspect-ratio: var(--card-ratio);
+    object-fit: cover;
+    border-radius: var(--radius-card);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .fl-collage__product:hover .fl-collage__second,
+  .fl-collage__product:focus-within .fl-collage__second {
+    opacity: 1;
+  }
+
+  .fl-collage__play {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .fl-collage__play-icon {
+    display: grid;
+    place-items: center;
+    width: 64px;
+    height: 64px;
+    padding-inline-start: 4px;
+    border-radius: 50%;
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    transition: transform 0.2s ease;
+  }
+
+  .fl-collage__play:hover .fl-collage__play-icon {
+    transform: scale(1.06);
+  }
+
+  .fl-collage__frame {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+
+  @media screen and (min-width: 750px) {
+    .fl-collage__grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: start;
+    }
+
+    .fl-collage__grid--center {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .fl-collage__grid--left .fl-collage__item--large {
+      grid-column: span 2;
+      grid-row: span 2;
+    }
+
+    .fl-collage__grid--right .fl-collage__item--large {
+      grid-column: 2 / 4;
+      grid-row: 1 / 3;
+    }
+
+    .fl-collage__grid--center .fl-collage__item--large {
+      --card-ratio: 2 / 1;
+
+      grid-column: 2 / 4;
+      grid-row: 1;
+    }
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  class FlVideoTile extends HTMLElement {
+    connectedCallback() {
+      if (this.bound) return;
+      this.bound = true;
+      this.addEventListener('click', (event) => {
+        const target = event.target;
+        const trigger = target && target.closest ? target.closest('[data-video-play]') : null;
+        if (!trigger) return;
+        const src = this.dataset.videoSrc;
+        if (!src) return;
+        event.preventDefault();
+        this.play(src);
+      });
+    }
+
+    play(src) {
+      const holder = this.querySelector('[data-video-holder]');
+      if (!holder) return;
+      const frame = document.createElement('iframe');
+      frame.className = 'fl-collage__frame';
+      frame.src = src;
+      frame.title = this.dataset.videoTitle || '';
+      frame.allow = 'autoplay; encrypted-media; picture-in-picture';
+      frame.setAttribute('allowfullscreen', '');
+      holder.textContent = '';
+      holder.appendChild(frame);
+      frame.focus();
+    }
+  }
+
+  if (!customElements.get('fl-video-tile')) customElements.define('fl-video-tile', FlVideoTile);
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Collage",
+  "max_blocks": 3,
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Multimedia collage",
+      "info": "Leave blank to hide the heading."
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "desktop_layout",
+      "label": "Large block on desktop",
+      "options": [
+        {
+          "value": "left",
+          "label": "First block, left"
+        },
+        {
+          "value": "center",
+          "label": "Second block, center"
+        },
+        {
+          "value": "right",
+          "label": "Last block, right"
+        }
+      ],
+      "default": "left",
+      "info": "The centered layout needs three blocks."
+    },
+    {
+      "type": "select",
+      "id": "mobile_layout",
+      "label": "Mobile layout",
+      "options": [
+        {
+          "value": "collage",
+          "label": "Collage"
+        },
+        {
+          "value": "column",
+          "label": "One column"
+        }
+      ],
+      "default": "column"
+    },
+    {
+      "type": "select",
+      "id": "card_styles",
+      "label": "Block style",
+      "options": [
+        {
+          "value": "none",
+          "label": "Media"
+        },
+        {
+          "value": "product-card-wrapper",
+          "label": "Card"
+        }
+      ],
+      "default": "product-card-wrapper",
+      "info": "Applies to image, collection and video blocks. Product blocks always use the Product cards theme settings."
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "name": "Image",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "image",
+          "label": "Image"
+        },
+        {
+          "type": "url",
+          "id": "link",
+          "label": "Link"
+        }
+      ]
+    },
+    {
+      "type": "product",
+      "name": "Product",
+      "settings": [
+        {
+          "type": "product",
+          "id": "product",
+          "label": "Product"
+        },
+        {
+          "type": "checkbox",
+          "id": "second_image",
+          "label": "Show second image on hover",
+          "default": false
+        },
+        {
+          "type": "checkbox",
+          "id": "quick_add",
+          "label": "Show quick add button",
+          "default": true
+        }
+      ]
+    },
+    {
+      "type": "collection",
+      "name": "Collection",
+      "settings": [
+        {
+          "type": "collection",
+          "id": "collection",
+          "label": "Collection"
+        }
+      ]
+    },
+    {
+      "type": "video",
+      "name": "Video",
+      "settings": [
+        {
+          "type": "image_picker",
+          "id": "cover_image",
+          "label": "Cover image"
+        },
+        {
+          "type": "video_url",
+          "id": "video_url",
+          "accept": ["youtube", "vimeo"],
+          "label": "Video link",
+          "default": "https://www.youtube.com/watch?v=_9VUPq3SxOc",
+          "placeholder": "https://www.youtube.com/watch?v=",
+          "info": "Plays inside the tile. Opens on YouTube or Vimeo without JavaScript."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collage",
+      "blocks": [
+        {
+          "type": "image"
+        },
+        {
+          "type": "product"
+        },
+        {
+          "type": "collection"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

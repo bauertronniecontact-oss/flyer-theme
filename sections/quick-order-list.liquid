@@ -1,0 +1,577 @@
+{% comment %}
+  Quick order list.
+  Wholesale style table for a whole collection: one row per variant, with an
+  optional thumbnail and SKU, the price and a quantity field.
+
+  Progressive enhancement, because /cart/add cannot take several lines in a
+  single native POST:
+  - Without JavaScript every row is its own small /cart/add form, so a shopper
+    can still add one line at a time (and the cart drawer picks those up
+    through [data-quick-add] when it is enabled).
+  - With JavaScript the row buttons are swapped for a single bulk button that
+    POSTs /cart/add.js with { items: [...] }, then dispatches 'fl:cart:change'
+    so the header count follows.
+{% endcomment %}
+
+{%- liquid
+  assign col = section.settings.collection
+  assign show_image = section.settings.show_image
+  assign show_sku = section.settings.show_sku
+-%}
+
+<section
+  class="fl-qol full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+>
+  <div class="fl-qol__inner">
+    {%- if section.settings.heading != blank -%}
+      <div class="fl-section-head">
+        <h2 class="fl-qol__heading">{{ section.settings.heading | escape }}</h2>
+      </div>
+    {%- endif -%}
+
+    {%- if col == blank or col.products.size == 0 -%}
+      <p class="fl-qol__empty">{{ 'collections.general.no_products' | t }}</p>
+    {%- else -%}
+      {%- paginate col.products by 20 -%}
+        <fl-quick-order
+          class="fl-qol__app"
+          data-add-url="{{ routes.cart_add_url }}"
+          data-cart-url="{{ routes.cart_url }}"
+          data-adding-text="{{ 'products.product.adding' | t | escape }}"
+          data-added-text="{{ 'products.product.added_to_cart' | t | escape }}"
+          data-empty-text="{{ 'products.quick_order.empty_selection' | t | escape }}"
+          data-error-text="{{ 'cart.item_error' | t | escape }}"
+        >
+          <div class="fl-qol__scroll">
+            <table class="fl-qol__table">
+              <caption class="visually-hidden">{{ col.title | escape }}</caption>
+              <thead>
+                <tr>
+                  <th class="fl-qol__th" scope="col">{{ 'customer.order.product' | t }}</th>
+                  {%- if show_sku -%}
+                    <th class="fl-qol__th" scope="col">{{ 'customer.order.sku' | t }}</th>
+                  {%- endif -%}
+                  <th class="fl-qol__th" scope="col">{{ 'customer.order.price' | t }}</th>
+                  <th class="fl-qol__th fl-qol__th--end" scope="col">{{ 'products.product.quantity' | t }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                {%- for product in col.products -%}
+                  {%- comment -%}
+                    50 is the Liquid for-loop ceiling anyway; spelling it out keeps
+                    a 100 variant product from silently blowing up the page.
+                  {%- endcomment -%}
+                  {%- for variant in product.variants limit: 50 -%}
+                    {%- liquid
+                      assign row_id = section.id | append: '-' | append: variant.id
+
+                      assign row_image = variant.image
+                      if row_image == blank
+                        assign row_image = product.featured_image
+                      endif
+
+                      assign row_name = product.title
+                      unless product.has_only_default_variant
+                        assign row_name = product.title | append: ' — ' | append: variant.title
+                      endunless
+                    -%}
+                    <tr class="fl-qol__row">
+                      <td class="fl-qol__cell fl-qol__cell--product">
+                        <div class="fl-qol__product">
+                          {%- if show_image -%}
+                            <div class="fl-qol__thumb fl-media">
+                              {%- if row_image != blank -%}
+                                {{
+                                  row_image
+                                  | image_url: width: 168
+                                  | image_tag:
+                                    widths: '56, 112, 168',
+                                    sizes: '56px',
+                                    alt: row_image.alt,
+                                    loading: 'lazy',
+                                    class: 'fl-qol__img'
+                                }}
+                              {%- else -%}
+                                {{ 'product-1' | placeholder_svg_tag: 'fl-qol__ph' }}
+                              {%- endif -%}
+                            </div>
+                          {%- endif -%}
+                          <div class="fl-qol__names">
+                            <a class="fl-qol__title" href="{{ variant.url }}">{{ product.title | escape }}</a>
+                            {%- unless product.has_only_default_variant -%}
+                              <span class="fl-qol__variant">{{ variant.title | escape }}</span>
+                            {%- endunless -%}
+                          </div>
+                        </div>
+                      </td>
+
+                      {%- if show_sku -%}
+                        <td class="fl-qol__cell fl-qol__cell--sku">{{ variant.sku | escape }}</td>
+                      {%- endif -%}
+
+                      <td class="fl-qol__cell">
+                        {% render 'price', product: product, variant: variant, show_from: false %}
+                      </td>
+
+                      <td class="fl-qol__cell fl-qol__cell--order">
+                        {%- if variant.available -%}
+                          <form
+                            action="{{ routes.cart_add_url }}"
+                            method="post"
+                            enctype="multipart/form-data"
+                            class="fl-qol__form"
+                            data-quick-add
+                            data-qol-row
+                            data-variant-id="{{ variant.id }}"
+                          >
+                            <input type="hidden" name="id" value="{{ variant.id }}">
+                            <label class="visually-hidden" for="FlQol-{{ row_id }}">
+                              {{- 'products.product.quantity' | t }} — {{ row_name | escape -}}
+                            </label>
+                            <input
+                              id="FlQol-{{ row_id }}"
+                              class="fl-input fl-qol__qty"
+                              type="number"
+                              name="quantity"
+                              value="1"
+                              min="1"
+                              step="1"
+                              inputmode="numeric"
+                              autocomplete="off"
+                              data-qol-qty
+                            >
+                            <button type="submit" class="fl-btn fl-btn--secondary fl-qol__add">
+                              {{- 'products.card.quick_add' | t -}}
+                              <span class="visually-hidden"> — {{ row_name | escape }}</span>
+                            </button>
+                          </form>
+                        {%- else -%}
+                          <span class="fl-qol__note">{{ 'products.card.sold_out' | t }}</span>
+                        {%- endif -%}
+                      </td>
+                    </tr>
+                  {%- endfor -%}
+                {%- endfor -%}
+              </tbody>
+            </table>
+          </div>
+
+          <div class="fl-qol__foot">
+            <button type="button" class="fl-btn fl-qol__addall" data-qol-add-all>
+              {{- 'products.quick_order.add_all' | t -}}
+            </button>
+            <a class="fl-btn fl-btn--secondary" href="{{ routes.cart_url }}">{{ 'cart.title' | t }}</a>
+            <p class="fl-qol__status" role="status" aria-live="polite" data-qol-status></p>
+          </div>
+        </fl-quick-order>
+
+        {%- if paginate.pages > 1 -%}
+          {%- assign current_page_str = paginate.current_page | append: '' -%}
+          <nav class="fl-pagination" aria-label="{{ 'general.pagination.label' | t }}">
+            {%- if paginate.previous -%}
+              <a class="fl-pagination__item" href="{{ paginate.previous.url }}">
+                <span aria-hidden="true">&larr;</span>
+                <span class="visually-hidden">{{ 'general.pagination.previous' | t }}</span>
+              </a>
+            {%- endif -%}
+            {%- for part in paginate.parts -%}
+              {%- if part.is_link -%}
+                <a
+                  class="fl-pagination__item"
+                  href="{{ part.url }}"
+                  aria-label="{{ 'general.pagination.page' | t: number: part.title }}"
+                >
+                  {{- part.title -}}
+                </a>
+              {%- elsif part.title == current_page_str -%}
+                <span
+                  class="fl-pagination__item"
+                  aria-current="page"
+                  aria-label="{{ 'general.pagination.current_page' | t: number: part.title }}"
+                >
+                  {{- part.title -}}
+                </span>
+              {%- else -%}
+                <span class="fl-pagination__gap">{{ part.title }}</span>
+              {%- endif -%}
+            {%- endfor -%}
+            {%- if paginate.next -%}
+              <a class="fl-pagination__item" href="{{ paginate.next.url }}">
+                <span aria-hidden="true">&rarr;</span>
+                <span class="visually-hidden">{{ 'general.pagination.next' | t }}</span>
+              </a>
+            {%- endif -%}
+          </nav>
+        {%- endif -%}
+      {%- endpaginate -%}
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-qol__inner {
+    width: min(calc(var(--page-width) - var(--page-margin) * 2), calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+  }
+
+  .fl-qol__empty {
+    color: var(--color-muted);
+  }
+
+  /* The table keeps its natural width on narrow screens and scrolls sideways
+     rather than squashing the quantity field below a usable size. */
+  .fl-qol__scroll {
+    overflow-x: auto;
+  }
+
+  .fl-qol__table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .fl-qol__th {
+    padding: 0 12px 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--color-muted);
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-qol__th--end {
+    text-align: right;
+  }
+
+  .fl-qol__cell {
+    padding: 14px 12px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  .fl-qol__th:first-child,
+  .fl-qol__cell:first-child {
+    padding-inline-start: 0;
+  }
+
+  .fl-qol__th:last-child,
+  .fl-qol__cell:last-child {
+    padding-inline-end: 0;
+  }
+
+  .fl-qol__cell--product {
+    min-width: 220px;
+  }
+
+  .fl-qol__product {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .fl-qol__thumb {
+    flex: 0 0 auto;
+    width: 56px;
+    min-width: 0;
+  }
+
+  .fl-qol__img,
+  .fl-qol__ph {
+    width: 56px;
+    height: 56px;
+    object-fit: cover;
+  }
+
+  .fl-qol__ph {
+    fill: var(--color-muted);
+    opacity: 0.35;
+  }
+
+  .fl-qol__names {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .fl-qol__title {
+    font-weight: 500;
+    text-decoration: none;
+  }
+
+  .fl-qol__title:hover {
+    text-decoration: underline;
+  }
+
+  .fl-qol__variant {
+    font-size: 0.8125em;
+    color: var(--color-muted);
+  }
+
+  .fl-qol__cell--sku {
+    font-size: 0.8125em;
+    white-space: nowrap;
+    color: var(--color-muted);
+  }
+
+  .fl-qol__cell--order {
+    text-align: right;
+  }
+
+  .fl-qol__form {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .fl-qol__qty {
+    width: 88px;
+    text-align: center;
+  }
+
+  .fl-qol__note {
+    font-size: 0.8125em;
+    color: var(--color-muted);
+  }
+
+  /* Bulk add only exists once the custom element has upgraded; until then the
+     per row buttons are the working path. */
+  .fl-qol__foot {
+    display: none;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-block-start: 24px;
+  }
+
+  .fl-qol__app.is-enhanced .fl-qol__foot {
+    display: flex;
+  }
+
+  .fl-qol__app.is-enhanced .fl-qol__add {
+    display: none;
+  }
+
+  .fl-qol__status {
+    flex-basis: 100%;
+    font-size: 0.875em;
+    color: var(--color-muted);
+  }
+
+  /* critical.css hides empty paragraphs; the live region has to stay in the
+     accessibility tree for its first update to be announced. */
+  .fl-qol__status:empty {
+    display: block;
+  }
+
+  a.fl-pagination__item:hover {
+    color: var(--color-ink);
+    background: var(--color-surface);
+  }
+
+  .fl-pagination__item[aria-current='page'] {
+    color: var(--color-ink);
+    border: 1px solid var(--color-line);
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('fl-quick-order')) {
+    customElements.define(
+      'fl-quick-order',
+      class extends HTMLElement {
+        connectedCallback() {
+          if (this.ready) return;
+          this.ready = true;
+          this.isBusy = false;
+          this.statusEl = this.querySelector('[data-qol-status]');
+          this.addAllBtn = this.querySelector('[data-qol-add-all]');
+
+          // Rows ship at 1 so the no-JS button adds something sensible; once the
+          // bulk control takes over, an empty basket is the right starting point.
+          this.eachQty((input) => {
+            input.min = '0';
+            input.value = '0';
+          });
+
+          this.classList.add('is-enhanced');
+
+          this.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            if (!event.target.closest('[data-qol-qty]')) return;
+            event.preventDefault();
+            this.addAll();
+          });
+
+          if (this.addAllBtn) {
+            this.addAllBtn.addEventListener('click', () => this.addAll());
+          }
+        }
+
+        eachQty(callback) {
+          const inputs = this.querySelectorAll('[data-qol-qty]');
+          Array.prototype.forEach.call(inputs, callback);
+        }
+
+        setStatus(message) {
+          if (!this.statusEl) return;
+          // Clearing first makes screen readers announce a repeated message.
+          this.statusEl.textContent = '';
+          window.requestAnimationFrame(() => {
+            this.statusEl.textContent = message;
+          });
+        }
+
+        collect() {
+          const items = [];
+          const rows = this.querySelectorAll('[data-qol-row]');
+          Array.prototype.forEach.call(rows, (row) => {
+            const input = row.querySelector('[data-qol-qty]');
+            if (!input) return;
+            const quantity = parseInt(input.value, 10);
+            if (!quantity || quantity < 1) return;
+            const id = parseInt(row.getAttribute('data-variant-id'), 10);
+            if (!id) return;
+            items.push({ id: id, quantity: quantity });
+          });
+          return items;
+        }
+
+        async addAll() {
+          if (this.isBusy) return;
+          const items = this.collect();
+          if (items.length === 0) {
+            this.setStatus(this.dataset.emptyText);
+            return;
+          }
+
+          this.isBusy = true;
+          let label = '';
+          if (this.addAllBtn) {
+            label = this.addAllBtn.textContent;
+            this.addAllBtn.disabled = true;
+            this.addAllBtn.textContent = this.dataset.addingText;
+          }
+
+          try {
+            const response = await fetch(this.dataset.addUrl + '.js', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+              body: JSON.stringify({ items: items })
+            });
+            if (!response.ok) {
+              let message = this.dataset.errorText;
+              try {
+                const data = await response.json();
+                if (data && data.description) message = data.description;
+              } catch (error) {
+                // keep the generic fallback message
+              }
+              this.setStatus(message);
+              return;
+            }
+            this.eachQty((input) => {
+              input.value = '0';
+            });
+            this.setStatus(this.dataset.addedText);
+            await this.notify();
+          } catch (error) {
+            this.setStatus(this.dataset.errorText);
+          } finally {
+            if (this.addAllBtn) {
+              this.addAllBtn.disabled = false;
+              this.addAllBtn.textContent = label;
+            }
+            this.isBusy = false;
+          }
+        }
+
+        async notify() {
+          try {
+            const response = await fetch(this.dataset.cartUrl + '.js', {
+              headers: { Accept: 'application/json' }
+            });
+            const cart = await response.json();
+            if (!cart || typeof cart.item_count !== 'number') return;
+            document.dispatchEvent(
+              new CustomEvent('fl:cart:change', { bubbles: true, detail: { itemCount: cart.item_count } })
+            );
+          } catch (error) {
+            // the header simply keeps the count it already had
+          }
+        }
+      }
+    );
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Quick order list",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Quick order"
+    },
+    {
+      "type": "collection",
+      "id": "collection",
+      "label": "Collection"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_image",
+      "label": "Show product images",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_sku",
+      "label": "Show SKU",
+      "default": false
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Quick order list"
+    }
+  ]
+}
+{% endschema %}

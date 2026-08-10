@@ -1,0 +1,462 @@
+{% comment %}
+  Collapsible content.
+  FAQ style accordion built on native <details>/<summary>, so every row opens
+  and closes without JavaScript. Rows can be framed one by one (row layout) or
+  grouped in a single panel (section layout), with an optional image beside
+  them on desktop. Emits FAQPage structured data when every row is plain text.
+{% endcomment %}
+
+{%- liquid
+  assign layout = section.settings.layout
+
+  assign has_image = false
+  if section.settings.image != blank and section.settings.desktop_layout != 'none'
+    assign has_image = true
+  endif
+
+  assign image_second = false
+  if section.settings.desktop_layout == 'image_second'
+    assign image_second = true
+  endif
+
+  assign row_tag = 'h3'
+  if section.settings.heading == blank
+    assign row_tag = 'h2'
+  endif
+
+  assign faq_rows = 0
+  assign faq_pages = 0
+  for block in section.blocks
+    if block.settings.page != blank
+      assign faq_pages = faq_pages | plus: 1
+    elsif block.settings.heading != blank and block.settings.row_content != blank
+      assign faq_rows = faq_rows | plus: 1
+    endif
+  endfor
+
+  assign faq_schema = false
+  if faq_pages == 0 and faq_rows > 0 and faq_rows == section.blocks.size
+    assign faq_schema = true
+  endif
+-%}
+
+<section
+  class="fl-collapsible full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
+>
+  <div class="fl-collapsible__inner{% unless has_image %} fl-collapsible__inner--narrow{% endunless %}">
+    {%- if section.settings.caption != blank or section.settings.heading != blank -%}
+      <div class="fl-section-head" style="text-align: {{ section.settings.heading_alignment }}">
+        {%- if section.settings.caption != blank -%}
+          <span class="fl-eyebrow">{{ section.settings.caption | escape }}</span>
+        {%- endif -%}
+        {%- if section.settings.heading != blank -%}
+          <h2 class="fl-collapsible__heading">{{ section.settings.heading | escape }}</h2>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div
+      class="fl-collapsible__grid{% if has_image %} fl-collapsible__grid--split{% endif %}{% if image_second %} fl-collapsible__grid--reverse{% endif %}"
+    >
+      {%- if has_image -%}
+        <div class="fl-collapsible__media fl-media">
+          {{
+            section.settings.image
+            | image_url: width: 1600
+            | image_tag:
+              widths: '400, 600, 800, 1000, 1200, 1600',
+              sizes: '(max-width: 749px) 100vw, 50vw',
+              alt: section.settings.image.alt,
+              loading: 'lazy',
+              class: 'fl-collapsible__img'
+          }}
+        </div>
+      {%- endif -%}
+
+      <div class="fl-collapsible__rows fl-collapsible__rows--{{ layout }}{% if layout == 'section' %} fl-collapsible__panel{% endif %}{% if layout == 'section' %} color-{{ section.settings.container_color_scheme }}{% endif %}">
+        {%- for block in section.blocks -%}
+          {%- liquid
+            assign row_heading = block.settings.heading
+            if row_heading == blank
+              assign row_heading = block.settings.page.title
+            endif
+
+            assign row_body = block.settings.row_content
+            if block.settings.page != blank
+              assign row_body = block.settings.page.content
+            endif
+          -%}
+
+          {%- if row_heading != blank or row_body != blank -%}
+            <div
+              class="fl-collapsible__row{% if layout == 'row' %} fl-collapsible__panel{% endif %}{% if layout == 'row' %} color-{{ section.settings.container_color_scheme }}{% endif %}"
+              {{ block.shopify_attributes }}
+            >
+              <details
+                class="fl-collapsible__details"
+                {% if section.settings.open_first_collapsible_row and forloop.first %}
+                  open
+                {% endif %}
+              >
+                <summary class="fl-collapsible__summary" id="Summary-{{ section.id }}-{{ block.id }}">
+                  <{{ row_tag }} class="fl-collapsible__row-heading">{{ row_heading | escape }}</{{ row_tag }}>
+                  <span class="fl-collapsible__icon" aria-hidden="true"></span>
+                </summary>
+                <div
+                  class="fl-collapsible__content fl-rte"
+                  role="region"
+                  aria-labelledby="Summary-{{ section.id }}-{{ block.id }}"
+                >
+                  {{ row_body }}
+                </div>
+              </details>
+            </div>
+          {%- endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+  </div>
+</section>
+
+{%- if faq_schema -%}
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {%- for block in section.blocks -%}
+          {%- unless forloop.first %},{% endunless -%}
+          {
+            "@type": "Question",
+            "name": {{ block.settings.heading | strip_html | strip | json }},
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": {{ block.settings.row_content | strip_html | strip | json }}
+            }
+          }
+        {%- endfor -%}
+      ]
+    }
+  </script>
+{%- endif -%}
+
+{% stylesheet %}
+  .fl-collapsible__inner {
+    width: var(--content-width);
+    margin-inline: auto;
+  }
+
+  .fl-collapsible__inner--narrow {
+    width: min(820px, var(--content-width));
+  }
+
+  .fl-collapsible__heading {
+    min-width: 0;
+  }
+
+  .fl-collapsible__grid--split {
+    display: grid;
+    gap: 32px;
+  }
+
+  .fl-collapsible__media {
+    min-width: 0;
+  }
+
+  .fl-collapsible__img {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+  }
+
+  .fl-collapsible__rows {
+    min-width: 0;
+  }
+
+  .fl-collapsible__rows--row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Hairline separators for the unframed layout. */
+  .fl-collapsible__rows--none .fl-collapsible__row {
+    border-block-start: 1px solid var(--color-line);
+  }
+
+  .fl-collapsible__rows--none .fl-collapsible__row:last-child {
+    border-block-end: 1px solid var(--color-line);
+  }
+
+  .fl-collapsible__rows--section .fl-collapsible__row + .fl-collapsible__row {
+    border-block-start: 1px solid var(--color-line);
+  }
+
+  /* Framed container, shaped by the Content containers theme settings. */
+  .fl-collapsible__panel {
+    padding-inline: 20px;
+    border: 1px solid var(--color-line);
+    border-radius: var(--box-radius, 8px);
+    box-shadow: var(--box-shadow);
+  }
+
+  .fl-collapsible__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding-block: 16px;
+    min-height: 44px;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .fl-collapsible__summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .fl-collapsible__summary:focus-visible {
+    outline-offset: -2px;
+  }
+
+  .fl-collapsible__row-heading {
+    min-width: 0;
+    font-size: 1.0625em;
+    font-weight: 500;
+  }
+
+  .fl-collapsible__icon {
+    position: relative;
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+  }
+
+  .fl-collapsible__icon::before,
+  .fl-collapsible__icon::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 1px;
+    background: currentcolor;
+    transition: transform 0.2s ease;
+  }
+
+  .fl-collapsible__icon::after {
+    transform: rotate(90deg);
+  }
+
+  .fl-collapsible__details[open] .fl-collapsible__icon::after {
+    transform: rotate(0deg);
+  }
+
+  .fl-collapsible__content {
+    padding-block: 0 20px;
+    color: var(--color-muted);
+  }
+
+  @media (min-width: 750px) {
+    .fl-collapsible__grid--split {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 48px;
+    }
+
+    .fl-collapsible__grid--reverse .fl-collapsible__media {
+      order: 2;
+    }
+
+    .fl-collapsible__img {
+      aspect-ratio: auto;
+      min-height: 360px;
+    }
+
+    .fl-collapsible__panel {
+      padding-inline: 28px;
+    }
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Collapsible content",
+  "max_blocks": 20,
+  "settings": [
+    {
+      "type": "text",
+      "id": "caption",
+      "label": "Caption",
+      "info": "Small line above the heading."
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "default": "Frequently asked questions"
+    },
+    {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading alignment",
+      "options": [
+        {
+          "value": "left",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "right",
+          "label": "Right"
+        }
+      ],
+      "default": "left"
+    },
+    {
+      "type": "checkbox",
+      "id": "open_first_collapsible_row",
+      "label": "Open first row by default",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Row framing",
+      "options": [
+        {
+          "value": "none",
+          "label": "None"
+        },
+        {
+          "value": "row",
+          "label": "Frame each row"
+        },
+        {
+          "value": "section",
+          "label": "Frame all rows"
+        }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "color_scheme",
+      "id": "container_color_scheme",
+      "label": "Frame colour scheme",
+      "info": "Used by the framed layouts.",
+      "default": "scheme-2"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Image"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Image"
+    },
+    {
+      "type": "select",
+      "id": "desktop_layout",
+      "label": "Image position on desktop",
+      "options": [
+        {
+          "value": "none",
+          "label": "No image"
+        },
+        {
+          "value": "image_first",
+          "label": "Image first"
+        },
+        {
+          "value": "image_second",
+          "label": "Image second"
+        }
+      ],
+      "default": "image_second"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "blocks": [
+    {
+      "type": "collapsible_row",
+      "name": "Collapsible row",
+      "settings": [
+        {
+          "type": "text",
+          "id": "heading",
+          "label": "Heading",
+          "default": "Frequently asked question"
+        },
+        {
+          "type": "richtext",
+          "id": "row_content",
+          "label": "Row content",
+          "default": "<p>Use this space to answer the questions your customers ask most often, such as shipping times, returns, or sizing.</p>"
+        },
+        {
+          "type": "page",
+          "id": "page",
+          "label": "Page",
+          "info": "Replaces the row content above."
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Collapsible content",
+      "blocks": [
+        {
+          "type": "collapsible_row"
+        },
+        {
+          "type": "collapsible_row"
+        },
+        {
+          "type": "collapsible_row"
+        },
+        {
+          "type": "collapsible_row"
+        }
+      ]
+    }
+  ]
+}
+{% endschema %}

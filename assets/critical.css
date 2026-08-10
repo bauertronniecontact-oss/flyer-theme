@@ -326,6 +326,50 @@ h6 {
   }
 }
 
+/* Pagination — shared by collection, search, blog and quick order list.
+   Lives here because {% stylesheet %} blocks are concatenated into one file
+   with no scoping: four sections each defining .fl-pagination meant the last
+   one compiled silently restyled the other three. */
+.fl-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 48px;
+}
+.fl-pagination__item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 10px;
+  color: var(--color-muted);
+  text-decoration: none;
+  border-radius: var(--radius-btn);
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+.fl-pagination__item:hover {
+  color: var(--color-ink);
+  background: var(--color-surface);
+}
+.fl-pagination__item--current {
+  color: var(--color-ink);
+  border: 1px solid var(--color-ink);
+}
+.fl-pagination__item--label {
+  padding: 0 14px;
+}
+.fl-pagination__gap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  min-height: 44px;
+  color: var(--color-muted);
+}
+
 /* --- Rich text rendered from Liquid (article.content, page.content) --- */
 .fl-rte > * + * {
   margin-top: 1.2em;
@@ -430,7 +474,8 @@ h6 {
   fill: var(--color-muted);
   opacity: 0.35;
 }
-.fl-card:hover .fl-card__media img {
+/* Theme setting: Animations > Hover effect (image zoom) */
+.fl-card--zoom:hover .fl-card__media img {
   transform: scale(1.03);
 }
 /* Corner comes from the Badges theme setting; the four rules below are toggled

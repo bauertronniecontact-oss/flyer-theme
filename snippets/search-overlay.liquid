@@ -4,6 +4,11 @@
   (products, pages, articles, query suggestions) and renders grouped
   results with product thumbnails and prices.
 
+  Theme settings honoured:
+  - Search > Enable search suggestions — when off, no JSON request is ever
+    made and the overlay is just a field that submits to the search page.
+  - Search > Show vendor / Show price — what each product result shows.
+
   Opening: any element with [data-search-open] anywhere in the document
   opens the overlay (delegated click listener). Focus is trapped while
   open; ESC, the close button, or the scrim close it.
@@ -15,21 +20,34 @@
   {% render 'search-overlay' %}
 {% enddoc %}
 
+{%- liquid
+  assign predictive = settings.predictive_search_enabled
+-%}
+
 <fl-search
   class="fl-search"
-  data-predictive-url="{{ routes.predictive_search_url }}"
   data-search-url="{{ routes.search_url }}"
-  data-currency="{{ cart.currency.iso_code }}"
-  data-money-format="{{ shop.money_format | escape }}"
-  data-label-loading="{{ 'accessibility.loading' | t | escape }}"
-  data-label-empty="{{ 'search.no_results_html' | t: terms: '%TERMS%' | escape }}"
-  data-label-results-one="{{ 'search.results_for_html' | t: count: 1, terms: '%TERMS%' | replace: '1', '%COUNT%' | escape }}"
-  data-label-results="{{ 'search.results_for_html' | t: count: 2, terms: '%TERMS%' | replace: '2', '%COUNT%' | escape }}"
-  data-label-from="{{ 'products.card.from' | t | escape }}"
-  data-label-suggestions="{{ 'search.suggestions' | t | escape }}"
-  data-label-products="{{ 'search.products' | t | escape }}"
-  data-label-pages="{{ 'search.pages' | t | escape }}"
-  data-label-articles="{{ 'search.articles' | t | escape }}"
+  {% if predictive %}
+    data-predictive="true"
+    data-predictive-url="{{ routes.predictive_search_url }}"
+    data-currency="{{ cart.currency.iso_code }}"
+    data-money-format="{{ shop.money_format | escape }}"
+    data-label-loading="{{ 'accessibility.loading' | t | escape }}"
+    data-label-empty="{{ 'search.no_results_html' | t: terms: '%TERMS%' | escape }}"
+    data-label-results-one="{{ 'search.results_for_html' | t: count: 1, terms: '%TERMS%' | replace: '1', '%COUNT%' | escape }}"
+    data-label-results="{{ 'search.results_for_html' | t: count: 2, terms: '%TERMS%' | replace: '2', '%COUNT%' | escape }}"
+    data-label-from="{{ 'products.card.from' | t | escape }}"
+    data-label-suggestions="{{ 'search.suggestions' | t | escape }}"
+    data-label-products="{{ 'search.products' | t | escape }}"
+    data-label-pages="{{ 'search.pages' | t | escape }}"
+    data-label-articles="{{ 'search.articles' | t | escape }}"
+    {% if settings.predictive_search_show_vendor %}
+      data-show-vendor="true"
+    {% endif %}
+    {% if settings.predictive_search_show_price %}
+      data-show-price="true"
+    {% endif %}
+  {% endif %}
 >
   <div
     class="fl-search__overlay"
@@ -56,7 +74,9 @@
               data-search-input
               placeholder="{{ 'search.placeholder' | t | escape }}"
               aria-label="{{ 'search.title' | t | escape }}"
-              aria-controls="FlSearchResults"
+              {% if predictive %}
+                aria-controls="FlSearchResults"
+              {% endif %}
               autocomplete="off"
               autocorrect="off"
               autocapitalize="off"
@@ -69,17 +89,28 @@
               </svg>
               <span class="visually-hidden">{{ 'search.clear' | t }}</span>
             </button>
+            {%- unless predictive -%}
+              {%- comment -%}
+                Without suggestions the overlay is a plain form, so it needs a
+                visible way to submit on touch keyboards that hide the Go key.
+              {%- endcomment -%}
+              <button type="submit" class="fl-search__submit">
+                {{- 'search.submit' | t -}}
+              </button>
+            {%- endunless -%}
           </form>
           <button type="button" class="fl-search__close" data-search-close>
             {{ 'accessibility.close' | t }}
           </button>
         </div>
 
-        <p class="fl-search__status" data-search-status role="status" aria-live="polite"></p>
-        <div class="fl-search__groups" id="FlSearchResults" data-search-results></div>
-        <a class="fl-search__viewall" data-search-viewall href="{{ routes.search_url }}" hidden>
-          {{- 'search.view_all' | t -}}
-        </a>
+        {%- if predictive -%}
+          <p class="fl-search__status" data-search-status role="status" aria-live="polite"></p>
+          <div class="fl-search__groups" id="FlSearchResults" data-search-results></div>
+          <a class="fl-search__viewall" data-search-viewall href="{{ routes.search_url }}" hidden>
+            {{- 'search.view_all' | t -}}
+          </a>
+        {%- endif -%}
       </div>
     </div>
   </div>
@@ -203,7 +234,8 @@
     visibility: hidden;
   }
 
-  .fl-search__close {
+  .fl-search__close,
+  .fl-search__submit {
     flex: 0 0 auto;
     min-height: 44px;
     padding: 10px 4px;
@@ -215,7 +247,14 @@
     cursor: pointer;
   }
 
-  .fl-search__close:hover {
+  .fl-search__close:hover,
+  .fl-search__submit:hover {
+    color: var(--color-ink);
+  }
+
+  .fl-search__submit {
+    padding-inline: 8px;
+    font-weight: 500;
     color: var(--color-ink);
   }
 
@@ -314,9 +353,19 @@
     text-underline-offset: 0.2em;
   }
 
-  .fl-search__product-price {
+  .fl-search__product-price,
+  .fl-search__product-vendor {
     font-size: 0.875em;
     color: var(--color-muted);
+  }
+
+  .fl-search__product-vendor {
+    overflow: hidden;
+    font-size: 0.75em;
+    letter-spacing: 0.08em;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
   }
 
   .fl-search__viewall {
@@ -357,6 +406,12 @@
       this.lastFocus = null;
       this.controller = null;
       this.debounceId = null;
+
+      // Theme setting: Search > Enable search suggestions. When off, the
+      // element never touches the JSON API and the form submits normally.
+      this.predictive = this.dataset.predictive === 'true';
+      this.showVendor = this.dataset.showVendor === 'true';
+      this.showPrice = this.dataset.showPrice === 'true';
 
       this.predictiveUrl = this.dataset.predictiveUrl || '/search/suggest';
       this.searchUrl = this.dataset.searchUrl || '/search';
@@ -406,7 +461,7 @@
         }
       });
 
-      if (this.input) {
+      if (this.input && this.predictive) {
         this.input.addEventListener('input', () => {
           clearTimeout(this.debounceId);
           this.debounceId = setTimeout(() => this.search(this.input.value.trim()), 250);
@@ -483,6 +538,7 @@
     }
 
     async search(query) {
+      if (!this.predictive) return;
       // Abort first, unconditionally: bailing out early on a short query used to
       // leave the previous request in flight, so stale results landed after the
       // field was cleared.
@@ -596,11 +652,19 @@
 
         const info = document.createElement('span');
         info.className = 'fl-search__product-info';
+        // Theme setting: Search > Show vendor. Above the title, like the card.
+        if (this.showVendor && product.vendor) {
+          const vendorEl = document.createElement('span');
+          vendorEl.className = 'fl-search__product-vendor';
+          vendorEl.textContent = product.vendor;
+          info.appendChild(vendorEl);
+        }
         const title = document.createElement('span');
         title.className = 'fl-search__product-title';
         title.textContent = product.title || '';
         info.appendChild(title);
-        const price = this.formatPrice(product);
+        // Theme setting: Search > Show price.
+        const price = this.showPrice ? this.formatPrice(product) : '';
         if (price) {
           const priceEl = document.createElement('span');
           priceEl.className = 'fl-search__product-price';

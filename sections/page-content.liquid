@@ -1,0 +1,131 @@
+{% comment %}
+  Page content.
+  Renders the content of a chosen store page, so a merchant can surface an
+  existing page (shipping, about, size guide…) inside another template
+  without retyping it. The heading falls back to the page title.
+{% endcomment %}
+
+{%- liquid
+  assign target = section.settings.page
+
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = target.title
+  endif
+
+  assign show_heading = false
+  if section.settings.show_heading and heading != blank
+    assign show_heading = true
+  endif
+-%}
+
+<section
+  class="fl-pagecontent full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  <div class="fl-pagecontent__inner">
+    {%- if show_heading -%}
+      <h2 class="fl-pagecontent__heading">{{ heading | escape }}</h2>
+    {%- endif -%}
+
+    {%- if target.content != blank -%}
+      <div class="fl-pagecontent__body fl-rte">{{ target.content }}</div>
+    {%- elsif request.design_mode -%}
+      {%- comment -%}
+        Editor-only affordance: nothing is rendered on the live storefront until
+        a page with content is selected.
+      {%- endcomment -%}
+      <div class="fl-pagecontent__empty fl-media">
+        {{ 'page' | placeholder_svg_tag: 'fl-pagecontent__ph' }}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+{% stylesheet %}
+  .fl-pagecontent {
+    display: block;
+  }
+
+  .fl-pagecontent__inner {
+    width: min(720px, calc(100% - var(--page-margin) * 2));
+    min-width: 0;
+    margin-inline: auto;
+  }
+
+  .fl-pagecontent__heading {
+    margin-bottom: 24px;
+  }
+
+  .fl-pagecontent__empty {
+    min-width: 0;
+  }
+
+  .fl-pagecontent__ph {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    fill: var(--color-muted);
+    opacity: 0.35;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Page content",
+  "settings": [
+    {
+      "type": "page",
+      "id": "page",
+      "label": "Page"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_heading",
+      "label": "Show heading",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading",
+      "info": "Leave blank to use the page title."
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Page"
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,396 @@
+{% comment %}
+  Video.
+  Deferred playback: only the cover image and a play button are rendered, the
+  player markup waits inside a <template> and is injected on click by <fl-video>.
+  A <noscript> copy keeps the video playable when JS is unavailable.
+{% endcomment %}
+
+{%- liquid
+  assign video = section.settings.video
+  assign video_url = section.settings.video_url
+  assign description = section.settings.description
+
+  assign has_video = false
+  if video != null
+    assign has_video = true
+  endif
+  if video_url != null
+    assign has_video = true
+  endif
+
+  assign poster = section.settings.cover_image
+  if poster == blank
+    assign poster = video.preview_image
+  endif
+
+  assign ratio = 1.7778
+  if poster != blank
+    assign ratio = poster.aspect_ratio | round: 4
+  elsif video != null
+    assign ratio = video.aspect_ratio | round: 4
+  endif
+
+  if section.settings.full_width
+    assign poster_sizes = '100vw'
+  else
+    assign inner_px = settings.max_page_width | minus: 48
+    assign poster_sizes = '(min-width: ' | append: settings.max_page_width | append: 'px) ' | append: inner_px | append: 'px, 100vw'
+  endif
+
+  assign frame_title = description
+  if frame_title == blank
+    assign frame_title = section.settings.heading
+  endif
+  if frame_title == blank
+    assign frame_title = 'accessibility.play_video' | t
+  endif
+-%}
+
+{%- capture play_label -%}
+  {{- 'accessibility.play_video' | t -}}
+  {%- if description != blank -%}: {{ description }}{%- endif -%}
+{%- endcapture -%}
+
+<div
+  class="fl-video full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  {%- if section.settings.heading != blank -%}
+    <div class="fl-video__head">
+      <h2 class="fl-video__heading">{{ section.settings.heading | escape }}</h2>
+    </div>
+  {%- endif -%}
+
+  <fl-video
+    class="fl-video__frame{% unless section.settings.full_width %} fl-video__frame--boxed fl-media{% endunless %}"
+    style="padding: {{ section.settings.image_padding }}px;"
+  >
+    <div class="fl-video__stage" data-stage style="--fl-video-ratio: {{ ratio }};">
+      {%- if has_video -%}
+        <button type="button" class="fl-video__poster" data-play aria-label="{{ play_label | escape }}">
+          {%- if poster != blank -%}
+            {{
+              poster
+              | image_url: width: 3840
+              | image_tag:
+                widths: '375, 750, 1100, 1500, 1920, 2560, 3840',
+                sizes: poster_sizes,
+                class: 'fl-video__img',
+                alt: '',
+                loading: 'lazy'
+            }}
+          {%- else -%}
+            {{ 'lifestyle-2' | placeholder_svg_tag: 'fl-video__ph' }}
+          {%- endif -%}
+          <span class="fl-video__play" aria-hidden="true">
+            <svg class="fl-video__icon" viewBox="0 0 24 24" focusable="false">
+              <path d="M8 5.5 19 12 8 18.5z" fill="currentColor"/>
+            </svg>
+          </span>
+        </button>
+
+        <template>
+          {%- if video != null -%}
+            {{
+              video
+              | video_tag: image_size: '1100x', autoplay: true, loop: false, controls: true, muted: false
+            }}
+          {%- elsif video_url.type == 'youtube' -%}
+            <iframe
+              src="https://www.youtube.com/embed/{{ video_url.id }}?autoplay=1&amp;playsinline=1"
+              title="{{ frame_title | escape }}"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          {%- else -%}
+            <iframe
+              src="https://player.vimeo.com/video/{{ video_url.id }}?autoplay=1"
+              title="{{ frame_title | escape }}"
+              allow="autoplay; encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          {%- endif -%}
+        </template>
+
+        <noscript>
+          {%- if video != null -%}
+            {{ video | video_tag: image_size: '1100x', controls: true }}
+          {%- elsif video_url.type == 'youtube' -%}
+            <iframe
+              src="https://www.youtube.com/embed/{{ video_url.id }}"
+              title="{{ frame_title | escape }}"
+              allow="encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          {%- else -%}
+            <iframe
+              src="https://player.vimeo.com/video/{{ video_url.id }}"
+              title="{{ frame_title | escape }}"
+              allow="encrypted-media; picture-in-picture"
+              allowfullscreen
+            ></iframe>
+          {%- endif -%}
+        </noscript>
+      {%- else -%}
+        {%- if poster != blank -%}
+          {{
+            poster
+            | image_url: width: 3840
+            | image_tag:
+              widths: '375, 750, 1100, 1500, 1920, 2560, 3840',
+              sizes: poster_sizes,
+              class: 'fl-video__img',
+              loading: 'lazy'
+          }}
+        {%- else -%}
+          {{ 'lifestyle-2' | placeholder_svg_tag: 'fl-video__ph' }}
+        {%- endif -%}
+      {%- endif -%}
+    </div>
+  </fl-video>
+</div>
+
+{% stylesheet %}
+  .fl-video {
+    display: block;
+  }
+
+  .fl-video__head {
+    width: min(calc(var(--page-width) - var(--page-margin) * 2), calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+    margin-bottom: 28px;
+  }
+
+  .fl-video__frame {
+    display: block;
+    overflow: hidden;
+    min-width: 0;
+    background-color: var(--color-surface);
+  }
+
+  .fl-video__frame--boxed {
+    width: min(calc(var(--page-width) - var(--page-margin) * 2), calc(100% - var(--page-margin) * 2));
+    margin-inline: auto;
+  }
+
+  .fl-video__stage {
+    position: relative;
+    overflow: hidden;
+    min-width: 0;
+    aspect-ratio: var(--fl-video-ratio, 16 / 9);
+    border-radius: inherit;
+    background-color: var(--color-surface);
+  }
+
+  .fl-video__poster {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    background-color: var(--color-surface);
+    border: 0;
+    cursor: pointer;
+  }
+
+  .fl-video__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .fl-video__ph {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    fill: var(--color-muted);
+    opacity: 0.35;
+  }
+
+  .fl-video__play {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    color: var(--color-ink);
+    background-color: rgba(var(--color-bg-rgb), 0.9);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    transition:
+      transform 0.2s ease,
+      background-color 0.2s ease;
+  }
+
+  .fl-video__poster:hover .fl-video__play {
+    background-color: var(--color-bg);
+    transform: translate(-50%, -50%) scale(1.06);
+  }
+
+  .fl-video__icon {
+    width: 24px;
+    height: 24px;
+    margin-left: 3px;
+  }
+
+  .fl-video__stage iframe,
+  .fl-video__stage video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+{% endstylesheet %}
+
+{% javascript %}
+  if (!customElements.get('fl-video')) {
+    customElements.define(
+      'fl-video',
+      class extends HTMLElement {
+        connectedCallback() {
+          this.button = this.querySelector('[data-play]');
+          this.stage = this.querySelector('[data-stage]');
+          this.template = this.querySelector('template');
+          if (!this.button || !this.stage || !this.template) return;
+
+          this.onClick = () => this.load();
+          this.button.addEventListener('click', this.onClick);
+        }
+
+        disconnectedCallback() {
+          if (this.button && this.onClick) this.button.removeEventListener('click', this.onClick);
+        }
+
+        load() {
+          if (this.loaded) return;
+          this.loaded = true;
+
+          this.stage.appendChild(this.template.content.cloneNode(true));
+          const player = this.stage.querySelector('iframe, video');
+          if (player) {
+            player.setAttribute('tabindex', '0');
+            player.focus();
+            if (typeof player.play === 'function') {
+              const started = player.play();
+              if (started && typeof started.catch === 'function') started.catch(() => {});
+            }
+          }
+          this.button.remove();
+          this.classList.add('is-playing');
+        }
+      }
+    );
+  }
+{% endjavascript %}
+
+{% schema %}
+{
+  "name": "Video",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "Heading"
+    },
+    {
+      "type": "header",
+      "content": "Shopify-hosted video"
+    },
+    {
+      "type": "video",
+      "id": "video",
+      "label": "Video"
+    },
+    {
+      "type": "header",
+      "content": "Or embed from a URL"
+    },
+    {
+      "type": "paragraph",
+      "content": "Used only when no Shopify-hosted video is selected above."
+    },
+    {
+      "type": "video_url",
+      "id": "video_url",
+      "accept": ["youtube", "vimeo"],
+      "label": "Video URL",
+      "info": "Accepts a YouTube or Vimeo link."
+    },
+    {
+      "type": "header",
+      "content": "Cover"
+    },
+    {
+      "type": "image_picker",
+      "id": "cover_image",
+      "label": "Cover image"
+    },
+    {
+      "type": "text",
+      "id": "description",
+      "label": "Video alt text",
+      "info": "Describe the video for customers using a screen reader."
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Make video full width",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "image_padding",
+      "min": 0,
+      "max": 40,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding around video",
+      "default": 0
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Video"
+    }
+  ]
+}
+{% endschema %}

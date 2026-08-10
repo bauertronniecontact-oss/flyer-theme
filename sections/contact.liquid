@@ -1,94 +1,112 @@
 {% comment %}
-  FLYER — Contact form (templates/page.contact.json).
+  FLYER — Contact form.
+  Main section of templates/page.contact.json, and addable to any template
+  through its preset. Keep the heading level at H1 only on the page where it
+  carries the main title.
 {% endcomment %}
 
-<div class="fl-contact">
-  <div class="fl-contact__head">
-    <h1 class="fl-contact__title">
-      {%- if section.settings.heading != blank -%}
-        {{ section.settings.heading | escape }}
-      {%- else -%}
-        {{ page.title | escape }}
+{%- liquid
+  assign heading_tag = section.settings.heading_tag | default: 'h1'
+
+  assign heading = section.settings.heading
+  if heading == blank
+    assign heading = page.title
+  endif
+  if heading == blank
+    assign heading = 'contact.form.title' | t
+  endif
+-%}
+
+<div
+  class="fl-contact full-width color-{{ section.settings.color_scheme }}"
+  style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
+>
+  <div class="fl-contact__inner">
+    <div class="fl-contact__head">
+      <{{ heading_tag }} class="fl-contact__title">{{ heading | escape }}</{{ heading_tag }}>
+
+      {%- if section.settings.intro != blank -%}
+        <div class="fl-contact__intro fl-rte">{{ section.settings.intro }}</div>
+      {%- elsif page.content != blank -%}
+        <div class="fl-contact__intro fl-rte">{{ page.content }}</div>
       {%- endif -%}
-    </h1>
+    </div>
 
-    {%- if section.settings.intro != blank -%}
-      <div class="fl-contact__intro fl-rte">{{ section.settings.intro }}</div>
-    {%- elsif page.content != blank -%}
-      <div class="fl-contact__intro fl-rte">{{ page.content }}</div>
-    {%- endif -%}
-  </div>
+    {%- form 'contact', class: 'fl-contact__form' -%}
+      {%- if form.posted_successfully? -%}
+        <p class="fl-form-status" role="status">{{ 'contact.form.success' | t }}</p>
+      {%- endif -%}
 
-  {%- form 'contact', class: 'fl-contact__form' -%}
-    {%- if form.posted_successfully? -%}
-      <p class="fl-form-status" role="status">{{ 'contact.form.success' | t }}</p>
-    {%- endif -%}
+      {%- if form.errors -%}
+        <div class="fl-form-status fl-form-status--error" role="alert">
+          <p>{{ 'contact.form.error' | t }}</p>
+          <ul class="fl-contact__errors">
+            {%- for field in form.errors -%}
+              <li>{{ form.errors.messages[field] }}</li>
+            {%- endfor -%}
+          </ul>
+        </div>
+      {%- endif -%}
 
-    {%- if form.errors -%}
-      <div class="fl-form-status fl-form-status--error" role="alert">
-        <p>{{ 'contact.form.error' | t }}</p>
-        <ul class="fl-contact__errors">
-          {%- for field in form.errors -%}
-            <li>{{ form.errors.messages[field] }}</li>
-          {%- endfor -%}
-        </ul>
+      <div class="fl-field">
+        <label class="fl-label" for="FlContactName">{{ 'contact.form.name' | t }}</label>
+        <input
+          class="fl-input"
+          type="text"
+          id="FlContactName"
+          name="contact[name]"
+          value="{{ form.name }}"
+          autocomplete="name"
+        >
       </div>
-    {%- endif -%}
 
-    <div class="fl-field">
-      <label class="fl-label" for="FlContactName">{{ 'contact.form.name' | t }}</label>
-      <input
-        class="fl-input"
-        type="text"
-        id="FlContactName"
-        name="contact[name]"
-        value="{{ form.name }}"
-        autocomplete="name"
-      >
-    </div>
+      <div class="fl-field">
+        <label class="fl-label" for="FlContactEmail">{{ 'contact.form.email' | t }}</label>
+        <input
+          class="fl-input"
+          type="email"
+          id="FlContactEmail"
+          name="contact[email]"
+          value="{{ form.email }}"
+          autocomplete="email"
+          autocapitalize="off"
+          required
+        >
+      </div>
 
-    <div class="fl-field">
-      <label class="fl-label" for="FlContactEmail">{{ 'contact.form.email' | t }}</label>
-      <input
-        class="fl-input"
-        type="email"
-        id="FlContactEmail"
-        name="contact[email]"
-        value="{{ form.email }}"
-        autocomplete="email"
-        autocapitalize="off"
-        required
-      >
-    </div>
+      <div class="fl-field">
+        <label class="fl-label" for="FlContactPhone">{{ 'contact.form.phone' | t }}</label>
+        <input
+          class="fl-input"
+          type="tel"
+          id="FlContactPhone"
+          name="contact[phone]"
+          value="{{ form.phone }}"
+          autocomplete="tel"
+        >
+      </div>
 
-    <div class="fl-field">
-      <label class="fl-label" for="FlContactPhone">{{ 'contact.form.phone' | t }}</label>
-      <input
-        class="fl-input"
-        type="tel"
-        id="FlContactPhone"
-        name="contact[phone]"
-        value="{{ form.phone }}"
-        autocomplete="tel"
-      >
-    </div>
+      <div class="fl-field">
+        <label class="fl-label" for="FlContactBody">{{ 'contact.form.message' | t }}</label>
+        <textarea class="fl-textarea" id="FlContactBody" name="contact[body]" rows="6" required>
+          {{- form.body -}}
+        </textarea>
+      </div>
 
-    <div class="fl-field">
-      <label class="fl-label" for="FlContactBody">{{ 'contact.form.message' | t }}</label>
-      <textarea class="fl-textarea" id="FlContactBody" name="contact[body]" rows="6" required>
-        {{- form.body -}}
-      </textarea>
-    </div>
-
-    <button type="submit" class="fl-btn">{{ 'contact.form.submit' | t }}</button>
-  {%- endform -%}
+      <button type="submit" class="fl-btn">{{ 'contact.form.submit' | t }}</button>
+    {%- endform -%}
+  </div>
 </div>
 
 {% stylesheet %}
   .fl-contact {
-    width: min(560px, 100%);
+    display: block;
+  }
+
+  .fl-contact__inner {
+    width: min(560px, calc(100% - var(--page-margin) * 2));
+    min-width: 0;
     margin-inline: auto;
-    padding-block: 48px 80px;
   }
 
   .fl-contact__head {
@@ -121,10 +139,66 @@
       "info": "Leave empty to use the page title."
     },
     {
+      "type": "select",
+      "id": "heading_tag",
+      "label": "Heading level",
+      "info": "Use H1 when this is the main heading of the page.",
+      "options": [
+        {
+          "value": "h1",
+          "label": "H1"
+        },
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        }
+      ],
+      "default": "h1"
+    },
+    {
       "type": "richtext",
       "id": "intro",
       "label": "Intro text",
       "info": "Leave empty to use the page content."
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Spacing"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Top padding",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 120,
+      "step": 4,
+      "unit": "px",
+      "label": "Bottom padding",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Contact form"
     }
   ]
 }

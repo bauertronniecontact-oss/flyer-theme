@@ -5,7 +5,20 @@
   - Re-renders itself through the Section Rendering API (?sections=cart-drawer).
   - Dispatches document event 'fl:cart:change' with detail: { itemCount }.
   - [data-cart-open] elements open it; everything degrades to /cart without JS.
+  Theme settings: Cart > Colour scheme, Show vendor, Enable order note,
+  Collection shown in an empty cart. Drawer border/shadow come from the
+  Drawers settings through the shared .fl-drawer class.
 {% endcomment %}
+
+{%- liquid
+  # Theme setting: Currency format > Show currency codes. Liquid has no dynamic
+  # filter name, so the cart total is resolved once here.
+  if settings.currency_code_enabled
+    assign cart_total = cart.total_price | money_with_currency
+  else
+    assign cart_total = cart.total_price | money
+  endif
+-%}
 
 <fl-cart-drawer
   class="fl-cart"
@@ -20,7 +33,7 @@
   <div class="fl-overlay" data-cart-close aria-hidden="true"></div>
 
   <div
-    class="fl-cart__panel"
+    class="fl-cart__panel fl-drawer color-{{ settings.cart_color_scheme }}"
     role="dialog"
     aria-modal="true"
     aria-labelledby="FlCartDrawerHeading"
@@ -54,10 +67,44 @@
               {{ 'cart.continue_shopping' | t }}
             </a>
           </div>
+
+          {%- comment -%}
+            Theme setting: Cart > Collection shown in an empty cart.
+          {%- endcomment -%}
+          {%- liquid
+            assign empty_collection = settings.cart_drawer_collection
+            # default: 0 keeps the comparison an integer one when no collection
+            # is picked, where products.size is nil.
+            assign rec_count = empty_collection.products.size | default: 0
+          -%}
+          {%- if rec_count > 0 -%}
+            <div class="fl-cart__recs">
+              <h3 class="fl-eyebrow">{{ empty_collection.title | escape }}</h3>
+              <div class="fl-product-grid fl-cart__recs-grid">
+                {%- for recommendation in empty_collection.products limit: 4 -%}
+                  {% render 'product-card',
+                    product: recommendation,
+                    show_quick_add: false,
+                    heading_level: 'h4',
+                    sizes: '(max-width: 480px) 45vw, 180px'
+                  %}
+                {%- endfor -%}
+              </div>
+            </div>
+          {%- endif -%}
         {%- else -%}
           <ul class="fl-cart__items" role="list">
             {%- for item in cart.items -%}
-              {%- assign item_title = item.product.title | escape -%}
+              {%- liquid
+                assign item_title = item.product.title | escape
+                if settings.currency_code_enabled
+                  assign line_price = item.final_line_price | money_with_currency
+                  assign line_compare = item.original_line_price | money_with_currency
+                else
+                  assign line_price = item.final_line_price | money
+                  assign line_compare = item.original_line_price | money
+                endif
+              -%}
               <li class="fl-cart__item">
                 <a class="fl-cart__thumb" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
                   {%- if item.image -%}
@@ -70,6 +117,11 @@
                 </a>
 
                 <div class="fl-cart__details">
+                  {%- comment -%}Theme setting: Cart > Show vendor.{%- endcomment -%}
+                  {%- if settings.cart_show_vendor and item.product.vendor != blank -%}
+                    <span class="fl-cart__item-vendor">{{ item.product.vendor | escape }}</span>
+                  {%- endif -%}
+
                   <a class="fl-cart__item-title" href="{{ item.url }}">{{ item_title }}</a>
 
                   {%- unless item.product.has_only_default_variant -%}
@@ -83,9 +135,9 @@
 
                   <span class="fl-cart__item-price">
                     {%- if item.original_line_price != item.final_line_price -%}
-                      <s class="fl-cart__item-compare">{{ item.original_line_price | money }}</s>
+                      <s class="fl-cart__item-compare">{{ line_compare }}</s>
                     {%- endif -%}
-                    <span>{{ item.final_line_price | money }}</span>
+                    <span>{{ line_price }}</span>
                   </span>
 
                   <div class="fl-cart__item-row">
@@ -147,7 +199,7 @@
         <div class="fl-cart__foot">
           <div class="fl-cart__subtotal">
             <span>{{ 'cart.subtotal' | t }}</span>
-            <span>{{ cart.total_price | money }}</span>
+            <span>{{ cart_total }}</span>
           </div>
           <p class="fl-cart__taxes">{{ 'cart.taxes_note' | t }}</p>
 
@@ -196,6 +248,8 @@
     pointer-events: auto;
   }
 
+  /* Colour, border and shadow come from the cart colour scheme and the shared
+     .fl-drawer class, both applied on the panel in the markup. */
   .fl-cart__panel {
     position: fixed;
     top: 0;
@@ -205,9 +259,6 @@
     display: flex;
     flex-direction: column;
     width: min(420px, 100%);
-    background: var(--color-bg);
-    border-left: 1px solid var(--color-line);
-    box-shadow: 0 8px 40px rgb(0 0 0 / 12%);
     transform: translateX(100%);
     visibility: hidden;
     transition: transform 0.3s ease, visibility 0s linear 0.3s;
@@ -290,6 +341,19 @@
     color: var(--color-muted);
   }
 
+  .fl-cart__recs {
+    padding-top: 24px;
+    border-top: 1px solid var(--color-line);
+  }
+
+  /* The drawer is 420px wide whatever the viewport, so the shared grid is
+     pinned to two columns instead of following the page breakpoints. The
+     compound selector outranks .fl-product-grid’s own media queries. */
+  .fl-cart__recs-grid.fl-product-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px 12px;
+  }
+
   .fl-cart__items {
     display: flex;
     flex-direction: column;
@@ -335,6 +399,13 @@
 
   .fl-cart__item-title:hover {
     text-decoration: underline;
+  }
+
+  .fl-cart__item-vendor {
+    font-size: 0.75em;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-muted);
   }
 
   .fl-cart__item-options {

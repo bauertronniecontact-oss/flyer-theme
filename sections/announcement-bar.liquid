@@ -9,7 +9,7 @@
 
 {%- if section.blocks.size > 0 -%}
   <fl-announcement-bar
-    class="fl-announce full-width{% if section.settings.invert %} fl-announce--invert{% endif %}"
+    class="fl-announce full-width color-{{ section.settings.color_scheme }}"
     role="region"
     aria-label="{{ 'general.announcement.label' | t }}"
     data-interval="{{ section.settings.rotate_interval }}"
@@ -73,15 +73,7 @@
   .fl-announce {
     display: block;
     font-size: 0.8125em;
-    background-color: var(--color-bg);
-    color: var(--color-ink);
     border-bottom: 1px solid var(--color-line);
-  }
-
-  .fl-announce--invert {
-    background-color: var(--color-ink);
-    color: var(--color-bg);
-    border-bottom: 0;
   }
 
   .fl-announce :focus-visible {
@@ -171,10 +163,6 @@
     z-index: 1;
     background-color: var(--color-bg);
     border-radius: var(--radius-btn);
-  }
-
-  .fl-announce--invert .fl-announce__btn:focus-visible {
-    background-color: var(--color-ink);
   }
 {% endstylesheet %}
 
@@ -279,11 +267,10 @@
   "max_blocks": 3,
   "settings": [
     {
-      "type": "checkbox",
-      "id": "invert",
-      "label": "Invert colors",
-      "info": "Dark bar with light text.",
-      "default": true
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-3"
     },
     {
       "type": "range",

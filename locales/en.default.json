@@ -19,7 +19,11 @@
     "next": "Next",
     "loading": "Loading…",
     "go_to_slide": "Go to slide {{ index }}",
-    "main_menu": "Main menu"
+    "main_menu": "Main menu",
+    "carousel": "Carousel",
+    "pause_slideshow": "Pause slideshow",
+    "play_slideshow": "Play slideshow",
+    "play_video": "Play video"
   },
   "general": {
     "pagination": {
@@ -95,6 +99,10 @@
     },
     "related": {
       "heading": "You may also like"
+    },
+    "quick_order": {
+      "add_all": "Add all to cart",
+      "empty_selection": "Enter a quantity to add items to your cart."
     }
   },
   "collections": {
@@ -106,7 +114,8 @@
         "other": "{{ count }} products"
       },
       "all_products": "Products",
-      "view_all": "View all"
+      "view_all": "View all",
+      "placeholder_title": "Example collection"
     },
     "sorting": {
       "title": "Sort by"
@@ -163,6 +172,7 @@
   "blog": {
     "read_more": "Read more",
     "no_articles": "No posts yet.",
+    "placeholder_title": "Blog post",
     "back_to_blog": "Back to {{ title }}",
     "comments": {
       "one": "{{ count }} comment",

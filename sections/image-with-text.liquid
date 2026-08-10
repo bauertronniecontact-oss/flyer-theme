@@ -1,5 +1,5 @@
 <section
-  class="fl-imgtext full-width{% if section.settings.background == 'surface' %} fl-imgtext--surface{% endif %}"
+  class="fl-imgtext full-width color-{{ section.settings.color_scheme }}"
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
   <div class="fl-imgtext__inner">
@@ -58,14 +58,6 @@
 </section>
 
 {% stylesheet %}
-  .fl-imgtext {
-    background-color: var(--color-bg);
-  }
-
-  .fl-imgtext--surface {
-    background-color: var(--color-surface);
-  }
-
   .fl-imgtext__inner {
     width: min(
       calc(var(--page-width) - var(--page-margin) * 2),
@@ -135,6 +127,12 @@
   "name": "Image with text",
   "settings": [
     {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Colour scheme",
+      "default": "scheme-1"
+    },
+    {
       "type": "image_picker",
       "id": "image",
       "label": "Image"
@@ -175,22 +173,6 @@
         }
       ],
       "default": "adapt"
-    },
-    {
-      "type": "select",
-      "id": "background",
-      "label": "Background",
-      "options": [
-        {
-          "value": "default",
-          "label": "White"
-        },
-        {
-          "value": "surface",
-          "label": "Soft gray"
-        }
-      ],
-      "default": "default"
     },
     {
       "type": "header",
