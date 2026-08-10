@@ -2,6 +2,24 @@
 
 Free Shopify OS 2.0 theme by KIOSK (kioskthemes.com). Art direction: **clean minimal** — white, airy, sober, mass-appeal. Demo brand: RUE STUDIO.
 
+## Colour schemes (Dawn-style) — READ FIRST
+
+Colours are **not** global any more. `settings.color_schemes` is a `color_scheme_group`; each scheme is emitted as a `.color-<id>` class that re-points the same token names below. The first scheme also lands on `:root` as the page default.
+
+**Every content section must expose a `color_scheme` setting** and put the class on its outermost element:
+
+```liquid
+<section class="fl-thing color-{{ section.settings.color_scheme }}" ...>
+```
+
+```json
+{ "type": "color_scheme", "id": "color_scheme", "label": "Colour scheme", "default": "scheme-1" }
+```
+
+Inside the section, keep using `var(--color-bg)`, `var(--color-ink)`, `var(--color-accent)`… — they resolve to whichever scheme is active. Never hardcode a colour, and never read `settings.color_*` (those flat settings no longer exist).
+
+`--color-ink-rgb` / `--color-bg-rgb` / `--color-shadow-rgb` are comma-separated triples for use in `rgba(var(--color-ink-rgb), 0.5)`.
+
 ## Tokens (defined in `snippets/css-variables.liquid`, editable in theme settings)
 
 | Var | Default | Role |
@@ -22,7 +40,11 @@ Free Shopify OS 2.0 theme by KIOSK (kioskthemes.com). Art direction: **clean min
 | `--radius-btn` / `--radius-input` / `--radius-card` | 4 / 4 / 8px | corners |
 | `--card-ratio` | 4 / 5 | product card image ratio |
 
-**Look**: generous whitespace, hairline `1px solid var(--color-line)` separators, no shadows (except overlays: `0 8px 40px rgb(0 0 0 / 12%)` allowed), subtle 0.15–0.4s ease transitions, images on `--color-surface`. Headings sentence case (no uppercase except `.fl-eyebrow`). Never hardcode colors/sizes — tokens only. No `!important` (only pre-approved in critical.css), no ID selectors.
+Shape/shadow tokens also exist for every surface family and **must be used instead of hardcoded values**: buttons (`--radius-btn`, `--btn-border-width`, `--btn-border-opacity`, `--btn-shadow`), inputs (`--radius-input`, `--input-border-*`, `--input-shadow`), variant pills (`--pill-*`), product cards (`--radius-card`, `--card-border-*`, `--card-shadow`, `--card-text-align`, `--card-image-padding`), collection cards (`--coll-card-*`), blog cards (`--blog-card-*`), content containers (`--box-*`), media (`--media-*`), popups (`--popup-*`), drawers (`--drawer-*`), badges (`--badge-radius`), grid gaps (`--grid-gap-x/y`), headings (`--heading-case`).
+
+Ready-made classes in `critical.css` apply those families: `.fl-media`, `.fl-box`, `.fl-popup`, `.fl-drawer`, `.fl-reveal` (scroll reveal).
+
+**Look**: generous whitespace, hairline separators, subtle 0.15–0.4s ease transitions, images on `--color-surface`. Never hardcode colors/sizes — tokens only. No `!important` (only pre-approved in critical.css), no ID selectors.
 
 ## Shared CSS already in `assets/critical.css` — REUSE, don't redefine
 

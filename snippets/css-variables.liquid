@@ -1,10 +1,61 @@
+{% comment %}
+  Emits every design token.
+
+  Colour schemes work like Dawn's: each scheme becomes a `.color-<id>` class
+  that re-points the same token names FLYER already uses, so any section can
+  opt into a palette just by carrying that class. The first scheme is also
+  applied to :root as the page default.
+
+  Surface / line / muted / control-border are derived from each scheme's own
+  background and text so a merchant only picks the colours that matter.
+{% endcomment %}
+
 {% style %}
   {{ settings.type_body_font | font_face: font_display: 'swap' }}
   {{ settings.type_body_font | font_modify: 'weight', 'bold' | font_face: font_display: 'swap' }}
   {{ settings.type_body_font | font_modify: 'style', 'italic' | font_face: font_display: 'swap' }}
   {{ settings.type_heading_font | font_face: font_display: 'swap' }}
 
+  {% for scheme in settings.color_schemes -%}
+    {%- liquid
+      assign bg = scheme.settings.background
+      assign ink = scheme.settings.text
+      assign surface = bg | color_mix: ink, 96
+      assign line = bg | color_mix: ink, 88
+      assign muted = ink | color_mix: bg, 62
+      assign control_border = ink | color_mix: bg, 45
+    -%}
+    {% if forloop.first %}:root,{% endif %}
+    .color-{{ scheme.id }} {
+      --color-bg: {{ bg }};
+      --color-bg-rgb: {{ bg.red }}, {{ bg.green }}, {{ bg.blue }};
+      {% if scheme.settings.background_gradient != empty %}
+        --gradient-bg: {{ scheme.settings.background_gradient }};
+      {% else %}
+        --gradient-bg: {{ bg }};
+      {% endif %}
+      --color-ink: {{ ink }};
+      --color-ink-rgb: {{ ink.red }}, {{ ink.green }}, {{ ink.blue }};
+      --color-surface: {{ surface }};
+      --color-line: {{ line }};
+      --color-muted: {{ muted }};
+      --color-control-border: {{ control_border }};
+      --color-accent: {{ scheme.settings.button }};
+      --color-on-accent: {{ scheme.settings.button_label }};
+      --color-outline-label: {{ scheme.settings.secondary_button_label }};
+      --color-shadow-rgb: {{ scheme.settings.shadow.red }}, {{ scheme.settings.shadow.green }}, {{ scheme.settings.shadow.blue }};
+    }
+  {% endfor %}
+
+  {% for scheme in settings.color_schemes %}
+    .color-{{ scheme.id }} {
+      color: var(--color-ink);
+      background-color: var(--color-bg);
+    }
+  {% endfor %}
+
   :root {
+    /* Typography */
     --font-body-family: {{ settings.type_body_font.family }}, {{ settings.type_body_font.fallback_families }};
     --font-body-style: {{ settings.type_body_font.style }};
     --font-body-weight: {{ settings.type_body_font.weight }};
@@ -12,29 +63,42 @@
     --font-heading-style: {{ settings.type_heading_font.style }};
     --font-heading-weight: {{ settings.type_heading_font.weight }};
     --font-size-base: {{ settings.type_base_size }}px;
+    --body-scale: {{ settings.type_body_scale | divided_by: 100.0 }};
     --heading-scale: {{ settings.type_heading_scale | divided_by: 100.0 }};
+    --heading-case: {{ settings.type_heading_case }};
 
-    --color-bg: {{ settings.color_background }};
-    --color-surface: {{ settings.color_surface }};
-    --color-ink: {{ settings.color_ink }};
-    --color-muted: {{ settings.color_muted }};
-    --color-line: {{ settings.color_line }};
-    /* Decorative rules may be faint, but form controls need a 3:1 border
-       (WCAG 1.4.11). Derived from the merchant's ink so it follows the palette;
-       the flat value is the fallback for browsers without color-mix. */
-    --color-control-border: #767676;
-    --color-control-border: color-mix(in srgb, {{ settings.color_ink }} 58%, {{ settings.color_background }});
-    --color-accent: {{ settings.color_accent }};
-    --color-on-accent: {{ settings.color_on_accent }};
-
+    /* Layout */
     --page-width: {{ settings.max_page_width }}px;
     --page-margin: {{ settings.min_page_margin }}px;
     --section-spacing: {{ settings.section_spacing }}px;
+    --grid-gap-x: {{ settings.spacing_grid_horizontal }}px;
+    --grid-gap-y: {{ settings.spacing_grid_vertical }}px;
 
+    /* Buttons */
     --radius-btn: {{ settings.radius_buttons }}px;
-    --radius-input: {{ settings.radius_inputs }}px;
-    --radius-card: {{ settings.radius_cards }}px;
+    --btn-border-width: {{ settings.buttons_border_thickness }}px;
+    --btn-border-opacity: {{ settings.buttons_border_opacity | divided_by: 100.0 }};
+    --btn-shadow: {{ settings.buttons_shadow_horizontal_offset }}px {{ settings.buttons_shadow_vertical_offset }}px {{ settings.buttons_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.buttons_shadow_opacity | divided_by: 100.0 }});
 
+    /* Inputs */
+    --radius-input: {{ settings.radius_inputs }}px;
+    --input-border-width: {{ settings.inputs_border_thickness }}px;
+    --input-border-opacity: {{ settings.inputs_border_opacity | divided_by: 100.0 }};
+    --input-shadow: {{ settings.inputs_shadow_horizontal_offset }}px {{ settings.inputs_shadow_vertical_offset }}px {{ settings.inputs_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.inputs_shadow_opacity | divided_by: 100.0 }});
+
+    /* Variant pills */
+    --pill-radius: {{ settings.variant_pills_radius }}px;
+    --pill-border-width: {{ settings.variant_pills_border_thickness }}px;
+    --pill-border-opacity: {{ settings.variant_pills_border_opacity | divided_by: 100.0 }};
+    --pill-shadow: {{ settings.variant_pills_shadow_horizontal_offset }}px {{ settings.variant_pills_shadow_vertical_offset }}px {{ settings.variant_pills_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.variant_pills_shadow_opacity | divided_by: 100.0 }});
+
+    /* Product cards */
+    --radius-card: {{ settings.radius_cards }}px;
+    --card-border-width: {{ settings.card_border_thickness }}px;
+    --card-border-opacity: {{ settings.card_border_opacity | divided_by: 100.0 }};
+    --card-image-padding: {{ settings.card_image_padding }}px;
+    --card-text-align: {{ settings.card_text_alignment }};
+    --card-shadow: {{ settings.card_shadow_horizontal_offset }}px {{ settings.card_shadow_vertical_offset }}px {{ settings.card_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.card_shadow_opacity | divided_by: 100.0 }});
     {% case settings.card_image_ratio %}
       {% when 'square' %}
         --card-ratio: 1 / 1;
@@ -43,5 +107,47 @@
       {% else %}
         --card-ratio: auto;
     {% endcase %}
+
+    /* Collection cards */
+    --coll-card-radius: {{ settings.collection_card_corner_radius }}px;
+    --coll-card-border-width: {{ settings.collection_card_border_thickness }}px;
+    --coll-card-border-opacity: {{ settings.collection_card_border_opacity | divided_by: 100.0 }};
+    --coll-card-image-padding: {{ settings.collection_card_image_padding }}px;
+    --coll-card-text-align: {{ settings.collection_card_text_alignment }};
+    --coll-card-shadow: {{ settings.collection_card_shadow_horizontal_offset }}px {{ settings.collection_card_shadow_vertical_offset }}px {{ settings.collection_card_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.collection_card_shadow_opacity | divided_by: 100.0 }});
+
+    /* Blog cards */
+    --blog-card-radius: {{ settings.blog_card_corner_radius }}px;
+    --blog-card-border-width: {{ settings.blog_card_border_thickness }}px;
+    --blog-card-border-opacity: {{ settings.blog_card_border_opacity | divided_by: 100.0 }};
+    --blog-card-image-padding: {{ settings.blog_card_image_padding }}px;
+    --blog-card-text-align: {{ settings.blog_card_text_alignment }};
+    --blog-card-shadow: {{ settings.blog_card_shadow_horizontal_offset }}px {{ settings.blog_card_shadow_vertical_offset }}px {{ settings.blog_card_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.blog_card_shadow_opacity | divided_by: 100.0 }});
+
+    /* Content containers */
+    --box-radius: {{ settings.text_boxes_radius }}px;
+    --box-border-width: {{ settings.text_boxes_border_thickness }}px;
+    --box-border-opacity: {{ settings.text_boxes_border_opacity | divided_by: 100.0 }};
+    --box-shadow: {{ settings.text_boxes_shadow_horizontal_offset }}px {{ settings.text_boxes_shadow_vertical_offset }}px {{ settings.text_boxes_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.text_boxes_shadow_opacity | divided_by: 100.0 }});
+
+    /* Media */
+    --media-radius: {{ settings.media_radius }}px;
+    --media-border-width: {{ settings.media_border_thickness }}px;
+    --media-border-opacity: {{ settings.media_border_opacity | divided_by: 100.0 }};
+    --media-shadow: {{ settings.media_shadow_horizontal_offset }}px {{ settings.media_shadow_vertical_offset }}px {{ settings.media_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.media_shadow_opacity | divided_by: 100.0 }});
+
+    /* Popups */
+    --popup-radius: {{ settings.popup_corner_radius }}px;
+    --popup-border-width: {{ settings.popup_border_thickness }}px;
+    --popup-border-opacity: {{ settings.popup_border_opacity | divided_by: 100.0 }};
+    --popup-shadow: {{ settings.popup_shadow_horizontal_offset }}px {{ settings.popup_shadow_vertical_offset }}px {{ settings.popup_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.popup_shadow_opacity | divided_by: 100.0 }});
+
+    /* Drawers */
+    --drawer-border-width: {{ settings.drawer_border_thickness }}px;
+    --drawer-border-opacity: {{ settings.drawer_border_opacity | divided_by: 100.0 }};
+    --drawer-shadow: {{ settings.drawer_shadow_horizontal_offset }}px {{ settings.drawer_shadow_vertical_offset }}px {{ settings.drawer_shadow_blur }}px rgba(var(--color-shadow-rgb), {{ settings.drawer_shadow_opacity | divided_by: 100.0 }});
+
+    /* Badges */
+    --badge-radius: {{ settings.badge_corner_radius }}px;
   }
 {% endstyle %}

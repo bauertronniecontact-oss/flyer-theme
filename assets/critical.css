@@ -179,8 +179,10 @@ a {
   text-decoration: none;
   color: var(--color-on-accent);
   background: var(--color-accent);
-  border: 1px solid var(--color-accent);
+  border: var(--btn-border-width, 1px) solid
+    rgba(var(--color-ink-rgb), var(--btn-border-opacity, 1));
   border-radius: var(--radius-btn);
+  box-shadow: var(--btn-shadow);
   cursor: pointer;
   transition: opacity 0.15s ease;
 }
@@ -193,9 +195,9 @@ a {
   cursor: not-allowed;
 }
 .fl-btn--secondary {
-  color: var(--color-ink);
+  color: var(--color-outline-label, var(--color-ink));
   background: transparent;
-  border-color: var(--color-ink);
+  border-color: rgba(var(--color-ink-rgb), var(--btn-border-opacity, 1));
 }
 .fl-btn--secondary:hover {
   opacity: 1;
@@ -211,8 +213,10 @@ a {
   min-height: 44px;
   color: var(--color-ink);
   background: var(--color-bg);
-  border: 1px solid var(--color-control-border);
+  border: var(--input-border-width, 1px) solid
+    rgba(var(--color-ink-rgb), var(--input-border-opacity, 0.55));
   border-radius: var(--radius-input);
+  box-shadow: var(--input-shadow);
 }
 .fl-input:focus-visible,
 .fl-select:focus-visible,
@@ -255,6 +259,71 @@ a {
 }
 .fl-section-head--center {
   text-align: center;
+}
+
+/* --- Shared primitives driven by theme settings --- */
+
+/* Media > border / radius / shadow */
+.fl-media {
+  overflow: hidden;
+  background: var(--color-surface);
+  border: var(--media-border-width, 0) solid
+    rgba(var(--color-ink-rgb), var(--media-border-opacity, 0.1));
+  border-radius: var(--media-radius, 8px);
+  box-shadow: var(--media-shadow);
+}
+
+/* Content containers > border / radius / shadow */
+.fl-box {
+  border: var(--box-border-width, 0) solid
+    rgba(var(--color-ink-rgb), var(--box-border-opacity, 0));
+  border-radius: var(--box-radius, 8px);
+  box-shadow: var(--box-shadow);
+}
+
+/* Popups > border / radius / shadow */
+.fl-popup {
+  background: var(--color-bg);
+  border: var(--popup-border-width, 1px) solid
+    rgba(var(--color-ink-rgb), var(--popup-border-opacity, 0.1));
+  border-radius: var(--popup-radius, 8px);
+  box-shadow: var(--popup-shadow);
+}
+
+/* Drawers > border / shadow */
+.fl-drawer {
+  background: var(--color-bg);
+  border-inline-start: var(--drawer-border-width, 1px) solid
+    rgba(var(--color-ink-rgb), var(--drawer-border-opacity, 0.1));
+  box-shadow: var(--drawer-shadow);
+}
+
+/* Typography > Heading capitalisation */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-transform: var(--heading-case, none);
+}
+
+/* Animations > Reveal sections on scroll. The section is only hidden once JS
+   has confirmed it can reveal it again, so no-JS visitors always see content. */
+.fl-reveal {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.fl-reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .fl-reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* --- Rich text rendered from Liquid (article.content, page.content) --- */
@@ -311,14 +380,9 @@ a {
   font-size: 0.75em;
   font-weight: 500;
   letter-spacing: 0.04em;
-  border-radius: 999px;
-  background: var(--color-ink);
-  color: var(--color-bg);
-}
-.fl-badge--soldout {
-  background: var(--color-surface);
+  border-radius: var(--badge-radius, 40px);
+  background: var(--color-bg);
   color: var(--color-ink);
-  border: 1px solid var(--color-line);
 }
 
 /* --- Product card (markup in snippets/product-card.liquid) --- */
@@ -328,7 +392,25 @@ a {
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  text-align: var(--card-text-align, left);
+  border: var(--card-border-width, 0) solid
+    rgba(var(--color-ink-rgb), var(--card-border-opacity, 0.1));
+  border-radius: var(--radius-card);
+  box-shadow: var(--card-shadow);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
+
+/* "Card" style wraps the whole tile in the card colour scheme. */
+.fl-card--boxed {
+  padding: var(--card-image-padding, 0);
+  background: var(--color-bg);
+}
+
+/* Theme setting: Animations > Hover effect */
+.fl-card--lift:hover {
+  transform: translateY(-4px);
+}
+
 .fl-card__media {
   position: relative;
   overflow: hidden;
@@ -351,12 +433,30 @@ a {
 .fl-card:hover .fl-card__media img {
   transform: scale(1.03);
 }
+/* Corner comes from the Badges theme setting; the four rules below are toggled
+   by the position class written on the card. */
 .fl-card__badges {
   position: absolute;
   top: 10px;
   left: 10px;
   display: flex;
   gap: 6px;
+}
+.fl-card__badges--top-right {
+  top: 10px;
+  right: 10px;
+  left: auto;
+}
+.fl-card__badges--bottom-left {
+  top: auto;
+  bottom: 10px;
+  left: 10px;
+}
+.fl-card__badges--bottom-right {
+  top: auto;
+  right: 10px;
+  bottom: 10px;
+  left: auto;
 }
 .fl-card__link {
   text-decoration: none;
@@ -409,7 +509,7 @@ a {
 .fl-product-grid {
   display: grid;
   grid-template-columns: repeat(var(--grid-cols, 4), minmax(0, 1fr));
-  gap: 28px 20px;
+  gap: var(--grid-gap-y, 28px) var(--grid-gap-x, 20px);
 }
 @media (max-width: 989px) {
   .fl-product-grid {

@@ -1,12 +1,64 @@
-/*
- * ------------------------------------------------------------
- * IMPORTANT: The contents of this file are auto-generated.
- *
- * This file may be updated by the Shopify admin theme editor
- * or related systems. Please exercise caution as any changes
- * made to this file may be overwritten.
- * ------------------------------------------------------------
- */
 {
-  "current": {}
+  "current": "FLYER",
+  "presets": {
+    "FLYER": {
+      "color_schemes": {
+        "scheme-1": {
+          "settings": {
+            "background": "#FFFFFF",
+            "background_gradient": "",
+            "text": "#1A1A1A",
+            "button": "#1A1A1A",
+            "button_label": "#FFFFFF",
+            "secondary_button_label": "#1A1A1A",
+            "shadow": "#1A1A1A"
+          }
+        },
+        "scheme-2": {
+          "settings": {
+            "background": "#F6F6F5",
+            "background_gradient": "",
+            "text": "#1A1A1A",
+            "button": "#1A1A1A",
+            "button_label": "#F6F6F5",
+            "secondary_button_label": "#1A1A1A",
+            "shadow": "#1A1A1A"
+          }
+        },
+        "scheme-3": {
+          "settings": {
+            "background": "#1A1A1A",
+            "background_gradient": "",
+            "text": "#FFFFFF",
+            "button": "#FFFFFF",
+            "button_label": "#1A1A1A",
+            "secondary_button_label": "#FFFFFF",
+            "shadow": "#000000"
+          }
+        },
+        "scheme-4": {
+          "settings": {
+            "background": "#EFEBE4",
+            "background_gradient": "",
+            "text": "#2B2620",
+            "button": "#2B2620",
+            "button_label": "#EFEBE4",
+            "secondary_button_label": "#2B2620",
+            "shadow": "#2B2620"
+          }
+        },
+        "scheme-5": {
+          "settings": {
+            "background": "#22303C",
+            "background_gradient": "",
+            "text": "#FFFFFF",
+            "button": "#FFFFFF",
+            "button_label": "#22303C",
+            "secondary_button_label": "#FFFFFF",
+            "shadow": "#000000"
+          }
+        }
+      }
+    }
+  }
 }

@@ -3,7 +3,8 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="{{ settings.color_background }}">
+    {%- assign default_scheme = settings.color_schemes | first -%}
+    <meta name="theme-color" content="{{ default_scheme.settings.background }}">
 
     {% render 'css-variables' %}
 
