@@ -29,6 +29,7 @@
   data-root-url="{{ routes.root_url }}"
   data-error-text="{{ 'cart.item_error' | t | escape }}"
   data-adding-text="{{ 'products.product.adding' | t | escape }}"
+  data-added-text="{{ 'products.product.added_to_cart' | t | escape }}"
 >
   <div class="fl-overlay" data-cart-close aria-hidden="true"></div>
 
@@ -718,14 +719,37 @@
       // detached the [data-add-label] node that <fl-product> holds a reference
       // to, so the product button stayed stuck on "Adding…" after the first add.
       const label = button.querySelector('[data-add-label]') || button;
-      const original = label.textContent;
+      // A confirmation from a previous add may still be on screen: cancel its
+      // pending revert and reuse the wording it captured, otherwise "Added to
+      // cart" would be recorded as this button's original label.
+      window.clearTimeout(button.flRevertTimer);
+      let original = label.textContent;
+      if (typeof button.flOriginalLabel === 'string') original = button.flOriginalLabel;
+      button.flOriginalLabel = original;
+      const addingText = this.dataset.addingText;
+      const addedText = this.dataset.addedText;
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
-      label.textContent = this.dataset.addingText;
-      return function () {
+      label.textContent = addingText;
+      // The button is freed as soon as the request settles, but the label only
+      // goes back to its original wording after the confirmation has had time
+      // on screen: restoring it in the same tick as the add succeeded painted
+      // over "Added to cart" before it was ever visible.
+      return function (added) {
         button.disabled = false;
         button.removeAttribute('aria-busy');
-        label.textContent = original;
+        if (!added) {
+          if (label.textContent === addingText) label.textContent = original;
+          button.flOriginalLabel = null;
+          return;
+        }
+        label.textContent = addedText;
+        button.flRevertTimer = window.setTimeout(function () {
+          // <fl-product> relabels the same button on fl:cart:change and on
+          // variant changes, so only take back a label that is still ours.
+          if (label.textContent === addedText) label.textContent = original;
+          button.flOriginalLabel = null;
+        }, 2000);
       };
     }
 
@@ -736,6 +760,7 @@
       const restore = this.setLoading(button);
       const body = new FormData(form);
       if (submitter && submitter.name) body.append(submitter.name, submitter.value);
+      let added = false;
       try {
         const response = await fetch(this.dataset.addUrl, {
           method: 'POST',
@@ -756,12 +781,13 @@
         }
         this.clearError();
         await this.refresh();
+        added = true;
         this.open(button);
       } catch (error) {
         this.showError(this.dataset.errorText);
         this.open(button);
       } finally {
-        restore();
+        restore(added);
         this.isBusy = false;
       }
     }

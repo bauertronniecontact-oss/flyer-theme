@@ -25,6 +25,7 @@
 
 <section
   class="fl-multicol full-width color-{{ section.settings.color_scheme }}{% if centered %} fl-multicol--center{% endif %}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
 >
   <div class="fl-multicol__inner">

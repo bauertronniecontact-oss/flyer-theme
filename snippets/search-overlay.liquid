@@ -59,7 +59,11 @@
     hidden
   >
     <div class="fl-search__scrim" data-search-close></div>
-    <div class="fl-search__panel">
+    {%- comment -%}
+      .fl-popup wires this surface to the Popups theme settings (border,
+      radius, shadow), which previously drove nothing in the theme.
+    {%- endcomment -%}
+    <div class="fl-search__panel fl-popup">
       <div class="fl-search__container">
         <div class="fl-search__bar">
           <form class="fl-search__form" action="{{ routes.search_url }}" method="get" role="search">
@@ -143,12 +147,15 @@
     opacity: 1;
   }
 
+  /* Background, border and shadow come from .fl-popup (Popups theme settings).
+     The panel drops from the very top of the viewport, so its top corners stay
+     square whatever radius the merchant picks. */
   .fl-search__panel {
     position: relative;
     max-height: 88dvh;
     overflow-y: auto;
-    background: var(--color-bg);
-    border-bottom: 1px solid var(--color-line);
+    border-start-start-radius: 0;
+    border-start-end-radius: 0;
     opacity: 0;
     transform: translateY(-10px);
     transition: opacity 0.25s ease, transform 0.25s ease;

@@ -143,6 +143,42 @@
                     </div>
                   </fieldset>
                 {%- endfor -%}
+
+                {%- comment -%}
+                  Without JS the radios are decorative: they carry no name="id"
+                  and the hidden id field is only rewritten by <fl-product>, so
+                  submitting bought the first variant whatever was ticked.
+                  This select is the real control when scripting is off.
+                {%- endcomment -%}
+                <noscript>
+                  <div class="fl-product__nojs">
+                    <label class="fl-label" for="NoJsVariant-{{ section.id }}">
+                      {{ 'products.product.choose_variant' | t }}
+                    </label>
+                    <select
+                      id="NoJsVariant-{{ section.id }}"
+                      class="fl-select"
+                      name="id"
+                      form="{{ product_form_id }}"
+                    >
+                      {%- for variant in product.variants -%}
+                        <option
+                          value="{{ variant.id }}"
+                          {% if variant == current_variant %}
+                            selected
+                          {% endif %}
+                          {% unless variant.available %}
+                            disabled
+                          {% endunless %}
+                        >
+                          {{ variant.title }}
+                          {%- unless variant.available %} — {{ 'products.card.sold_out' | t }}{% endunless -%}
+                          — {{ variant.price | money }}
+                        </option>
+                      {%- endfor -%}
+                    </select>
+                  </div>
+                </noscript>
               </div>
             {%- endunless -%}
 
@@ -184,7 +220,12 @@
           {%- when 'buy_buttons' -%}
             <div class="fl-product__block fl-product__buy" {{ block.shopify_attributes }}>
               {% form 'product', product, id: product_form_id, data-product-form: '' %}
-                <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-input>
+                {%- comment -%}
+                  Disabled by default so it is NOT submitted when scripting is
+                  off — the <noscript> select carries the id in that case.
+                  <fl-product> re-enables it on upgrade.
+                {%- endcomment -%}
+                <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-input disabled>
                 <button
                   type="submit"
                   name="add"
@@ -239,14 +280,31 @@
   <script type="application/json" data-variants-json>
     {{ product.variants | json }}
   </script>
+  {%- comment -%}
+    Pre-rendered amounts injected by <fl-product> on variant change. They must
+    use the SAME format as snippets/price.liquid, otherwise the currency code
+    vanished as soon as a variant was picked. Liquid has no dynamic filter name,
+    so the format is resolved per variant up front.
+  {%- endcomment -%}
   <script type="application/json" data-money-json>
     {
       {%- for v in product.variants -%}
+        {%- liquid
+          if settings.currency_code_enabled
+            assign v_amount = v.price | money_with_currency
+            assign v_compare_amount = v.compare_at_price | money_with_currency
+            assign v_unit_amount = v.unit_price | money_with_currency
+          else
+            assign v_amount = v.price | money
+            assign v_compare_amount = v.compare_at_price | money
+            assign v_unit_amount = v.unit_price | money
+          endif
+        -%}
         "{{ v.id }}": {
-          "price": {{ v.price | money | json }},
-          "compare": {% if v.compare_at_price > v.price %}{{ v.compare_at_price | money | json }}{% else %}null{% endif %},
+          "price": {{ v_amount | json }},
+          "compare": {% if v.compare_at_price > v.price %}{{ v_compare_amount | json }}{% else %}null{% endif %},
           "available": {{ v.available | json }},
-          "unit": {% if v.unit_price_measurement %}{{ v.unit_price | money | json }}{% else %}null{% endif %},
+          "unit": {% if v.unit_price_measurement %}{{ v_unit_amount | json }}{% else %}null{% endif %},
           "unitRef": {% if v.unit_price_measurement %}{{ v.unit_price_measurement.reference_value | json }}{% else %}null{% endif %},
           "unitUnit": {% if v.unit_price_measurement %}{{ v.unit_price_measurement.reference_unit | json }}{% else %}null{% endif %}
         }
@@ -386,6 +444,7 @@
     gap: 8px;
   }
 
+  /* Theme settings > Variant pills drive border / radius / shadow. */
   .fl-product__value {
     display: inline-flex;
     align-items: center;
@@ -393,8 +452,10 @@
     min-width: 44px;
     min-height: 44px;
     padding: 8px 16px;
-    border: 1px solid var(--color-control-border);
-    border-radius: var(--radius-btn);
+    border: var(--pill-border-width, 1px) solid
+      rgba(var(--color-ink-rgb), var(--pill-border-opacity, 0.55));
+    border-radius: var(--pill-radius, 4px);
+    box-shadow: var(--pill-shadow);
     background: var(--color-bg);
     cursor: pointer;
     transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
@@ -598,6 +659,8 @@
         connectedCallback() {
           this.form = this.querySelector('[data-product-form]');
           this.variantInput = this.querySelector('[data-variant-input]');
+          // Scripting is on, so this field is now the source of truth.
+          if (this.variantInput) this.variantInput.disabled = false;
           this.addButton = this.querySelector('[data-add-button]');
           this.addLabel = this.querySelector('[data-add-label]');
           this.addStatus = this.querySelector('[data-add-status]');

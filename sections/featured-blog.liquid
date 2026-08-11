@@ -12,6 +12,15 @@
   assign cols = section.settings.columns_desktop
   assign heading = section.settings.heading
 
+  comment
+    Card titles sit under the section heading. With no heading rendered there is
+    no h2 above them, so they take that level themselves instead of skipping it.
+  endcomment
+  assign title_tag = 'h3'
+  if heading == blank
+    assign title_tag = 'h2'
+  endif
+
   assign cols_tablet = 2
   if cols == 1
     assign cols_tablet = 1
@@ -42,6 +51,7 @@
 
 <section
   class="fl-featblog full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
 >
   <div class="fl-featblog__inner">
@@ -117,9 +127,9 @@
                   </p>
                 {%- endif -%}
 
-                <h3 class="fl-featblog__title">
+                <{{ title_tag }} class="fl-featblog__title">
                   <a class="fl-featblog__link" href="{{ article.url }}">{{ article.title | escape }}</a>
-                </h3>
+                </{{ title_tag }}>
 
                 {%- if excerpt != blank -%}
                   <p class="fl-featblog__excerpt">{{ excerpt }}</p>
@@ -146,7 +156,9 @@
                 </div>
               {%- endif -%}
               <div class="fl-featblog__body">
-                <h3 class="fl-featblog__title">{{ 'blog.placeholder_title' | t }}</h3>
+                <{{ title_tag }} class="fl-featblog__title">
+                  {{- 'blog.placeholder_title' | t -}}
+                </{{ title_tag }}>
                 <span class="fl-featblog__more" aria-hidden="true">{{ 'blog.read_more' | t }}</span>
               </div>
             </article>

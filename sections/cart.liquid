@@ -6,6 +6,17 @@
   Line-level and cart-level discounts are displayed when present.
 {% endcomment %}
 
+{%- liquid
+  # Theme setting: Currency format > Show currency codes. Liquid has no dynamic
+  # filter name, so every amount on this page is resolved through an if, the
+  # same way the cart drawer does it.
+  if settings.currency_code_enabled
+    assign cart_total = cart.total_price | money_with_currency
+  else
+    assign cart_total = cart.total_price | money
+  endif
+-%}
+
 <fl-cart-page
   class="fl-cart-page"
   data-loading-text="{{ 'accessibility.loading' | t | escape }}"
@@ -29,7 +40,22 @@
       <div class="fl-cart-page__main">
         <ul class="fl-cart-page__items" role="list">
           {%- for item in cart.items -%}
-            {%- assign item_title = item.product.title | escape -%}
+            {%- liquid
+              assign item_title = item.product.title | escape
+              if settings.currency_code_enabled
+                assign unit_compare = item.original_price | money_with_currency
+                assign unit_price = item.final_price | money_with_currency
+                assign unit_measure = item.unit_price | money_with_currency
+                assign line_compare = item.original_line_price | money_with_currency
+                assign line_price = item.final_line_price | money_with_currency
+              else
+                assign unit_compare = item.original_price | money
+                assign unit_price = item.final_price | money
+                assign unit_measure = item.unit_price | money
+                assign line_compare = item.original_line_price | money
+                assign line_price = item.final_line_price | money
+              endif
+            -%}
             <li class="fl-cart-page__item">
               <a class="fl-cart-page__thumb" href="{{ item.url }}" tabindex="-1" aria-hidden="true">
                 {%- if item.image -%}
@@ -57,15 +83,15 @@
                   {%- if item.original_price != item.final_price -%}
                     <s class="fl-cart-page__compare">
                       <span class="visually-hidden">{{ 'products.card.regular_price' | t }}</span>
-                      {{- item.original_price | money -}}
+                      {{- unit_compare -}}
                     </s>
                   {%- endif -%}
-                  <span>{{ item.final_price | money }}</span>
+                  <span>{{ unit_price }}</span>
                 </span>
 
                 {%- if item.unit_price_measurement -%}
                   <span class="fl-cart-page__unit-measure">
-                    {{ item.unit_price | money }}
+                    {{ unit_measure }}
                     /
                     {%- if item.unit_price_measurement.reference_value != 1 -%}
                       {{ item.unit_price_measurement.reference_value }}
@@ -77,10 +103,17 @@
                 {%- if item.line_level_discount_allocations.size > 0 -%}
                   <ul class="fl-cart-page__discounts" role="list">
                     {%- for allocation in item.line_level_discount_allocations -%}
+                      {%- liquid
+                        if settings.currency_code_enabled
+                          assign allocation_amount = allocation.amount | money_with_currency
+                        else
+                          assign allocation_amount = allocation.amount | money
+                        endif
+                      -%}
                       <li class="fl-cart-page__discount">
                         <span class="visually-hidden">{{ 'cart.discount' | t }}: </span>
                         {{- allocation.discount_application.title | escape }}
-                        (−{{ allocation.amount | money }})
+                        (−{{ allocation_amount }})
                       </li>
                     {%- endfor -%}
                   </ul>
@@ -134,10 +167,10 @@
                 {%- if item.original_line_price != item.final_line_price -%}
                   <s class="fl-cart-page__compare">
                     <span class="visually-hidden">{{ 'products.card.regular_price' | t }}</span>
-                    {{- item.original_line_price | money -}}
+                    {{- line_compare -}}
                   </s>
                 {%- endif -%}
-                <span>{{ item.final_line_price | money }}</span>
+                <span>{{ line_price }}</span>
               </div>
             </li>
           {%- endfor -%}
@@ -161,12 +194,19 @@
         {%- if cart.cart_level_discount_applications.size > 0 -%}
           <ul class="fl-cart-page__discount-rows" role="list">
             {%- for application in cart.cart_level_discount_applications -%}
+              {%- liquid
+                if settings.currency_code_enabled
+                  assign discount_amount = application.total_allocated_amount | money_with_currency
+                else
+                  assign discount_amount = application.total_allocated_amount | money
+                endif
+              -%}
               <li class="fl-cart-page__discount-row">
                 <span>
                   <span class="visually-hidden">{{ 'cart.discount' | t }}: </span>
                   {{- application.title | escape -}}
                 </span>
-                <span>−{{ application.total_allocated_amount | money }}</span>
+                <span>−{{ discount_amount }}</span>
               </li>
             {%- endfor -%}
           </ul>
@@ -174,7 +214,7 @@
 
         <div class="fl-cart-page__subtotal">
           <span>{{ 'cart.subtotal' | t }}</span>
-          <span>{{ cart.total_price | money }}</span>
+          <span>{{ cart_total }}</span>
         </div>
 
         <p class="fl-cart-page__taxes">{{ 'cart.taxes_note' | t }}</p>
@@ -200,7 +240,7 @@
 {% stylesheet %}
   .fl-cart-page {
     display: block;
-    padding-block: var(--section-spacing);
+    padding-block: 48px 80px;
   }
 
   .fl-cart-page__head {

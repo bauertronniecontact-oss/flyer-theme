@@ -3,6 +3,8 @@
   Progressive enhancement: without JS every slide is stacked and fully readable,
   and the controls stay hidden. <fl-slideshow> adds `is-enhanced`, which switches
   the track to a single overlapping cell and reveals arrows / dots / play-pause.
+  Under prefers-reduced-motion the timer never runs, so the play/pause button is
+  hidden rather than left as a dead control.
 {% endcomment %}
 
 {%- liquid
@@ -182,7 +184,7 @@
       {%- endif -%}
 
       {%- if show_bar -%}
-        <div class="fl-slideshow__controls">
+        <div class="fl-slideshow__controls{% unless show_dots %} fl-slideshow__controls--toggle-only{% endunless %}">
           {%- if show_dots -%}
             <div class="fl-slideshow__dots">
               {%- for block in section.blocks -%}
@@ -293,6 +295,11 @@
   .fl-slideshow--adapt .fl-slideshow__slide {
     aspect-ratio: var(--fl-slide-ratio, 16 / 9);
     min-height: 320px;
+    /* Without a definite width, the 320px floor is transferred back through
+       the aspect-ratio into a width of 320 x ratio (569px for 16/9), which
+       overflowed every phone viewport and cropped the slide content. */
+    width: 100%;
+    max-width: 100%;
   }
 
   .fl-slideshow__media {
@@ -467,6 +474,20 @@
 
   .fl-slideshow__toggle.is-paused .fl-slideshow__icon--pause {
     display: none;
+  }
+
+  /* Autoplay never starts under reduced motion, so the play/pause button would
+     be a dead control permanently announced as “Play slideshow”. When it is the
+     only thing in the bar, the bar goes with it instead of showing an empty
+     pill. */
+  @media (prefers-reduced-motion: reduce) {
+    .fl-slideshow .fl-slideshow__toggle {
+      display: none;
+    }
+
+    .fl-slideshow.is-enhanced .fl-slideshow__controls--toggle-only {
+      display: none;
+    }
   }
 {% endstylesheet %}
 

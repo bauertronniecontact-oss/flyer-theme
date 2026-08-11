@@ -22,6 +22,7 @@
 
 <fl-featured-product
   class="fl-featprod full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
   data-text-add="{{ 'products.product.add_to_cart' | t | escape }}"
   data-text-adding="{{ 'products.product.adding' | t | escape }}"
@@ -54,7 +55,12 @@
         <div class="fl-featprod__gallery" role="group" aria-label="{{ 'products.product.media_label' | t }}">
           <div class="fl-featprod__viewer fl-media">
             {%- if feat_product.media.size > 0 -%}
-              {%- for media in feat_product.media limit: 10 -%}
+              {%- comment -%}
+                Every media is rendered: a capped gallery made the "Image X of
+                Y" count lie and left the variant image swap without a target.
+                Only the first one is visible, the rest are hidden and lazy.
+              {%- endcomment -%}
+              {%- for media in feat_product.media -%}
                 <div
                   class="fl-featprod__media"
                   data-media-item
@@ -88,7 +94,7 @@
 
           {%- if feat_product.media.size > 1 -%}
             <div class="fl-featprod__thumbs">
-              {%- for media in feat_product.media limit: 10 -%}
+              {%- for media in feat_product.media -%}
                 <button
                   type="button"
                   class="fl-featprod__thumb"
@@ -171,6 +177,40 @@
                         </div>
                       </fieldset>
                     {%- endfor -%}
+
+                    {%- comment -%}
+                      Real variant control when scripting is off: the radios
+                      carry no name="id" and the hidden field is JS-driven.
+                    {%- endcomment -%}
+                    <noscript>
+                      <div class="fl-featprod__nojs">
+                        <label class="fl-label" for="NoJsFeatVariant-{{ section.id }}">
+                          {{ 'products.product.choose_variant' | t }}
+                        </label>
+                        <select
+                          id="NoJsFeatVariant-{{ section.id }}"
+                          class="fl-select"
+                          name="id"
+                          form="{{ form_id }}"
+                        >
+                          {%- for variant in feat_product.variants -%}
+                            <option
+                              value="{{ variant.id }}"
+                              {% if variant == current_variant %}
+                                selected
+                              {% endif %}
+                              {% unless variant.available %}
+                                disabled
+                              {% endunless %}
+                            >
+                              {{ variant.title }}
+                              {%- unless variant.available %} — {{ 'products.card.sold_out' | t }}{% endunless -%}
+                              — {{ variant.price | money }}
+                            </option>
+                          {%- endfor -%}
+                        </select>
+                      </div>
+                    </noscript>
                   </div>
                 {%- endunless -%}
 
@@ -214,7 +254,11 @@
               {%- when 'buy_buttons' -%}
                 <div class="fl-featprod__block fl-featprod__buy" {{ block.shopify_attributes }}>
                   {% form 'product', feat_product, id: form_id, data-product-form: '' %}
-                    <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-input>
+                    {%- comment -%}
+                      Disabled so it is not submitted without JS; the noscript
+                      select carries the id then. Re-enabled on upgrade.
+                    {%- endcomment -%}
+                    <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-input disabled>
                     <button
                       type="submit"
                       name="add"
@@ -558,6 +602,7 @@
         connectedCallback() {
           this.form = this.querySelector('[data-product-form]');
           this.variantInput = this.querySelector('[data-variant-input]');
+          if (this.variantInput) this.variantInput.disabled = false;
           this.addButton = this.querySelector('[data-add-button]');
           this.addLabel = this.querySelector('[data-add-label]');
           this.addStatus = this.querySelector('[data-add-status]');

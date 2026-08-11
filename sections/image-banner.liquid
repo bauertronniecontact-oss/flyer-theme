@@ -115,7 +115,17 @@
 </section>
 
 {% stylesheet %}
+  /* Content sitting ON the image never follows the section's colour scheme.
+     --color-on-accent is the scheme's button label, which on a dark scheme is
+     near-black (scheme-3: #1A1A1A): heading, text and buttons disappeared into
+     the black overlay. Like Dawn, the hero commits to a fixed white foreground
+     and lets the always-black overlay carry the contrast, whatever the scheme.
+     The colour scheme still applies to the section itself, i.e. everything
+     OUTSIDE the image (background bands showing around it). */
   .fl-banner {
+    --fl-banner-fg: #fff;
+    --fl-banner-btn-ink: #1a1a1a;
+
     position: relative;
     display: flex;
     overflow: hidden;
@@ -164,7 +174,7 @@
     max-width: var(--page-width);
     margin-inline: auto;
     padding: clamp(32px, 6vw, 64px) var(--page-margin);
-    color: var(--color-on-accent);
+    color: var(--fl-banner-fg);
   }
 
   .fl-banner__heading {
@@ -205,9 +215,9 @@
     line-height: 1.2;
     text-align: center;
     text-decoration: none;
-    color: var(--color-ink);
-    background: var(--color-on-accent);
-    border: 1px solid var(--color-on-accent);
+    color: var(--fl-banner-btn-ink);
+    background: var(--fl-banner-fg);
+    border: 1px solid var(--fl-banner-fg);
     border-radius: var(--radius-btn);
     transition: opacity 0.15s ease;
   }
@@ -217,13 +227,13 @@
   }
 
   .fl-banner__btn:focus-visible {
-    outline-color: var(--color-on-accent);
+    outline-color: var(--fl-banner-fg);
   }
 
   .fl-banner__btn--secondary {
-    color: var(--color-on-accent);
+    color: var(--fl-banner-fg);
     background: transparent;
-    border-color: var(--color-on-accent);
+    border-color: var(--fl-banner-fg);
   }
 {% endstylesheet %}
 

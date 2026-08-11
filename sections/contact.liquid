@@ -1,12 +1,15 @@
 {% comment %}
   FLYER — Contact form.
   Main section of templates/page.contact.json, and addable to any template
-  through its preset. Keep the heading level at H1 only on the page where it
-  carries the main title.
+  through its preset. Because it can sit next to a template that already has a
+  main title, the heading level defaults to H2; switch it to H1 in the editor
+  on the page where this section carries the main title.
+  Field ids are suffixed with section.id so two instances on one page keep
+  their own label/field pairing.
 {% endcomment %}
 
 {%- liquid
-  assign heading_tag = section.settings.heading_tag | default: 'h1'
+  assign heading_tag = section.settings.heading_tag | default: 'h2'
 
   assign heading = section.settings.heading
   if heading == blank
@@ -19,6 +22,7 @@
 
 <div
   class="fl-contact full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
   <div class="fl-contact__inner">
@@ -49,11 +53,11 @@
       {%- endif -%}
 
       <div class="fl-field">
-        <label class="fl-label" for="FlContactName">{{ 'contact.form.name' | t }}</label>
+        <label class="fl-label" for="FlContactName-{{ section.id }}">{{ 'contact.form.name' | t }}</label>
         <input
           class="fl-input"
           type="text"
-          id="FlContactName"
+          id="FlContactName-{{ section.id }}"
           name="contact[name]"
           value="{{ form.name }}"
           autocomplete="name"
@@ -61,11 +65,11 @@
       </div>
 
       <div class="fl-field">
-        <label class="fl-label" for="FlContactEmail">{{ 'contact.form.email' | t }}</label>
+        <label class="fl-label" for="FlContactEmail-{{ section.id }}">{{ 'contact.form.email' | t }}</label>
         <input
           class="fl-input"
           type="email"
-          id="FlContactEmail"
+          id="FlContactEmail-{{ section.id }}"
           name="contact[email]"
           value="{{ form.email }}"
           autocomplete="email"
@@ -75,11 +79,11 @@
       </div>
 
       <div class="fl-field">
-        <label class="fl-label" for="FlContactPhone">{{ 'contact.form.phone' | t }}</label>
+        <label class="fl-label" for="FlContactPhone-{{ section.id }}">{{ 'contact.form.phone' | t }}</label>
         <input
           class="fl-input"
           type="tel"
-          id="FlContactPhone"
+          id="FlContactPhone-{{ section.id }}"
           name="contact[phone]"
           value="{{ form.phone }}"
           autocomplete="tel"
@@ -87,8 +91,14 @@
       </div>
 
       <div class="fl-field">
-        <label class="fl-label" for="FlContactBody">{{ 'contact.form.message' | t }}</label>
-        <textarea class="fl-textarea" id="FlContactBody" name="contact[body]" rows="6" required>
+        <label class="fl-label" for="FlContactBody-{{ section.id }}">{{ 'contact.form.message' | t }}</label>
+        <textarea
+          class="fl-textarea"
+          id="FlContactBody-{{ section.id }}"
+          name="contact[body]"
+          rows="6"
+          required
+        >
           {{- form.body -}}
         </textarea>
       </div>
@@ -142,7 +152,7 @@
       "type": "select",
       "id": "heading_tag",
       "label": "Heading level",
-      "info": "Use H1 when this is the main heading of the page.",
+      "info": "Use H1 only when this is the main heading of the page.",
       "options": [
         {
           "value": "h1",
@@ -157,7 +167,7 @@
           "label": "H3"
         }
       ],
-      "default": "h1"
+      "default": "h2"
     },
     {
       "type": "richtext",

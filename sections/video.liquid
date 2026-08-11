@@ -2,7 +2,9 @@
   Video.
   Deferred playback: only the cover image and a play button are rendered, the
   player markup waits inside a <template> and is injected on click by <fl-video>.
-  A <noscript> copy keeps the video playable when JS is unavailable.
+  A <noscript> copy keeps the video playable when JS is unavailable — the cover
+  button stays hidden (and out of the tab order) until <fl-video> has wired it
+  up, so it is never an inert control sitting on top of the noscript player.
 {% endcomment %}
 
 {%- liquid
@@ -53,6 +55,7 @@
 
 <div
   class="fl-video full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
   {%- if section.settings.heading != blank -%}
@@ -182,16 +185,23 @@
     background-color: var(--color-surface);
   }
 
+  /* Hidden until <fl-video> upgrades and binds the click handler: without JS
+     the <noscript> player is shown instead and this button would be a
+     focusable, clickable no-op covering it. */
   .fl-video__poster {
     position: absolute;
     inset: 0;
-    display: block;
+    display: none;
     width: 100%;
     height: 100%;
     padding: 0;
     background-color: var(--color-surface);
     border: 0;
     cursor: pointer;
+  }
+
+  .fl-video__frame.is-enhanced .fl-video__poster {
+    display: block;
   }
 
   .fl-video__img {
@@ -260,6 +270,7 @@
 
           this.onClick = () => this.load();
           this.button.addEventListener('click', this.onClick);
+          this.classList.add('is-enhanced');
         }
 
         disconnectedCallback() {

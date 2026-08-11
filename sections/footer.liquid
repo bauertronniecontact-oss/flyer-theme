@@ -42,6 +42,33 @@
                 {%- endif -%}
               </div>
 
+            {%- comment -%}
+              Renders the theme-level "Brand information" settings, which had
+              no consumer anywhere in the theme.
+            {%- endcomment -%}
+            {%- when 'brand' -%}
+              <div class="fl-footer__col fl-footer__col--brand" {{ block.shopify_attributes }}>
+                {%- if settings.brand_image -%}
+                  {%- assign brand_alt = shop.name | escape -%}
+                  {{
+                    settings.brand_image
+                    | image_url: width: 1100
+                    | image_tag:
+                      widths: '150, 300, 550, 1100',
+                      sizes: '(max-width: 749px) 60vw, 300px',
+                      alt: brand_alt,
+                      class: 'fl-footer__brand-img',
+                      loading: 'lazy'
+                  }}
+                {%- endif -%}
+                {%- if settings.brand_headline != blank -%}
+                  <p class="fl-footer__brand-headline">{{ settings.brand_headline }}</p>
+                {%- endif -%}
+                {%- if settings.brand_description != blank -%}
+                  <div class="fl-footer__text">{{ settings.brand_description }}</div>
+                {%- endif -%}
+              </div>
+
             {%- when 'newsletter' -%}
               <div class="fl-footer__col fl-footer__col--news" {{ block.shopify_attributes }}>
                 {%- if block.settings.heading != blank -%}
@@ -253,6 +280,19 @@
 
   .fl-footer__text {
     color: var(--color-muted);
+  }
+
+  /* --- Brand information (theme settings) --- */
+  .fl-footer__brand-img {
+    width: var(--brand-image-width, 100px);
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 12px;
+  }
+
+  .fl-footer__brand-headline {
+    margin-bottom: 8px;
+    font-weight: 500;
   }
 
   /* --- Newsletter --- */
@@ -496,6 +536,17 @@
           "id": "text",
           "label": "Text",
           "default": "<p>Share store details, announcements, or brand content with your customers.</p>"
+        }
+      ]
+    },
+    {
+      "type": "brand",
+      "name": "Brand information",
+      "limit": 1,
+      "settings": [
+        {
+          "type": "paragraph",
+          "content": "Edit the content under Theme settings > Brand information."
         }
       ]
     },

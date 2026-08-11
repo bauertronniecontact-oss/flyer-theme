@@ -2,12 +2,17 @@
   Disclosures.
   Country/currency and language pickers as a standalone section, for stores that
   would rather surface them in the page body than in the footer.
-  Native <select> elements inside {% form 'localization' %}: with JavaScript a
-  change submits the form straight away, without it the <noscript> button does.
-  A picker is only rendered when the store actually offers more than one option.
+  Native <select> elements inside {% form 'localization' %}, each confirmed with
+  its own Update button: submitting on `change` trapped keyboard users on the
+  first option they arrowed onto, so nothing auto-submits and no JavaScript is
+  involved. A picker is only rendered when the store actually offers more than
+  one option. Ids carry section.id so two instances on a page stay independent.
 {% endcomment %}
 
 {%- liquid
+  assign country_form_id = 'FlDisclosuresCountryForm-' | append: section.id
+  assign language_form_id = 'FlDisclosuresLanguageForm-' | append: section.id
+
   assign show_country = false
   if section.settings.enable_country_selector and localization.available_countries.size > 1
     assign show_country = true
@@ -26,13 +31,13 @@
   >
     <div class="fl-disclosures__inner">
       {%- if show_country -%}
-        {%- form 'localization', id: 'FlDisclosuresCountryForm', class: 'fl-disclosures__form' -%}
-          <fl-locale-form class="fl-disclosures__field">
-            <label class="fl-label" for="FlDisclosuresCountry">
+        {%- form 'localization', id: country_form_id, class: 'fl-disclosures__form' -%}
+          <div class="fl-disclosures__field">
+            <label class="fl-label" for="FlDisclosuresCountry-{{ section.id }}">
               {{- 'general.localization.country_label' | t -}}
             </label>
             <select
-              id="FlDisclosuresCountry"
+              id="FlDisclosuresCountry-{{ section.id }}"
               class="fl-select fl-disclosures__select"
               name="country_code"
             >
@@ -47,23 +52,21 @@
                 </option>
               {%- endfor -%}
             </select>
-            <noscript>
-              <button type="submit" class="fl-btn fl-btn--secondary fl-disclosures__submit">
-                {{ 'general.localization.update' | t }}
-              </button>
-            </noscript>
-          </fl-locale-form>
+            <button type="submit" class="fl-btn fl-btn--secondary fl-disclosures__submit">
+              {{ 'general.localization.update' | t }}
+            </button>
+          </div>
         {%- endform -%}
       {%- endif -%}
 
       {%- if show_language -%}
-        {%- form 'localization', id: 'FlDisclosuresLanguageForm', class: 'fl-disclosures__form' -%}
-          <fl-locale-form class="fl-disclosures__field">
-            <label class="fl-label" for="FlDisclosuresLanguage">
+        {%- form 'localization', id: language_form_id, class: 'fl-disclosures__form' -%}
+          <div class="fl-disclosures__field">
+            <label class="fl-label" for="FlDisclosuresLanguage-{{ section.id }}">
               {{- 'general.localization.language_label' | t -}}
             </label>
             <select
-              id="FlDisclosuresLanguage"
+              id="FlDisclosuresLanguage-{{ section.id }}"
               class="fl-select fl-disclosures__select"
               name="locale_code"
             >
@@ -79,12 +82,10 @@
                 </option>
               {%- endfor -%}
             </select>
-            <noscript>
-              <button type="submit" class="fl-btn fl-btn--secondary fl-disclosures__submit">
-                {{ 'general.localization.update' | t }}
-              </button>
-            </noscript>
-          </fl-locale-form>
+            <button type="submit" class="fl-btn fl-btn--secondary fl-disclosures__submit">
+              {{ 'general.localization.update' | t }}
+            </button>
+          </div>
         {%- endform -%}
       {%- endif -%}
     </div>
@@ -130,26 +131,6 @@
     }
   }
 {% endstylesheet %}
-
-{% javascript %}
-  if (!customElements.get('fl-locale-form')) {
-    customElements.define(
-      'fl-locale-form',
-      class extends HTMLElement {
-        connectedCallback() {
-          if (this.ready) return;
-          this.ready = true;
-          const select = this.querySelector('select');
-          if (!select) return;
-          select.addEventListener('change', () => {
-            const form = this.closest('form');
-            if (form) form.submit();
-          });
-        }
-      }
-    );
-  }
-{% endjavascript %}
 
 {% schema %}
 {

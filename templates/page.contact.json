@@ -1,7 +1,10 @@
 {
   "sections": {
     "main": {
-      "type": "contact"
+      "type": "contact",
+      "settings": {
+        "heading_tag": "h1"
+      }
     }
   },
   "order": ["main"]

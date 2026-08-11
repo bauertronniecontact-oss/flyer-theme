@@ -46,6 +46,7 @@
 
 <section
   class="fl-collage full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
 >
   <div class="fl-collage__inner">
@@ -109,7 +110,13 @@
 
               {%- when 'product' -%}
                 {%- if block.settings.product != blank -%}
-                  <div class="fl-collage__tile fl-collage__product">
+                  {%- comment -%}
+                    The "Card" product card style pads the image inside the
+                    tile, so the hover layer has to be inset by the same amount.
+                  {%- endcomment -%}
+                  <div
+                    class="fl-collage__tile fl-collage__product{% if settings.card_style == 'card' %} fl-collage__product--boxed{% endif %}"
+                  >
                     {% render 'product-card',
                       product: block.settings.product,
                       sizes: tile_sizes,
@@ -360,6 +367,14 @@
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
+  }
+
+  /* Product cards > Style "Card" pads the card, so the layer starts inside it
+     instead of at the tile corner. */
+  .fl-collage__product--boxed .fl-collage__second {
+    inset-block-start: var(--card-image-padding, 0px);
+    inset-inline-start: var(--card-image-padding, 0px);
+    width: calc(100% - var(--card-image-padding, 0px) * 2);
   }
 
   .fl-collage__product:hover .fl-collage__second,

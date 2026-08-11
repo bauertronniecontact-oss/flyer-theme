@@ -1,13 +1,28 @@
+{%- comment -%}
+  full-width + an inner constrained to the page width, like rich-text /
+  image-with-text / multicolumn: the colour scheme paints a band across the
+  whole screen instead of stopping at the content column.
+{%- endcomment -%}
 <div
-  class="fl-custom-liquid color-{{ section.settings.color_scheme }}"
+  class="fl-custom-liquid full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px;"
 >
-  {{ section.settings.custom_liquid }}
+  <div class="fl-custom-liquid__inner">
+    {{ section.settings.custom_liquid }}
+  </div>
 </div>
 
 {% stylesheet %}
   .fl-custom-liquid {
     min-width: 0;
+  }
+
+  /* --content-width is declared on .shopify-section in critical.css. */
+  .fl-custom-liquid__inner {
+    width: var(--content-width);
+    min-width: 0;
+    margin-inline: auto;
   }
 {% endstylesheet %}
 

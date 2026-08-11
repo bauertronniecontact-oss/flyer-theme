@@ -513,8 +513,11 @@
     display: none;
   }
 
+  /* Positioning context for the facet dropdowns: the row always starts at the
+     page content edge, so a panel anchored to it can never spill out of the
+     viewport, unlike one anchored to a pill sitting near the right edge. */
   .fl-toolbar__drawer--inline .fl-toolbar__facets {
-    position: static;
+    position: relative;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -529,7 +532,6 @@
   }
 
   .fl-toolbar__drawer--inline .fl-facet {
-    position: relative;
     border-block-end: 0;
   }
 
@@ -550,9 +552,12 @@
   .fl-toolbar__drawer--inline .fl-facet__panel {
     position: absolute;
     top: calc(100% + 8px);
-    left: 0;
+    inset-inline-start: 0;
     z-index: 30;
+    width: max-content;
     min-width: 260px;
+    /* Never wider than the page content box. */
+    max-width: min(340px, var(--content-width, 100%));
     max-height: 340px;
     overflow-y: auto;
     padding: 6px 16px 16px;

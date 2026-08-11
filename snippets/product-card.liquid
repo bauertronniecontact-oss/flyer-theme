@@ -7,10 +7,15 @@
   @param {string} [sizes] - sizes attribute for the image (default grid sizing)
   @param {string} [heading_level] - h2 or h3 (default h3); use h2 when the grid
     sits directly under the page h1, so the outline has no gap
+  @param {string} [loading] - image loading attribute, 'lazy' (default) or
+    'eager'. Pass 'eager' for the cards of the FIRST row of a grid: one of them
+    holds the LCP image and lazy-loading it delays the largest paint. 'eager'
+    also emits fetchpriority="high". Never pass it to a whole grid.
 
   @example
   {% render 'product-card', product: product %}
   {% render 'product-card', product: product, heading_level: 'h2' %}
+  {% render 'product-card', product: product, loading: 'eager' %}
 {% enddoc %}
 
 {%- liquid
@@ -19,6 +24,13 @@
     assign quick = show_quick_add
   endif
   assign img_sizes = sizes | default: '(max-width: 749px) 50vw, (max-width: 989px) 33vw, 25vw'
+  assign img_widths = '360, 540, 720, 900'
+
+  # Caller-controlled priority. Lazy everywhere by default, but the first row of
+  # a grid sits above the fold and holds the LCP image, so it can opt into
+  # eager + fetchpriority high.
+  assign img_loading = loading | default: 'lazy'
+
   assign on_sale = false
   if product.compare_at_price > product.price
     assign on_sale = true
@@ -55,11 +67,19 @@
 <article class="{{ card_classes }}">
   <div class="fl-card__media">
     {%- if product.featured_media -%}
-      {{
-        product.featured_media
-        | image_url: width: 900
-        | image_tag: widths: '360, 540, 720, 900', sizes: img_sizes, alt: product.featured_media.alt, loading: 'lazy'
-      }}
+      {%- if img_loading == 'eager' -%}
+        {{
+          product.featured_media
+          | image_url: width: 900
+          | image_tag: widths: img_widths, sizes: img_sizes, alt: product.featured_media.alt, loading: 'eager', fetchpriority: 'high'
+        }}
+      {%- else -%}
+        {{
+          product.featured_media
+          | image_url: width: 900
+          | image_tag: widths: img_widths, sizes: img_sizes, alt: product.featured_media.alt, loading: 'lazy'
+        }}
+      {%- endif -%}
     {%- else -%}
       {{ 'product-1' | placeholder_svg_tag: 'fl-card__placeholder' }}
     {%- endif -%}

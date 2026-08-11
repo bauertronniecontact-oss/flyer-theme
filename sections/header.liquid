@@ -162,7 +162,7 @@
   </div>
 
   <dialog
-    class="fl-header__drawer"
+    class="fl-header__drawer fl-drawer"
     id="FlMenuDrawer"
     data-menu-drawer
     scroll-lock
@@ -482,6 +482,9 @@
     display: none;
   }
 
+  /* Background, start border and shadow come from the shared .fl-drawer class
+     (Drawers theme settings), applied on the dialog in the markup. Only the
+     three remaining UA dialog borders are reset here. */
   .fl-header__drawer {
     position: fixed;
     inset: 0 auto 0 0;
@@ -491,9 +494,8 @@
     max-width: none;
     margin: 0;
     padding: 0;
-    border: 0;
-    background: var(--color-bg);
-    box-shadow: 0 8px 40px rgb(0 0 0 / 12%);
+    border-block: 0;
+    border-inline-end: 0;
   }
 
   .fl-header__drawer[open] {

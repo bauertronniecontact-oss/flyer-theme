@@ -72,7 +72,8 @@ body {
   font-family: var(--font-body-family);
   font-style: var(--font-body-style);
   font-weight: var(--font-body-weight);
-  font-size: var(--font-size-base);
+  /* Typography > Body scale */
+  font-size: calc(var(--font-size-base) * var(--body-scale, 1));
   line-height: 1.6;
   background-color: var(--color-bg);
   color: var(--color-ink);
@@ -179,8 +180,8 @@ a {
   text-decoration: none;
   color: var(--color-on-accent);
   background: var(--color-accent);
-  border: var(--btn-border-width, 1px) solid
-    rgba(var(--color-ink-rgb), var(--btn-border-opacity, 1));
+  /* The scheme's primary_button_border role is the button colour, not the ink. */
+  border: var(--btn-border-width, 1px) solid var(--color-accent);
   border-radius: var(--radius-btn);
   box-shadow: var(--btn-shadow);
   cursor: pointer;
@@ -197,7 +198,7 @@ a {
 .fl-btn--secondary {
   color: var(--color-outline-label, var(--color-ink));
   background: transparent;
-  border-color: rgba(var(--color-ink-rgb), var(--btn-border-opacity, 1));
+  border-color: var(--color-outline-label, var(--color-ink));
 }
 .fl-btn--secondary:hover {
   opacity: 1;
@@ -586,6 +587,12 @@ h6 {
 
 .shopify-section > * {
   grid-column: 2;
+}
+
+/* Layout > Space between sections. Main-template sections carry their own
+   padding, so this setting only adds separation and is safe to leave at 0. */
+main > .shopify-section + .shopify-section {
+  margin-top: var(--section-spacing, 0);
 }
 
 .shopify-section > .full-width {

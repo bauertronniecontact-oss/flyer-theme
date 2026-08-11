@@ -28,58 +28,73 @@
   assign card_sizes = '(max-width: 749px) 50vw, (max-width: 989px) 33vw, ' | append: sizes_desktop
 -%}
 
+{%- comment -%}
+  full-width + an inner constrained to the page width, like rich-text /
+  image-with-text / multicolumn: the colour scheme paints a band across the
+  whole screen instead of stopping at the content column.
+{%- endcomment -%}
 <section
-  class="fl-featured color-{{ section.settings.color_scheme }}"
+  class="fl-featured full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
 >
-  {%- if heading != blank or show_link -%}
-    <div class="fl-featured__head">
-      {%- if heading != blank -%}
-        <h2 class="fl-featured__heading">{{ heading | escape }}</h2>
-      {%- endif -%}
-      {%- if show_link -%}
-        <a class="fl-featured__viewall" href="{{ col.url }}">
-          {{- 'collections.general.view_all' | t -}}
-          <span class="visually-hidden"> {{ col.title | escape }}</span>
-        </a>
-      {%- endif -%}
-    </div>
-  {%- endif -%}
+  <div class="fl-featured__inner">
+    {%- if heading != blank or show_link -%}
+      <div class="fl-featured__head">
+        {%- if heading != blank -%}
+          <h2 class="fl-featured__heading">{{ heading | escape }}</h2>
+        {%- endif -%}
+        {%- if show_link -%}
+          <a class="fl-featured__viewall" href="{{ col.url }}">
+            {{- 'collections.general.view_all' | t -}}
+            <span class="visually-hidden"> {{ col.title | escape }}</span>
+          </a>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
 
-  {%- if col.products.size > 0 -%}
-    <div
-      class="fl-product-grid"
-      style="--grid-cols: {{ cols }}; --grid-cols-tablet: 3; --grid-cols-mobile: 2"
-    >
-      {%- for product in col.products limit: limit -%}
-        {% render 'product-card', product: product, sizes: card_sizes %}
-      {%- endfor -%}
-    </div>
-  {%- else -%}
-    {%- comment -%}
-      Also covers a chosen but empty collection, which used to render a heading
-      with nothing under it.
-    {%- endcomment -%}
-    <div
-      class="fl-product-grid"
-      style="--grid-cols: {{ cols }}; --grid-cols-tablet: 3; --grid-cols-mobile: 2"
-    >
-      {%- for i in (1..4) -%}
-        {%- assign placeholder_name = 'product-' | append: i -%}
-        <article class="fl-card">
-          <div class="fl-card__media">
-            {{ placeholder_name | placeholder_svg_tag: 'fl-featured__ph' }}
-          </div>
-          <div class="fl-card__info">
-            <h3 class="fl-card__title">{{ 'products.card.placeholder_title' | t }}</h3>
-          </div>
-        </article>
-      {%- endfor -%}
-    </div>
-  {%- endif -%}
+    {%- if col.products.size > 0 -%}
+      <div
+        class="fl-product-grid"
+        style="--grid-cols: {{ cols }}; --grid-cols-tablet: 3; --grid-cols-mobile: 2"
+      >
+        {%- for product in col.products limit: limit -%}
+          {% render 'product-card', product: product, sizes: card_sizes %}
+        {%- endfor -%}
+      </div>
+    {%- else -%}
+      {%- comment -%}
+        Also covers a chosen but empty collection, which used to render a heading
+        with nothing under it.
+      {%- endcomment -%}
+      <div
+        class="fl-product-grid"
+        style="--grid-cols: {{ cols }}; --grid-cols-tablet: 3; --grid-cols-mobile: 2"
+      >
+        {%- for i in (1..4) -%}
+          {%- assign placeholder_name = 'product-' | append: i -%}
+          <article class="fl-card">
+            <div class="fl-card__media">
+              {{ placeholder_name | placeholder_svg_tag: 'fl-featured__ph' }}
+            </div>
+            <div class="fl-card__info">
+              <h3 class="fl-card__title">{{ 'products.card.placeholder_title' | t }}</h3>
+            </div>
+          </article>
+        {%- endfor -%}
+      </div>
+    {%- endif -%}
+  </div>
 </section>
 
 {% stylesheet %}
+  /* Same constrained inner as the other content sections; --content-width is
+     declared on .shopify-section in critical.css. */
+  .fl-featured__inner {
+    width: var(--content-width);
+    margin-inline: auto;
+  }
+
   .fl-featured__head {
     display: flex;
     flex-wrap: wrap;

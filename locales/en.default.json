@@ -60,7 +60,11 @@
       "facebook": "Facebook",
       "x": "X (Twitter)",
       "pinterest": "Pinterest",
-      "youtube": "YouTube"
+      "youtube": "YouTube",
+      "linkedin": "LinkedIn",
+      "snapchat": "Snapchat",
+      "tumblr": "Tumblr",
+      "vimeo": "Vimeo"
     },
     "breadcrumbs": {
       "home": "Home"
@@ -86,6 +90,7 @@
       "sold_out": "Sold out",
       "unavailable": "Unavailable",
       "quantity": "Quantity",
+      "choose_variant": "Choose a variant",
       "decrease_quantity": "Decrease quantity for {{ title }}",
       "increase_quantity": "Increase quantity for {{ title }}",
       "vendor": "Vendor",

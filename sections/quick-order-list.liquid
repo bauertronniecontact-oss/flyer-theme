@@ -9,8 +9,10 @@
     can still add one line at a time (and the cart drawer picks those up
     through [data-quick-add] when it is enabled).
   - With JavaScript the row buttons are swapped for a single bulk button that
-    POSTs /cart/add.js with { items: [...] }, then dispatches 'fl:cart:change'
-    so the header count follows.
+    POSTs /cart/add.js with { items: [...] }, then hands the refresh over to
+    the cart drawer: its refresh() re-renders the drawer section and
+    broadcasts 'fl:cart:change' so the header count follows. Without a drawer
+    (settings.cart_type == 'page') only that event is dispatched.
 {% endcomment %}
 
 {%- liquid
@@ -21,6 +23,7 @@
 
 <section
   class="fl-qol full-width color-{{ section.settings.color_scheme }}"
+  {% render 'reveal' %}
   style="padding-block: {{ section.settings.padding_top }}px {{ section.settings.padding_bottom }}px"
 >
   <div class="fl-qol__inner">
@@ -492,6 +495,22 @@
         }
 
         async notify() {
+          // The cart drawer owns the cart re-render: refresh() pulls
+          // ?sections=cart-drawer, swaps [data-cart-inner] and dispatches
+          // 'fl:cart:change' itself. Reuse it instead of leaving the drawer on
+          // the state it was rendered with at page load.
+          const drawer = document.querySelector('fl-cart-drawer');
+          if (drawer && typeof drawer.refresh === 'function') {
+            try {
+              await drawer.refresh();
+              return;
+            } catch (error) {
+              // fall through: the header count can still be updated on its own
+            }
+          }
+
+          // No drawer on the page (settings.cart_type == 'page'), or it could
+          // not refresh: the header count is the only thing left to update.
           try {
             const response = await fetch(this.dataset.cartUrl + '.js', {
               headers: { Accept: 'application/json' }
