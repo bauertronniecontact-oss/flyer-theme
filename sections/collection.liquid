@@ -240,8 +240,22 @@
         class="fl-product-grid fl-collection__grid"
         style="--grid-cols: {{ section.settings.cols_desktop }}; --grid-cols-mobile: {{ section.settings.cols_mobile }}"
       >
+        {%- comment -%}
+          The first row sits above the fold and holds the LCP image, so those
+          cards load eagerly; everything below stays lazy.
+        {%- endcomment -%}
+        {%- assign eager_count = section.settings.cols_desktop | times: 1 -%}
         {%- for product in collection.products -%}
-          {% render 'product-card', product: product, sizes: card_sizes, heading_level: 'h2' %}
+          {%- if forloop.index <= eager_count -%}
+            {% render 'product-card',
+              product: product,
+              sizes: card_sizes,
+              heading_level: 'h2',
+              loading: 'eager'
+            %}
+          {%- else -%}
+            {% render 'product-card', product: product, sizes: card_sizes, heading_level: 'h2' %}
+          {%- endif -%}
         {%- endfor -%}
       </div>
 

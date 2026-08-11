@@ -173,7 +173,12 @@
                         >
                           {{ variant.title }}
                           {%- unless variant.available %} — {{ 'products.card.sold_out' | t }}{% endunless -%}
-                          — {{ variant.price | money }}
+                          —
+                              {%- if settings.currency_code_enabled -%}
+                                {{ variant.price | money_with_currency }}
+                              {%- else -%}
+                                {{ variant.price | money }}
+                              {%- endif -%}
                         </option>
                       {%- endfor -%}
                     </select>
