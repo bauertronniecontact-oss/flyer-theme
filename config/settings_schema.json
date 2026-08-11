@@ -2,7 +2,7 @@
   {
     "name": "theme_info",
     "theme_name": "FLYER",
-    "theme_version": "1.1.0",
+    "theme_version": "1.2.0",
     "theme_author": "KIOSK",
     "theme_documentation_url": "https://kioskthemes.com",
     "theme_support_url": "https://kioskthemes.com/support/"
@@ -129,8 +129,14 @@
         "id": "type_heading_case",
         "label": "Heading capitalisation",
         "options": [
-          { "value": "none", "label": "Sentence case" },
-          { "value": "uppercase", "label": "Uppercase" }
+          {
+            "value": "none",
+            "label": "Sentence case"
+          },
+          {
+            "value": "uppercase",
+            "label": "Uppercase"
+          }
         ],
         "default": "none"
       },
@@ -236,9 +242,18 @@
         "label": "Hover effect",
         "info": "Applies to cards and media.",
         "options": [
-          { "value": "default", "label": "None" },
-          { "value": "vertical-lift", "label": "Vertical lift" },
-          { "value": "zoom", "label": "Image zoom" }
+          {
+            "value": "default",
+            "label": "None"
+          },
+          {
+            "value": "vertical-lift",
+            "label": "Vertical lift"
+          },
+          {
+            "value": "zoom",
+            "label": "Image zoom"
+          }
         ],
         "default": "zoom"
       }
@@ -477,8 +492,14 @@
         "id": "card_style",
         "label": "Style",
         "options": [
-          { "value": "standard", "label": "Standard" },
-          { "value": "card", "label": "Card" }
+          {
+            "value": "standard",
+            "label": "Standard"
+          },
+          {
+            "value": "card",
+            "label": "Card"
+          }
         ],
         "default": "standard"
       },
@@ -487,9 +508,18 @@
         "id": "card_image_ratio",
         "label": "Image ratio",
         "options": [
-          { "value": "natural", "label": "Natural" },
-          { "value": "square", "label": "Square" },
-          { "value": "portrait", "label": "Portrait" }
+          {
+            "value": "natural",
+            "label": "Natural"
+          },
+          {
+            "value": "square",
+            "label": "Square"
+          },
+          {
+            "value": "portrait",
+            "label": "Portrait"
+          }
         ],
         "default": "portrait"
       },
@@ -508,9 +538,18 @@
         "id": "card_text_alignment",
         "label": "Text alignment",
         "options": [
-          { "value": "left", "label": "Left" },
-          { "value": "center", "label": "Centre" },
-          { "value": "right", "label": "Right" }
+          {
+            "value": "left",
+            "label": "Left"
+          },
+          {
+            "value": "center",
+            "label": "Centre"
+          },
+          {
+            "value": "right",
+            "label": "Right"
+          }
         ],
         "default": "left"
       },
@@ -616,8 +655,14 @@
         "id": "collection_card_style",
         "label": "Style",
         "options": [
-          { "value": "standard", "label": "Standard" },
-          { "value": "card", "label": "Card" }
+          {
+            "value": "standard",
+            "label": "Standard"
+          },
+          {
+            "value": "card",
+            "label": "Card"
+          }
         ],
         "default": "standard"
       },
@@ -636,9 +681,18 @@
         "id": "collection_card_text_alignment",
         "label": "Text alignment",
         "options": [
-          { "value": "left", "label": "Left" },
-          { "value": "center", "label": "Centre" },
-          { "value": "right", "label": "Right" }
+          {
+            "value": "left",
+            "label": "Left"
+          },
+          {
+            "value": "center",
+            "label": "Centre"
+          },
+          {
+            "value": "right",
+            "label": "Right"
+          }
         ],
         "default": "left"
       },
@@ -728,8 +782,14 @@
         "id": "blog_card_style",
         "label": "Style",
         "options": [
-          { "value": "standard", "label": "Standard" },
-          { "value": "card", "label": "Card" }
+          {
+            "value": "standard",
+            "label": "Standard"
+          },
+          {
+            "value": "card",
+            "label": "Card"
+          }
         ],
         "default": "standard"
       },
@@ -748,9 +808,18 @@
         "id": "blog_card_text_alignment",
         "label": "Text alignment",
         "options": [
-          { "value": "left", "label": "Left" },
-          { "value": "center", "label": "Centre" },
-          { "value": "right", "label": "Right" }
+          {
+            "value": "left",
+            "label": "Left"
+          },
+          {
+            "value": "center",
+            "label": "Centre"
+          },
+          {
+            "value": "right",
+            "label": "Right"
+          }
         ],
         "default": "left"
       },
@@ -1130,10 +1199,22 @@
         "id": "badge_position",
         "label": "Position on cards",
         "options": [
-          { "value": "top left", "label": "Top left" },
-          { "value": "top right", "label": "Top right" },
-          { "value": "bottom left", "label": "Bottom left" },
-          { "value": "bottom right", "label": "Bottom right" }
+          {
+            "value": "top left",
+            "label": "Top left"
+          },
+          {
+            "value": "top right",
+            "label": "Top right"
+          },
+          {
+            "value": "bottom left",
+            "label": "Bottom left"
+          },
+          {
+            "value": "bottom right",
+            "label": "Bottom right"
+          }
         ],
         "default": "top left"
       },
@@ -1301,8 +1382,14 @@
         "id": "cart_type",
         "label": "Cart type",
         "options": [
-          { "value": "drawer", "label": "Drawer" },
-          { "value": "page", "label": "Page" }
+          {
+            "value": "drawer",
+            "label": "Drawer"
+          },
+          {
+            "value": "page",
+            "label": "Page"
+          }
         ],
         "default": "drawer"
       },

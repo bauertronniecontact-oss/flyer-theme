@@ -3,70 +3,124 @@
 <!doctype html>
 <html lang="{{ request.locale.iso_code }}">
   <head>
-    {% # Inlined CSS Variables %}
-    {% render 'css-variables' %}
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    {% # Load and preload the critical CSS %}
+    {% render 'css-variables' %}
     {{ 'critical.css' | asset_url | stylesheet_tag: preload: true }}
 
-    {% # Social, title, etc. %}
-    {% render 'meta-tags' %}
+    {% if settings.favicon %}
+      <link rel="icon" type="image/png" href="{{ settings.favicon | image_url: width: 32, height: 32 }}">
+    {% endif %}
 
-    {% style %}
-      main {
-        text-align: center;
-      }
-      main img {
-        display: unset;
-      }
-    {% endstyle %}
+    <title>{{ 'gift_card.card' | t }} &ndash; {{ shop.name }}</title>
 
     {{ content_for_header }}
+
+    {% style %}
+      .fl-gift {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 100svh;
+        padding: var(--page-margin);
+      }
+
+      .fl-gift__inner {
+        width: min(420px, 100%);
+        padding: 40px 32px;
+        text-align: center;
+        background: var(--color-bg);
+        border: 1px solid var(--color-line);
+        border-radius: var(--radius-card);
+      }
+
+      .fl-gift__shop {
+        font-family: var(--font-heading-family);
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--color-muted);
+      }
+
+      .fl-gift__amount {
+        margin: 12px 0 4px;
+        font-size: calc(var(--font-size-base) * 2.6);
+      }
+
+      .fl-gift__note {
+        color: var(--color-muted);
+      }
+
+      .fl-gift__media {
+        margin: 28px 0;
+      }
+
+      .fl-gift__media img {
+        margin-inline: auto;
+      }
+
+      .fl-gift__code {
+        display: inline-block;
+        padding: 14px 20px;
+        margin-bottom: 24px;
+        font-size: 1.125em;
+        letter-spacing: 0.16em;
+        background: var(--color-surface);
+        border-radius: var(--radius-input);
+        word-break: break-all;
+      }
+
+      .fl-gift__wallet {
+        display: inline-block;
+        margin-top: 8px;
+      }
+    {% endstyle %}
   </head>
 
   <body>
-    <main>
-      <div class="shopify-section">
-        <h1>{{ gift_card.balance | money }}</h1>
+    <main class="fl-gift" role="main">
+      <div class="fl-gift__inner">
+        <p class="fl-gift__shop">{{ shop.name }}</p>
 
-        {% if gift_card.enabled == false or gift_card.expired %}
-          <p>{{ 'gift_card.expired' | t }}</p>
-        {% endif %}
+        <p class="fl-gift__amount">{{ gift_card.balance | money }}</p>
 
-        {% if gift_card.expires_on %}
-          {% assign expires_on = gift_card.expires_on | date: '%B %e, %Y' %}
-          <p>
-            {{ 'gift_card.expires_on' | t: expires_on: expires_on }}
-          </p>
-        {% endif %}
+        {%- if gift_card.enabled == false or gift_card.expired -%}
+          <p class="fl-form-status" role="status">{{ 'gift_card.expired' | t }}</p>
+        {%- elsif gift_card.expires_on -%}
+          {%- assign expires_on = gift_card.expires_on | date: format: 'month_day_year' -%}
+          <p class="fl-gift__note">{{ 'gift_card.expires_on' | t: expires_on: expires_on }}</p>
+        {%- endif -%}
 
-        <p>
-          {% if settings.logo %}
-            {{ settings.logo | image_url: width: 300 | image_tag: alt: shop.name }}
-          {% else %}
+        <div class="fl-gift__media">
+          {%- if settings.logo -%}
+            {%- assign logo_alt = shop.name | escape -%}
+            {{ settings.logo | image_url: width: 400 | image_tag: widths: '200, 400', sizes: '200px', alt: logo_alt }}
+          {%- else -%}
             <img
               src="{{ 'gift-card/card.svg' | shopify_asset_url }}"
               alt="{{ 'gift_card.card' | t }}"
               width="300"
               height="200"
+              loading="lazy"
             >
-          {% endif %}
-        </p>
+          {%- endif -%}
+        </div>
 
-        <h2>{{ shop.name }}</h2>
-        <p>{{ 'gift_card.use_at_checkout' | t }}</p>
-        <p>{{ gift_card.code | format_code }}</p>
+        <p class="fl-gift__note">{{ 'gift_card.use_at_checkout' | t }}</p>
 
-        {% if gift_card.pass_url %}
-          <a href="{{ gift_card.pass_url }}">
+        <p class="fl-gift__code">{{ gift_card.code | format_code }}</p>
+
+        {%- if gift_card.pass_url -%}
+          <a class="fl-gift__wallet" href="{{ gift_card.pass_url }}">
             <img
               src="{{ 'gift-card/add-to-apple-wallet.svg' | shopify_asset_url }}"
               alt="{{ 'gift_card.add_to_apple_wallet' | t }}"
               width="200"
               height="60"
+              loading="lazy"
             >
           </a>
-        {% endif %}
+        {%- endif -%}
       </div>
     </main>
   </body>

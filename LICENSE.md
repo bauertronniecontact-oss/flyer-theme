@@ -1,9 +1,65 @@
-Copyright (c) 2018-present Shopify Inc.
+# FLYER — Licence
 
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, sell and/or create derivative works of the Software or any part thereof, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+Copyright © 2026 KIOSK — kioskthemes.com
 
-The rights granted above may only be exercised to develop themes that integrate or interoperate with Shopify software or services, and, if applicable, to distribute, offer for sale or otherwise make available any such themes via the Shopify Theme Store. All other uses of the Software are strictly prohibited.
+FLYER est distribué gratuitement. En téléchargeant ce thème, vous acceptez ce
+qui suit.
 
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+## Ce que vous pouvez faire
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+- Installer FLYER sur **autant de boutiques Shopify que vous voulez**, qu'elles
+  soient à vous ou à vos clients.
+- **Modifier** le thème comme bon vous semble : code, styles, sections.
+- L'utiliser pour une boutique **commerciale**, sans redevance ni attribution
+  obligatoire sur votre vitrine.
+- Le conserver et continuer à l'utiliser même si KIOSK cesse de le distribuer.
+
+## Ce que vous ne pouvez pas faire
+
+- **Revendre FLYER**, tel quel ou modifié, comme un thème.
+- Le **redistribuer** publiquement (dépôt, place de marché, pack de thèmes),
+  même gratuitement. Envoyez les gens vers kioskthemes.com.
+- Retirer ou remplacer cette licence dans les copies que vous transmettez à un
+  client dans le cadre d'une prestation.
+
+Prestataires et agences : installer et personnaliser FLYER pour un client est
+expressément autorisé, y compris de façon facturée. C'est votre travail
+d'intégration que vous facturez, pas le thème.
+
+## Garantie
+
+FLYER est fourni « en l'état », sans garantie d'aucune sorte. KIOSK ne peut être
+tenu responsable d'une perte de chiffre d'affaires, de données ou de temps liée
+à son utilisation. Testez toujours sur un thème en brouillon avant de publier.
+
+## Support
+
+FLYER étant gratuit, le support est fourni au mieux, sans engagement de délai :
+kioskthemes.com/support/
+
+---
+
+# FLYER — License (English)
+
+Copyright © 2026 KIOSK — kioskthemes.com
+
+FLYER is distributed free of charge. By downloading it you agree to the terms
+below.
+
+**You may** install FLYER on as many Shopify stores as you like, yours or your
+clients'; modify it freely; use it commercially with no royalty and no required
+attribution on your storefront; and keep using it if KIOSK stops distributing it.
+
+**You may not** resell FLYER as a theme, modified or not; redistribute it
+publicly (repository, marketplace, theme bundle), even for free — point people
+to kioskthemes.com instead; or strip this licence from copies you hand to a
+client.
+
+Agencies and freelancers may install and customise FLYER for clients, including
+as paid work. You are charging for your integration work, not for the theme.
+
+FLYER is provided "as is", without warranty of any kind. KIOSK is not liable for
+lost revenue, data or time arising from its use. Always test on an unpublished
+theme before publishing.
+
+Support is best-effort, with no guaranteed response time: kioskthemes.com/support/
