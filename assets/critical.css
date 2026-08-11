@@ -437,6 +437,9 @@ h6 {
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  /* Fill the grid row so the quick-add button sits on the same baseline across
+     a row, whatever the title length. */
+  height: 100%;
   text-align: var(--card-text-align, left);
   border: var(--card-border-width, 0) solid
     rgba(var(--color-ink-rgb), var(--card-border-opacity, 0.1));
@@ -522,13 +525,16 @@ h6 {
 }
 .fl-card__info {
   display: flex;
+  flex: 1 0 auto;
   flex-direction: column;
   gap: 4px;
 }
 .fl-card__quick {
   position: relative;
   z-index: 1;
-  margin-top: 2px;
+  /* Pushed to the bottom of the card so buttons line up across a row. */
+  margin-top: auto;
+  padding-top: 8px;
   align-self: flex-start;
 }
 
