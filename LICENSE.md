@@ -1,4 +1,31 @@
-# FLYER — Licence
+# FLYER — License
+
+Copyright © 2026 KIOSK — kioskthemes.com
+
+FLYER is distributed free of charge. By downloading it you agree to the terms
+below.
+
+**You may** install FLYER on as many Shopify stores as you like, yours or your
+clients'; modify it freely; use it commercially with no royalty and no required
+attribution on your storefront; and keep using it if KIOSK stops distributing it.
+
+**You may not** resell FLYER as a theme, modified or not; redistribute it
+publicly (repository, marketplace, theme bundle), even for free — point people
+to kioskthemes.com instead; or strip this licence from copies you hand to a
+client.
+
+Agencies and freelancers may install and customise FLYER for clients, including
+as paid work. You are charging for your integration work, not for the theme.
+
+FLYER is provided "as is", without warranty of any kind. KIOSK is not liable for
+lost revenue, data or time arising from its use. Always test on an unpublished
+theme before publishing.
+
+Support is best-effort, with no guaranteed response time: kioskthemes.com/support/
+
+---
+
+# FLYER — Licence (Français)
 
 Copyright © 2026 KIOSK — kioskthemes.com
 
@@ -36,30 +63,3 @@ tenu responsable d'une perte de chiffre d'affaires, de données ou de temps lié
 
 FLYER étant gratuit, le support est fourni au mieux, sans engagement de délai :
 kioskthemes.com/support/
-
----
-
-# FLYER — License (English)
-
-Copyright © 2026 KIOSK — kioskthemes.com
-
-FLYER is distributed free of charge. By downloading it you agree to the terms
-below.
-
-**You may** install FLYER on as many Shopify stores as you like, yours or your
-clients'; modify it freely; use it commercially with no royalty and no required
-attribution on your storefront; and keep using it if KIOSK stops distributing it.
-
-**You may not** resell FLYER as a theme, modified or not; redistribute it
-publicly (repository, marketplace, theme bundle), even for free — point people
-to kioskthemes.com instead; or strip this licence from copies you hand to a
-client.
-
-Agencies and freelancers may install and customise FLYER for clients, including
-as paid work. You are charging for your integration work, not for the theme.
-
-FLYER is provided "as is", without warranty of any kind. KIOSK is not liable for
-lost revenue, data or time arising from its use. Always test on an unpublished
-theme before publishing.
-
-Support is best-effort, with no guaranteed response time: kioskthemes.com/support/
