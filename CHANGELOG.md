@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.3.0 — 2026-08-20
+
+### Added
+- Shop Pay Installments banner on the product page, shown automatically when
+  the store is eligible.
+- New setting, **Show express payment buttons**, on both the product and
+  featured product sections, enabled by default. The express buttons
+  themselves shipped in 1.2.0; they can now be turned off.
+
 ## 1.2.0 — 2026-08-11
 
 First public release.
