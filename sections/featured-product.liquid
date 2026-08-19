@@ -284,6 +284,7 @@
                     <span class="visually-hidden" role="status" data-add-status></span>
                     {%- if block.settings.show_dynamic_checkout -%}
                       {{ form | payment_button }}
+                      {{ form | payment_terms }}
                     {%- endif -%}
                   {% endform %}
                 </div>
