@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.4.0 — 2026-08-20
+
+### Added
+- Payment method logos in the footer, taken from the methods your store
+  actually accepts. New setting: **Show payment method logos**.
+- Unit price on the product page and on product cards — required in the EU
+  (Directive 98/6/EC) for anything sold by weight, volume or length. It appears
+  only when you have set a unit of measure on the variant, and follows the
+  selected variant.
+- Complementary product recommendations. The product recommendations section
+  now has a **Recommendation type** setting — *Related* (automatic) or
+  *Complementary*, the ones you pair by hand in the free Shopify Search &
+  Discovery app. Add the section twice to show both.
+
+### Added
+- The product recommendations section can now be added from the editor, and
+  only on the product template. It had no preset, so a second instance — the one
+  you need for complementary products — could not be added at all.
+
 ## 1.3.0 — 2026-08-20
 
 ### Added

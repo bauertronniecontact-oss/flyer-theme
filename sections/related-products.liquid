@@ -16,7 +16,7 @@
 <fl-related
   class="fl-related"
   {% if product %}
-    data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit=4"
+    data-url="{{ routes.product_recommendations_url }}?section_id={{ section.id }}&product_id={{ product.id }}&limit=4&intent={{ section.settings.intent | default: 'related' }}"
   {% endif %}
 >
   {%- if recommendations.performed? and recommendations.products_count > 0 -%}
@@ -99,6 +99,23 @@
   "name": "Related products",
   "settings": [
     {
+      "type": "select",
+      "id": "intent",
+      "label": "Recommendation type",
+      "info": "Complementary products are the ones you pair by hand in the free Shopify Search & Discovery app. Add this section a second time to show both.",
+      "options": [
+        {
+          "value": "related",
+          "label": "Related products (automatic)"
+        },
+        {
+          "value": "complementary",
+          "label": "Complementary products (Search & Discovery)"
+        }
+      ],
+      "default": "related"
+    },
+    {
       "type": "paragraph",
       "content": "Automatic recommendations based on the current product. Use on the product template."
     },
@@ -128,6 +145,11 @@
       "label": "Bottom padding",
       "default": 48
     }
+  ],
+  "enabled_on": { "templates": ["product"] },
+  "presets": [
+    { "name": "Related products" },
+    { "name": "Complementary products", "settings": { "intent": "complementary", "heading": "Goes well with" } }
   ]
 }
 {% endschema %}
