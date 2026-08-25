@@ -177,8 +177,12 @@
     color: var(--fl-banner-fg);
   }
 
+  /* min(…, 100%) keeps the reading-measure cap but stops a single long word
+     (min-content wider than the box) from pushing the flex item outside the
+     content area, where .fl-banner's overflow: hidden crops it on both sides.
+     Clamped to the box, overflow-wrap: break-word can actually wrap the word. */
   .fl-banner__heading {
-    max-width: 16em;
+    max-width: min(16em, 100%);
   }
 
   .fl-banner__heading--small {
@@ -194,7 +198,7 @@
   }
 
   .fl-banner__text {
-    max-width: 44ch;
+    max-width: min(44ch, 100%);
     font-size: 1.0625em;
   }
 

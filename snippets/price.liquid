@@ -70,6 +70,9 @@
   {%- if show_from and varies -%}
     <span class="fl-price__from">{{ 'products.card.from' | t }}</span>
   {%- endif -%}
+  {%- if on_sale -%}
+    <span class="visually-hidden">{{ 'products.card.sale_price' | t }}</span>
+  {%- endif -%}
   <span class="fl-price__current">{{ amount }}</span>
   {%- if on_sale -%}
     <s class="fl-price__compare">

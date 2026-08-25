@@ -75,7 +75,9 @@ body {
   /* Typography > Body scale */
   font-size: calc(var(--font-size-base) * var(--body-scale, 1));
   line-height: 1.6;
-  background-color: var(--color-bg);
+  /* --gradient-bg resolves to the scheme's plain background when no gradient
+     is set, so the page ground always matches the default scheme. */
+  background: var(--gradient-bg, var(--color-bg));
   color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
 }
@@ -180,8 +182,10 @@ a {
   text-decoration: none;
   color: var(--color-on-accent);
   background: var(--color-accent);
-  /* The scheme's primary_button_border role is the button colour, not the ink. */
-  border: var(--btn-border-width, 1px) solid var(--color-accent);
+  /* The scheme's primary_button_border role is the button colour, not the ink.
+     Buttons > Border opacity fades it via the scheme's accent triplet. */
+  border: var(--btn-border-width, 1px) solid
+    rgba(var(--color-accent-rgb), var(--btn-border-opacity, 1));
   border-radius: var(--radius-btn);
   box-shadow: var(--btn-shadow);
   cursor: pointer;
@@ -198,7 +202,10 @@ a {
 .fl-btn--secondary {
   color: var(--color-outline-label, var(--color-ink));
   background: transparent;
-  border-color: var(--color-outline-label, var(--color-ink));
+  border-color: rgba(
+    var(--color-outline-label-rgb, var(--color-ink-rgb)),
+    var(--btn-border-opacity, 1)
+  );
 }
 .fl-btn--secondary:hover {
   opacity: 1;
@@ -284,7 +291,9 @@ a {
 
 /* Popups > border / radius / shadow */
 .fl-popup {
-  background: var(--color-bg);
+  /* Same value the scheme class paints, so a scheme gradient survives this
+     later, equal-specificity declaration (plain colour when no gradient). */
+  background: var(--gradient-bg, var(--color-bg));
   border: var(--popup-border-width, 1px) solid
     rgba(var(--color-ink-rgb), var(--popup-border-opacity, 0.1));
   border-radius: var(--popup-radius, 8px);
@@ -293,7 +302,7 @@ a {
 
 /* Drawers > border / shadow */
 .fl-drawer {
-  background: var(--color-bg);
+  background: var(--gradient-bg, var(--color-bg));
   border-inline-start: var(--drawer-border-width, 1px) solid
     rgba(var(--color-ink-rgb), var(--drawer-border-opacity, 0.1));
   box-shadow: var(--drawer-shadow);
@@ -426,6 +435,8 @@ h6 {
   font-weight: 500;
   letter-spacing: 0.04em;
   border-radius: var(--badge-radius, 40px);
+  /* Deliberately the scheme's plain colour, not --gradient-bg: a gradient
+     squeezed into a chip this small reads as noise and hurts legibility. */
   background: var(--color-bg);
   color: var(--color-ink);
 }
@@ -451,7 +462,7 @@ h6 {
 /* "Card" style wraps the whole tile in the card colour scheme. */
 .fl-card--boxed {
   padding: var(--card-image-padding, 0);
-  background: var(--color-bg);
+  background: var(--gradient-bg, var(--color-bg));
 }
 
 /* Theme setting: Animations > Hover effect */

@@ -19,6 +19,14 @@
   <h1 class="fl-collections__title">{{ 'collections.general.title' | t }}</h1>
 
   {%- paginate collections by 24 -%}
+    {%- if collections.size == 0 -%}
+      <div class="fl-collections__empty">
+        <p class="fl-collections__empty-text">{{ 'collections.general.no_collections' | t }}</p>
+        <a class="fl-btn" href="{{ routes.all_products_collection_url }}">
+          {{ 'cart.continue_shopping' | t }}
+        </a>
+      </div>
+    {%- else -%}
     <ul class="fl-collections__grid" role="list">
       {%- for collection in collections -%}
         <li class="fl-collections__item">
@@ -53,6 +61,7 @@
         </li>
       {%- endfor -%}
     </ul>
+    {%- endif -%}
 
     {%- if paginate.pages > 1 -%}
       <nav class="fl-collections__pagination" aria-label="{{ 'general.pagination.label' | t }}">
@@ -153,6 +162,16 @@
     display: flex;
     gap: 20px;
     margin-top: 40px;
+  }
+
+  .fl-collections__empty {
+    padding-block: 72px;
+    text-align: center;
+  }
+
+  .fl-collections__empty-text {
+    margin-block-end: 20px;
+    color: var(--color-muted);
   }
 {% endstylesheet %}
 

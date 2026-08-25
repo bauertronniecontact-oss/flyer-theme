@@ -120,7 +120,8 @@
       },
       "all_products": "Products",
       "view_all": "View all",
-      "placeholder_title": "Example collection"
+      "placeholder_title": "Example collection",
+      "no_collections": "No collections found."
     },
     "sorting": {
       "title": "Sort by"

@@ -13,8 +13,9 @@
   opens the overlay (delegated click listener). Focus is trapped while
   open; ESC, the close button, or the scrim close it.
 
-  No-JS fallback: the input lives in a GET form pointing to the search
-  page, so pressing Enter always works.
+  No-JS fallback: [data-search-open] triggers are real links to
+  routes.search_url (the delegated handler preventDefaults them), and the
+  input lives in a GET form pointing to the search page.
 
   @example
   {% render 'search-overlay' %}
@@ -22,6 +23,13 @@
 
 {%- liquid
   assign predictive = settings.predictive_search_enabled
+  # Same resolution as snippets/price.liquid: suggestion prices must match
+  # the server-rendered cards when "Show currency codes" is on.
+  if settings.currency_code_enabled
+    assign money_format = shop.money_with_currency_format
+  else
+    assign money_format = shop.money_format
+  endif
 -%}
 
 <fl-search
@@ -31,7 +39,7 @@
     data-predictive="true"
     data-predictive-url="{{ routes.predictive_search_url }}"
     data-currency="{{ cart.currency.iso_code }}"
-    data-money-format="{{ shop.money_format | escape }}"
+    data-money-format="{{ money_format | escape }}"
     data-label-loading="{{ 'accessibility.loading' | t | escape }}"
     data-label-empty="{{ 'search.no_results_html' | t: terms: '%TERMS%' | escape }}"
     data-label-results-one="{{ 'search.results_for_html' | t: count: 1, terms: '%TERMS%' | replace: '1', '%COUNT%' | escape }}"
@@ -63,7 +71,7 @@
       .fl-popup wires this surface to the Popups theme settings (border,
       radius, shadow), which previously drove nothing in the theme.
     {%- endcomment -%}
-    <div class="fl-search__panel fl-popup">
+    <div class="fl-search__panel fl-popup" tabindex="-1">
       <div class="fl-search__container">
         <div class="fl-search__bar">
           <form class="fl-search__form" action="{{ routes.search_url }}" method="get" role="search">
@@ -458,7 +466,11 @@
         });
       }
 
-      this.addEventListener('keydown', (event) => {
+      // Bound on document only while the overlay is open: a click on a
+      // non-interactive part of the panel moves focus to <body>, which is
+      // outside <fl-search>, so an element-level listener stopped seeing
+      // ESC and Tab entirely.
+      this._onKeydown = (event) => {
         if (!this.isOpen()) return;
         if (event.key === 'Escape') {
           event.preventDefault();
@@ -466,7 +478,7 @@
         } else if (event.key === 'Tab') {
           this.trapFocus(event);
         }
-      });
+      };
 
       if (this.input && this.predictive) {
         this.input.addEventListener('input', () => {
@@ -478,6 +490,7 @@
 
     disconnectedCallback() {
       document.removeEventListener('click', this._onDocClick);
+      document.removeEventListener('keydown', this._onKeydown);
       document.documentElement.style.overflow = '';
     }
 
@@ -488,6 +501,7 @@
     open(opener) {
       if (!this.overlay || this.isOpen()) return;
       this.lastFocus = opener || document.activeElement;
+      document.addEventListener('keydown', this._onKeydown);
       this.overlay.hidden = false;
       void this.overlay.offsetWidth;
       this.overlay.classList.add('is-open');
@@ -503,6 +517,7 @@
 
     close() {
       if (!this.overlay || !this.isOpen()) return;
+      document.removeEventListener('keydown', this._onKeydown);
       this.overlay.classList.remove('is-open');
       document.documentElement.style.overflow = '';
       document.querySelectorAll('[data-search-open]').forEach((btn) => {
@@ -525,6 +540,17 @@
       if (!focusables.length) return;
       const first = focusables[0];
       const last = focusables[focusables.length - 1];
+      // Focus fell outside the dialog (e.g. onto <body>): pull it back in
+      // instead of letting Tab reach the page behind the modal.
+      if (!this.overlay.contains(document.activeElement)) {
+        event.preventDefault();
+        if (event.shiftKey) {
+          last.focus();
+        } else {
+          first.focus();
+        }
+        return;
+      }
       if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();

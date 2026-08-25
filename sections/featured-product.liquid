@@ -334,14 +334,32 @@
       <script type="application/json" data-variants-json>
         {{ feat_product.variants | json }}
       </script>
+      {%- comment -%}
+        Pre-rendered amounts injected by <fl-featured-product> on variant
+        change. They must use the SAME format as snippets/price.liquid,
+        otherwise the currency code vanishes as soon as a variant is picked.
+        Liquid has no dynamic filter name, so the format is resolved per
+        variant up front. Same pattern as sections/product.liquid.
+      {%- endcomment -%}
       <script type="application/json" data-money-json>
         {
           {%- for v in feat_product.variants -%}
+            {%- liquid
+              if settings.currency_code_enabled
+                assign v_amount = v.price | money_with_currency
+                assign v_compare_amount = v.compare_at_price | money_with_currency
+                assign v_unit_amount = v.unit_price | money_with_currency
+              else
+                assign v_amount = v.price | money
+                assign v_compare_amount = v.compare_at_price | money
+                assign v_unit_amount = v.unit_price | money
+              endif
+            -%}
             "{{ v.id }}": {
-              "price": {{ v.price | money | json }},
-              "compare": {% if v.compare_at_price > v.price %}{{ v.compare_at_price | money | json }}{% else %}null{% endif %},
+              "price": {{ v_amount | json }},
+              "compare": {% if v.compare_at_price > v.price %}{{ v_compare_amount | json }}{% else %}null{% endif %},
               "available": {{ v.available | json }},
-              "unit": {% if v.unit_price_measurement %}{{ v.unit_price | money | json }}{% else %}null{% endif %},
+              "unit": {% if v.unit_price_measurement %}{{ v_unit_amount | json }}{% else %}null{% endif %},
               "unitRef": {% if v.unit_price_measurement %}{{ v.unit_price_measurement.reference_value | json }}{% else %}null{% endif %},
               "unitUnit": {% if v.unit_price_measurement %}{{ v.unit_price_measurement.reference_unit | json }}{% else %}null{% endif %}
             }

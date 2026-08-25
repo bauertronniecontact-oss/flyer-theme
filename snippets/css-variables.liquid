@@ -44,8 +44,10 @@
       --color-muted: {{ muted }};
       --color-control-border: {{ control_border }};
       --color-accent: {{ scheme.settings.button }};
+      --color-accent-rgb: {{ scheme.settings.button.red }}, {{ scheme.settings.button.green }}, {{ scheme.settings.button.blue }};
       --color-on-accent: {{ scheme.settings.button_label }};
       --color-outline-label: {{ scheme.settings.secondary_button_label }};
+      --color-outline-label-rgb: {{ scheme.settings.secondary_button_label.red }}, {{ scheme.settings.secondary_button_label.green }}, {{ scheme.settings.secondary_button_label.blue }};
       --color-shadow-rgb: {{ scheme.settings.shadow.red }}, {{ scheme.settings.shadow.green }}, {{ scheme.settings.shadow.blue }};
     }
   {% endfor %}

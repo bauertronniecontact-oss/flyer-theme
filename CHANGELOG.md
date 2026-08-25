@@ -1,5 +1,43 @@
 # Changelog
 
+## 1.4.2 — 2026-08-25
+
+27 fixes from a full audit of 1.4.1 (52 reviewing agents, every finding
+adversarially verified, every fix re-tested on a live store).
+
+### Fixed
+- **Add to cart failed without JavaScript on single-variant products.** The
+  1.2.0 no-JS fallback disabled the hidden variant-id field on the assumption
+  that a `noscript` select would replace it — but that select only renders for
+  multi-variant products. Single-variant products posted without an id and
+  Shopify answered 400. The field is now disabled only when the fallback
+  actually renders. Same fix on the Featured product section.
+- Collection filters went silently dead when a price field held an
+  out-of-range value; inputs are now clamped and the native validation
+  message is surfaced instead of a mute block.
+- Without JavaScript, mobile visitors had no navigation (hidden nav, inert
+  burger) and the search button did nothing. The nav now unhides via noscript
+  and the search control is a real link to the search page.
+- Sticky-header offset was hardcoded at 88px: a logo taller than ~67px made
+  the header overlap sticky columns. The offset now follows the logo height.
+- Search overlay: ESC stopped working and Tab escaped the dialog once focus
+  fell back to the page body.
+- Quick-add buttons lost their hidden product name after one add; failed adds
+  left the product button stuck on "Adding…"; submitter-less submits dropped
+  the variant id.
+- Currency code (when enabled) was dropped by the Featured product variant
+  switch, the predictive-search prices, and the customer order pages.
+- Submenu panels and quick-order labels could overflow the page horizontally;
+  a very long word could overflow the image banner.
+- Gradient colour schemes now paint the page background and boxed surfaces;
+  the button border-opacity setting works again.
+- Empty states: collections list without collections, order detail without
+  addresses.
+- Accessibility: column headings no longer skip a level when the section
+  heading is cleared; the announcement bar gets a pause control whenever it
+  auto-rotates; discounted prices carry a "Sale price" label for screen
+  readers.
+
 Entries for 1.3.0 and 1.4.0 were rewritten on 2026-08-25 after each claim was
 checked against the code. Three features listed there as new had in fact
 shipped in 1.2.0, and one explanation was wrong. They are corrected below and

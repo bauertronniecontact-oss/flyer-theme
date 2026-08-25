@@ -223,8 +223,12 @@
   }
 
   /* The table keeps its natural width on narrow screens and scrolls sideways
-     rather than squashing the quantity field below a usable size. */
+     rather than squashing the quantity field below a usable size.
+     position: relative makes this the containing block of the absolutely
+     positioned .visually-hidden labels inside the table — without it they
+     escape the overflow clip and widen document.scrollWidth on mobile. */
   .fl-qol__scroll {
+    position: relative;
     overflow-x: auto;
   }
 

@@ -699,8 +699,41 @@
 
     submitForm() {
       if (!this.form) return;
+      this.clampPriceInputs();
+      if (!this.form.checkValidity()) {
+        // A field that constraint validation rejects would silently block
+        // requestSubmit(), and the browser cannot show its bubble inside a
+        // closed <details>. Open the offending facet (and the mobile
+        // drawer) first so the native message is actually visible.
+        const invalid = this.form.querySelector(':invalid');
+        if (invalid) {
+          if (this.drawer && this.drawer.contains(invalid)) this.drawer.setAttribute('open', '');
+          const facet = invalid.closest('[data-facet]');
+          if (facet) facet.open = true;
+        }
+        this.form.reportValidity();
+        return;
+      }
       if (this.form.requestSubmit) this.form.requestSubmit();
       else this.form.submit();
+    }
+
+    clampPriceInputs() {
+      // Out-of-range or off-step price values (e.g. 99 when max is 32, or
+      // 14.999) must not veto an unrelated filter/sort submit: clamp them
+      // to the input bounds and round to the step instead. Shopify clamps
+      // price filters server-side anyway, so this never changes results.
+      const inputs = this.form.querySelectorAll('.fl-facet__price-input');
+      inputs.forEach((input) => {
+        if (input.value === '') return;
+        let value = Number(input.value);
+        if (Number.isNaN(value)) return;
+        const min = Number(input.min);
+        const max = Number(input.max);
+        if (input.min !== '' && !Number.isNaN(min)) value = Math.max(value, min);
+        if (input.max !== '' && !Number.isNaN(max)) value = Math.min(value, max);
+        input.value = value.toFixed(2);
+      });
     }
 
     handleDocClick(event) {

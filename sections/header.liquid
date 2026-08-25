@@ -1,7 +1,32 @@
 {%- liquid
   assign menu = section.settings.menu
   assign logo_alt = settings.logo.alt | default: shop.name | escape
+
+  comment
+    The stylesheet below publishes --sticky-offset: 88px, sized for the 64px
+    wordmark bar (+1px border, +23px clearance). An image logo renders at
+    settings.logo_width wide with height auto, so its height — and the bar's —
+    is known here: logo_width / aspect_ratio. When that makes the bar taller
+    than 64px, override the offset so sticky columns (product info, cart
+    summary) still clear the header. Pure Liquid: no JS required.
+  endcomment
+  assign sticky_offset = 0
+  if section.settings.sticky_header and settings.logo != blank and settings.logo.aspect_ratio > 0
+    assign logo_h = settings.logo_width | divided_by: settings.logo.aspect_ratio | ceil
+    assign bar_h = logo_h | plus: 20
+    if bar_h > 64
+      assign sticky_offset = bar_h | plus: 24
+    endif
+  endif
 -%}
+
+{%- if sticky_offset > 88 -%}
+  {% style %}
+    :root:has(.fl-header-section [data-sticky]) {
+      --sticky-offset: {{ sticky_offset }}px;
+    }
+  {% endstyle %}
+{%- endif -%}
 
 <fl-header
   class="fl-header full-width"
@@ -29,6 +54,28 @@
       </svg>
       <span class="visually-hidden">{{ 'accessibility.open_menu' | t }}</span>
     </button>
+
+    {%- comment -%}
+      No-JS fallback: the burger only calls FlHeader.openDrawer(), so without
+      JS it is an inert control and the mobile drawer can never open. Hide it
+      and show the inline nav instead — its dropdowns are native <details>,
+      which work without JS. Same pattern as the <noscript> players/buttons
+      in video.liquid and collection.liquid.
+    {%- endcomment -%}
+    <noscript>
+      <style>
+        @media (max-width: 989px) {
+          .fl-header__burger {
+            display: none;
+          }
+
+          .fl-header__nav,
+          .fl-header__account {
+            display: flex;
+          }
+        }
+      </style>
+    </noscript>
 
     <a class="fl-header__logo" href="{{ routes.root_url }}">
       {%- if settings.logo != blank -%}
@@ -112,9 +159,14 @@
 
     <div class="fl-header__icons">
       {%- if section.settings.show_search -%}
-        <button
-          type="button"
+        {%- comment -%}
+          Real link so search stays reachable without JS; <fl-search>'s
+          delegated [data-search-open] handler preventDefaults it and opens
+          the overlay instead (same pattern as data-cart-open).
+        {%- endcomment -%}
+        <a
           class="fl-header__icon-btn"
+          href="{{ routes.search_url }}"
           data-search-open
           aria-haspopup="dialog"
           aria-expanded="false"
@@ -125,7 +177,7 @@
             <path d="m13.5 13.5 3.5 3.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
           <span class="visually-hidden">{{ 'accessibility.search' | t }}</span>
-        </button>
+        </a>
       {%- endif -%}
 
       {%- if shop.customer_accounts_enabled -%}
@@ -262,7 +314,10 @@
     z-index: 50;
   }
 
-  /* Sticky columns elsewhere read this so they don't slide under the header. */
+  /* Sticky columns elsewhere read this so they don't slide under the header.
+     88px fits the 64px wordmark bar; when an image logo makes the bar taller,
+     the style block at the top of this section overrides it with the value
+     computed from logo_width / aspect_ratio. */
   :root:has(.fl-header-section [data-sticky]) {
     --sticky-offset: 88px;
   }
@@ -375,6 +430,10 @@
     left: -20px;
     z-index: 5;
     min-width: 220px;
+    /* A single unbreakable submenu word (min-content > 220px) would otherwise
+       push the panel past the viewport edge and scroll the whole page. */
+    max-width: min(320px, calc(100vw - var(--page-margin) * 2));
+    overflow-wrap: anywhere;
     margin: 0;
     padding: 8px 0;
     list-style: none;

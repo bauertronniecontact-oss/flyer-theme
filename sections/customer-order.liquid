@@ -4,6 +4,23 @@
 
 {% render 'customer-styles' %}
 
+{%- liquid
+  # Theme setting: Currency format > Show currency codes. Liquid has no dynamic
+  # filter name, so every amount on this page is resolved through an if, the
+  # same way the cart page does it.
+  if settings.currency_code_enabled
+    assign order_subtotal = order.line_items_subtotal_price | money_with_currency
+    assign order_shipping = order.shipping_price | money_with_currency
+    assign order_tax = order.tax_price | money_with_currency
+    assign order_total = order.total_price | money_with_currency
+  else
+    assign order_subtotal = order.line_items_subtotal_price | money
+    assign order_shipping = order.shipping_price | money
+    assign order_tax = order.tax_price | money
+    assign order_total = order.total_price | money
+  endif
+-%}
+
 <div class="fl-account">
   <div class="fl-account__inner fl-account__inner--wide">
     <a class="fl-account__back" href="{{ routes.account_url }}">
@@ -29,6 +46,13 @@
 
     <div class="fl-order__lines">
       {%- for line_item in order.line_items -%}
+        {%- liquid
+          if settings.currency_code_enabled
+            assign line_amount = line_item.final_line_price | money_with_currency
+          else
+            assign line_amount = line_item.final_line_price | money
+          endif
+        -%}
         <div class="fl-order__line">
           <div class="fl-order__media">
             {%- if line_item.image -%}
@@ -65,7 +89,7 @@
           </div>
           <div class="fl-order__amount">
             <span class="fl-account__cell-label">{{ 'customer.order.total' | t }}</span>
-            {{ line_item.final_line_price | money }}
+            {{ line_amount }}
           </div>
         </div>
       {%- endfor -%}
@@ -75,25 +99,32 @@
       <div class="fl-order__totals">
         <div class="fl-order__total-row">
           <span>{{ 'customer.order.subtotal' | t }}</span>
-          <span>{{ order.line_items_subtotal_price | money }}</span>
+          <span>{{ order_subtotal }}</span>
         </div>
         {%- for discount_application in order.cart_level_discount_applications -%}
+          {%- liquid
+            if settings.currency_code_enabled
+              assign discount_amount = discount_application.total_allocated_amount | money_with_currency
+            else
+              assign discount_amount = discount_application.total_allocated_amount | money
+            endif
+          -%}
           <div class="fl-order__total-row">
             <span>{{ 'customer.order.discount' | t }} — {{ discount_application.title }}</span>
-            <span>-{{ discount_application.total_allocated_amount | money }}</span>
+            <span>-{{ discount_amount }}</span>
           </div>
         {%- endfor -%}
         <div class="fl-order__total-row">
           <span>{{ 'customer.order.shipping' | t }}</span>
-          <span>{{ order.shipping_price | money }}</span>
+          <span>{{ order_shipping }}</span>
         </div>
         <div class="fl-order__total-row">
           <span>{{ 'customer.order.tax' | t }}</span>
-          <span>{{ order.tax_price | money }}</span>
+          <span>{{ order_tax }}</span>
         </div>
         <div class="fl-order__total-row fl-order__total-row--grand">
           <span>{{ 'customer.order.total' | t }}</span>
-          <span>{{ order.total_price | money }}</span>
+          <span>{{ order_total }}</span>
         </div>
         <div class="fl-order__total-row">
           <span>{{ 'customer.order.payment_status' | t }}</span>
@@ -106,14 +137,18 @@
       </div>
 
       <div class="fl-order__addresses">
-        <div>
-          <h2 class="fl-order__addr-title">{{ 'customer.order.billing_address' | t }}</h2>
-          <address class="fl-account__address">{{ order.billing_address | format_address }}</address>
-        </div>
-        <div>
-          <h2 class="fl-order__addr-title">{{ 'customer.order.shipping_address' | t }}</h2>
-          <address class="fl-account__address">{{ order.shipping_address | format_address }}</address>
-        </div>
+        {%- if order.billing_address -%}
+          <div>
+            <h2 class="fl-order__addr-title">{{ 'customer.order.billing_address' | t }}</h2>
+            <address class="fl-account__address">{{ order.billing_address | format_address }}</address>
+          </div>
+        {%- endif -%}
+        {%- if order.shipping_address -%}
+          <div>
+            <h2 class="fl-order__addr-title">{{ 'customer.order.shipping_address' | t }}</h2>
+            <address class="fl-account__address">{{ order.shipping_address | format_address }}</address>
+          </div>
+        {%- endif -%}
       </div>
     </div>
   </div>

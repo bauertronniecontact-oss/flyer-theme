@@ -21,6 +21,16 @@
       assign sizes_desktop = '33vw'
   endcase
   assign img_sizes = '(max-width: 749px) 100vw, (max-width: 989px) 50vw, ' | append: sizes_desktop
+
+  comment
+    Column headings sit under the section heading. With no section heading
+    rendered there is no h2 above them, so they take that level themselves
+    instead of skipping straight to h3.
+  endcomment
+  assign col_tag = 'h3'
+  if section.settings.heading == blank
+    assign col_tag = 'h2'
+  endif
 -%}
 
 <section
@@ -59,7 +69,7 @@
             {%- endif -%}
 
             {%- if block.settings.heading != blank -%}
-              <h3 class="fl-multicol__heading">{{ block.settings.heading | escape }}</h3>
+              <{{ col_tag }} class="fl-multicol__heading">{{ block.settings.heading | escape }}</{{ col_tag }}>
             {%- endif -%}
 
             {%- if block.settings.text != blank -%}

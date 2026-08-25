@@ -64,6 +64,33 @@
         >
           {{ 'accessibility.next' | t }}
         </button>
+
+        <button
+          type="button"
+          class="fl-announce__toggle"
+          data-toggle
+          aria-controls="Announcements-{{ section.id }}"
+          aria-label="{{ 'accessibility.pause_slideshow' | t }}"
+          data-label-pause="{{ 'accessibility.pause_slideshow' | t | escape }}"
+          data-label-play="{{ 'accessibility.play_slideshow' | t | escape }}"
+        >
+          <svg
+            class="fl-announce__icon fl-announce__icon--pause"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z" fill="currentColor"/>
+          </svg>
+          <svg
+            class="fl-announce__icon fl-announce__icon--play"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M8 5.5 18 12 8 18.5z" fill="currentColor"/>
+          </svg>
+        </button>
       {%- endif -%}
     </div>
   </fl-announcement-bar>
@@ -164,6 +191,55 @@
     background-color: var(--color-bg);
     border-radius: var(--radius-btn);
   }
+
+  /* Persistent pause/play control (WCAG 2.2.2). Rotation only exists with JS,
+     so the button stays hidden until <fl-announcement-bar> enhances the bar. */
+  .fl-announce__toggle {
+    display: none;
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+
+  .fl-announce.is-enhanced .fl-announce__toggle {
+    display: inline-flex;
+  }
+
+  .fl-announce__icon {
+    width: 14px;
+    height: 14px;
+  }
+
+  .fl-announce__icon--play {
+    display: none;
+  }
+
+  .fl-announce__toggle.is-paused .fl-announce__icon--play {
+    display: block;
+  }
+
+  .fl-announce__toggle.is-paused .fl-announce__icon--pause {
+    display: none;
+  }
+
+  /* Autoplay never starts under reduced motion, so the button would be a dead
+     control permanently announced as “Play slideshow”. */
+  @media (prefers-reduced-motion: reduce) {
+    .fl-announce.is-enhanced .fl-announce__toggle {
+      display: none;
+    }
+  }
 {% endstylesheet %}
 
 {% javascript %}
@@ -176,6 +252,9 @@
           this.rotator = this.querySelector('[data-rotator]');
           if (this.messages.length < 2) return;
 
+          this.classList.add('is-enhanced');
+          this.toggle = this.querySelector('[data-toggle]');
+          this.userPaused = false;
           this.index = 0;
           this.timer = null;
           this.delay = 5000;
@@ -189,6 +268,7 @@
             } else {
               this.play();
             }
+            this.syncToggle();
           };
           this.reducedMotion.addEventListener('change', this.onMotionChange);
 
@@ -196,6 +276,18 @@
           const next = this.querySelector('[data-next]');
           if (prev) prev.addEventListener('click', () => this.step(-1));
           if (next) next.addEventListener('click', () => this.step(1));
+
+          if (this.toggle) {
+            this.toggle.addEventListener('click', () => {
+              this.userPaused = !this.userPaused;
+              if (this.userPaused) {
+                this.pause();
+              } else {
+                this.play();
+              }
+              this.syncToggle();
+            });
+          }
 
           this.addEventListener('mouseenter', () => this.pause());
           this.addEventListener('mouseleave', () => {
@@ -222,6 +314,7 @@
           }
 
           this.play();
+          this.syncToggle();
         }
 
         disconnectedCallback() {
@@ -245,6 +338,7 @@
         }
 
         play() {
+          if (this.userPaused) return;
           if (this.reducedMotion.matches) return;
           if (this.timer) clearInterval(this.timer);
           if (this.rotator) this.rotator.setAttribute('aria-live', 'off');
@@ -255,6 +349,14 @@
           if (this.timer) clearInterval(this.timer);
           this.timer = null;
           if (this.rotator) this.rotator.setAttribute('aria-live', 'polite');
+        }
+
+        syncToggle() {
+          if (!this.toggle) return;
+          const isPaused = this.userPaused || this.reducedMotion.matches;
+          this.toggle.classList.toggle('is-paused', isPaused);
+          const label = isPaused ? this.toggle.dataset.labelPlay : this.toggle.dataset.labelPause;
+          if (label) this.toggle.setAttribute('aria-label', label);
         }
       }
     );

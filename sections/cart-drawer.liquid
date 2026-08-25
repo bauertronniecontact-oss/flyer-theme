@@ -713,21 +713,43 @@
       this.openerEl = null;
     }
 
+    findLabelTextNode(button) {
+      // First non-blank text node of a button: the visible wording of the
+      // quick-add buttons. Text.textContent reads and writes like an element's.
+      for (const node of button.childNodes) {
+        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim() !== '') return node;
+      }
+      return null;
+    }
+
     setLoading(button) {
       if (!button) return function () {};
       // Only the label's text is swapped. Overwriting the button's innerHTML
       // detached the [data-add-label] node that <fl-product> holds a reference
       // to, so the product button stayed stuck on "Adding…" after the first add.
-      const label = button.querySelector('[data-add-label]') || button;
+      // Quick-add buttons have no [data-add-label]: their visible wording is a
+      // bare text node beside a visually-hidden product name, and writing
+      // textContent on the whole button flattened that span into visible text
+      // on restore. Swapping only the text node leaves the span untouched.
+      const label = button.querySelector('[data-add-label]') || this.findLabelTextNode(button) || button;
+      const addingText = this.dataset.addingText;
+      const addedText = this.dataset.addedText;
       // A confirmation from a previous add may still be on screen: cancel its
       // pending revert and reuse the wording it captured, otherwise "Added to
       // cart" would be recorded as this button's original label.
       window.clearTimeout(button.flRevertTimer);
       let original = label.textContent;
       if (typeof button.flOriginalLabel === 'string') original = button.flOriginalLabel;
+      // <fl-product>'s form-level submit listener runs before this document-
+      // level one and has already relabelled the button "Adding…": recover the
+      // real wording from the host element instead of recording the loading
+      // text, which kept a FAILED add reading "Adding…" until <fl-product>'s
+      // 8 s fallback timer finally reset it.
+      if (original === addingText) {
+        const host = button.closest('[data-text-add]');
+        if (host && host.dataset.textAdd) original = host.dataset.textAdd;
+      }
       button.flOriginalLabel = original;
-      const addingText = this.dataset.addingText;
-      const addedText = this.dataset.addedText;
       button.disabled = true;
       button.setAttribute('aria-busy', 'true');
       label.textContent = addingText;
@@ -759,7 +781,11 @@
       const button = submitter || form.querySelector('[type="submit"]');
       const restore = this.setLoading(button);
       const body = new FormData(form);
-      if (submitter && submitter.name) body.append(submitter.name, submitter.value);
+      // Quick-add forms carry the variant id on the submit button itself
+      // (name="id"), and FormData(form) never includes the submitter. Rely on
+      // the resolved fallback so script-triggered submits and browsers without
+      // SubmitEvent.submitter still post the id.
+      if (button && button.name) body.append(button.name, button.value);
       let added = false;
       try {
         const response = await fetch(this.dataset.addUrl, {
