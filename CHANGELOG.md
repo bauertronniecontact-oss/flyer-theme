@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.1 — 2026-08-20
+
+### Fixed
+- Removed a legal-page template that Shopify never rendered: `policy` is not a
+  theme template type, so the file could not appear in any dropdown and its
+  section was dead code. Nothing changes for stores: policies written in
+  **Settings → Policies** are rendered by Shopify itself at `/policies/…`,
+  inside the theme's header and footer, and a regular Page already gives the
+  same centred reading column for any legal page you add to the menu.
+
 ## 1.4.0 — 2026-08-20
 
 ### Added
