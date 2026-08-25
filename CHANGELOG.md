@@ -1,42 +1,38 @@
 # Changelog
 
+Entries for 1.3.0 and 1.4.0 were rewritten on 2026-08-25 after each claim was
+checked against the code. Three features listed there as new had in fact
+shipped in 1.2.0, and one explanation was wrong. They are corrected below and
+credited to the release they actually came from.
+
 ## 1.4.1 — 2026-08-20
 
-### Fixed
-- Removed a legal-page template that Shopify never rendered: `policy` is not a
-  theme template type, so the file could not appear in any dropdown and its
-  section was dead code. Nothing changes for stores: policies written in
-  **Settings → Policies** are rendered by Shopify itself at `/policies/…`,
-  inside the theme's header and footer, and a regular Page already gives the
-  same centred reading column for any legal page you add to the menu.
+### Removed
+- The `policy` template and its section — dead code. Shopify accepts the file
+  on upload, but it never renders it: store policies at `/policies/…` are drawn
+  by Shopify itself, inside your theme's header and footer. Verified by putting
+  the template back with a marker in it — the marker never reached the page,
+  which used Shopify's own `shopify-policy__container`. Nothing changes for
+  stores. For a legal page you want in your menu, a regular Page gives the same
+  centred reading column.
 
 ## 1.4.0 — 2026-08-20
 
 ### Added
-- Payment method logos in the footer, taken from the methods your store
-  actually accepts. New setting: **Show payment method logos**.
-- Unit price on the product page and on product cards — required in the EU
-  (Directive 98/6/EC) for anything sold by weight, volume or length. It appears
-  only when you have set a unit of measure on the variant, and follows the
-  selected variant.
-- Complementary product recommendations. The product recommendations section
-  now has a **Recommendation type** setting — *Related* (automatic) or
-  *Complementary*, the ones you pair by hand in the free Shopify Search &
-  Discovery app. Add the section twice to show both.
-
-### Added
-- The product recommendations section can now be added from the editor, and
-  only on the product template. It had no preset, so a second instance — the one
-  you need for complementary products — could not be added at all.
+- Complementary product recommendations. The **Related products** section now
+  has a **Recommendation type** setting: *Related* picks products
+  automatically, *Complementary* shows the ones you pair by hand in the free
+  Shopify Search & Discovery app.
+- The Related products section can now be added from the editor, and only on
+  the product template. It shipped without a preset, so the second instance —
+  the one you need to show complementary products alongside related ones —
+  could not be added at all.
 
 ## 1.3.0 — 2026-08-20
 
 ### Added
-- Shop Pay Installments banner on the product page, shown automatically when
-  the store is eligible.
-- New setting, **Show express payment buttons**, on both the product and
-  featured product sections, enabled by default. The express buttons
-  themselves shipped in 1.2.0; they can now be turned off.
+- Shop Pay Installments banner on the product page and the featured product
+  section, shown automatically when your store is eligible.
 
 ## 1.2.0 — 2026-08-11
 
@@ -51,6 +47,14 @@ First public release.
 - 22 addable sections, including slideshow, video, collage, multirow,
   collapsible content, collection list, featured blog, featured product,
   email signup banner, page content, quick order list, and app blocks.
+- Express payment buttons (Apple Pay, Google Pay, Shop Pay) on the product and
+  featured product sections, with a **Show dynamic checkout buttons** switch on
+  the Buy buttons block.
+- Unit price on the product page and on product cards — required in the EU
+  (Directive 98/6/EC) for anything sold by weight, volume or length. It appears
+  once you set a unit of measure on the variant, and follows the selected one.
+- Payment method logos in the footer, taken from the methods your store
+  accepts. Setting: **Show payment icons**.
 - Scroll reveal, configurable hover effect, LCP-aware image loading on the
   first row of product grids.
 
