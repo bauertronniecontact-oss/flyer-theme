@@ -18,6 +18,19 @@
   if section.settings.media_position == 'right'
     assign grid_class = 'fl-featprod__grid fl-featprod__grid--right'
   endif
+
+  # Same rule as the product section: the hidden id field may only be disabled
+  # when the <noscript> select actually renders (multi-variant product AND
+  # variant_picker block present), otherwise the no-JS POST loses its id.
+  assign has_noscript_variant_select = false
+  unless feat_product.has_only_default_variant
+    for block in section.blocks
+      if block.type == 'variant_picker'
+        assign has_noscript_variant_select = true
+        break
+      endif
+    endfor
+  endunless
 -%}
 
 <fl-featured-product
@@ -260,10 +273,16 @@
                 <div class="fl-featprod__block fl-featprod__buy" {{ block.shopify_attributes }}>
                   {% form 'product', feat_product, id: form_id, data-product-form: '' %}
                     {%- comment -%}
-                      Disabled so it is not submitted without JS; the noscript
-                      select carries the id then. Re-enabled on upgrade.
+                      Disabled only when the noscript select really replaces it;
+                      re-enabled on upgrade. Otherwise the no-JS POST keeps the id.
                     {%- endcomment -%}
-                    <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-input disabled>
+                    <input
+                      type="hidden"
+                      name="id"
+                      value="{{ current_variant.id }}"
+                      data-variant-input
+                      {% if has_noscript_variant_select %}disabled{% endif %}
+                    >
                     <button
                       type="submit"
                       name="add"

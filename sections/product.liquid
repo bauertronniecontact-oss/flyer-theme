@@ -9,6 +9,21 @@
 {%- liquid
   assign current_variant = product.selected_or_first_available_variant
   assign product_form_id = 'ProductForm-' | append: section.id
+
+  # The hidden id field may only be disabled when the <noscript> select is
+  # actually rendered to replace it. That select lives inside the
+  # variant_picker block AND behind has_only_default_variant: on a
+  # single-variant product — or if the merchant removes the block — disabling
+  # the field left the native POST without any id, and Shopify answered 400.
+  assign has_noscript_variant_select = false
+  unless product.has_only_default_variant
+    for block in section.blocks
+      if block.type == 'variant_picker'
+        assign has_noscript_variant_select = true
+        break
+      endif
+    endfor
+  endunless
 -%}
 
 <fl-product
@@ -226,11 +241,18 @@
             <div class="fl-product__block fl-product__buy" {{ block.shopify_attributes }}>
               {% form 'product', product, id: product_form_id, data-product-form: '' %}
                 {%- comment -%}
-                  Disabled by default so it is NOT submitted when scripting is
-                  off — the <noscript> select carries the id in that case.
-                  <fl-product> re-enables it on upgrade.
+                  Disabled only when the <noscript> select really replaces it
+                  (multi-variant product + variant_picker block present);
+                  <fl-product> re-enables it on upgrade. Otherwise the field
+                  stays enabled so the native no-JS POST carries the id.
                 {%- endcomment -%}
-                <input type="hidden" name="id" value="{{ current_variant.id }}" data-variant-input disabled>
+                <input
+                  type="hidden"
+                  name="id"
+                  value="{{ current_variant.id }}"
+                  data-variant-input
+                  {% if has_noscript_variant_select %}disabled{% endif %}
+                >
                 <button
                   type="submit"
                   name="add"
