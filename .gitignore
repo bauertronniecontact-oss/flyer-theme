@@ -15,3 +15,7 @@ node_modules/
 ## Release files
 release
 *.zip
+
+# Cache local de wrangler : contient l identifiant de compte Cloudflare
+# et le nom du compte (donc une adresse e-mail). Jamais versionne.
+.wrangler/
